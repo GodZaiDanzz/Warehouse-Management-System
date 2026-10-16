@@ -54,15 +54,23 @@ class ProjectController extends Controller
             'name' => ['required', 'string', 'max:255'],
             'location' => ['nullable', 'string', 'max:255'],
             'status' => ['nullable', 'string', 'max:50'],
+            'start_date' => ['nullable', 'date'],
+            'end_date' => ['nullable', 'date'],
             'budget' => ['nullable', 'numeric', 'min:0'],
             'description' => ['nullable', 'string'],
         ], [
             'name.required' => 'Nama Project wajib diisi.',
+            'start_date.date' => 'Format Tanggal Mulai tidak valid.',
+            'end_date.date' => 'Format Tanggal Selesai tidak valid.',
         ]);
 
         $validated['created_by'] = Auth::id();
         if (empty($validated['status'])) {
             $validated['status'] = 'Ongoing';
+        }
+
+        if ($validated['status'] === 'Completed' && empty($validated['end_date'])) {
+            $validated['end_date'] = now()->toDateString();
         }
 
         $project = Project::create($validated);
@@ -92,17 +100,25 @@ class ProjectController extends Controller
 
         $itemsList = Item::orderBy('name')->get();
 
-        // Calculate discrete and decimal totals
+        // Calculate discrete and decimal totals, and total material cost
         $allProjectOuts = (clone $baseQuery)
             ->leftJoin('items', 'material_outs.item_id', '=', 'items.id')
-            ->select('material_outs.quantity', DB::raw("UPPER(TRIM(COALESCE(material_outs.unit, items.unit, 'PCS'))) as item_unit"))
+            ->select(
+                'material_outs.quantity',
+                'items.unit_price',
+                DB::raw("UPPER(TRIM(COALESCE(material_outs.unit, items.unit, 'PCS'))) as item_unit")
+            )
             ->get();
 
         $projectDiscreteQty = 0;
         $projectDecimalTotals = [];
+        $totalMaterialCost = 0;
         foreach ($allProjectOuts as $apo) {
             $u = $apo->item_unit;
             $q = (float) $apo->quantity;
+            $price = (float) ($apo->unit_price ?? 0);
+            $totalMaterialCost += ($q * $price);
+
             if (is_decimal_unit($u)) {
                 $projectDecimalTotals[$u] = ($projectDecimalTotals[$u] ?? 0) + $q;
             } else {
@@ -117,22 +133,26 @@ class ProjectController extends Controller
             'decimal_string' => $projectDecimalString,
             'total_transactions' => (clone $baseQuery)->count(),
             'unique_items' => (clone $baseQuery)->distinct('item_id')->count('item_id'),
+            'total_cost' => $totalMaterialCost,
         ];
 
         $materialSummaryPerItem = (clone $baseQuery)
             ->select(
-                'item_id',
-                'unit',
-                DB::raw('SUM(quantity) as total_qty'),
+                'material_outs.item_id',
+                'material_outs.unit',
+                DB::raw('SUM(material_outs.quantity) as total_qty'),
                 DB::raw('COUNT(*) as total_trans'),
-                DB::raw('MAX(date) as last_used_date')
+                DB::raw('MAX(material_outs.date) as last_used_date')
             )
             ->with('item')
-            ->groupBy('item_id', 'unit')
+            ->groupBy('material_outs.item_id', 'material_outs.unit')
             ->orderByDesc('total_qty')
             ->get();
 
-        return view('pages.projects.show', compact('project', 'materialOuts', 'itemsList', 'summary', 'materialSummaryPerItem'));
+        $currentUser = Auth::user();
+        $canViewPrices = $currentUser && $currentUser->canViewPrices();
+
+        return view('pages.projects.show', compact('project', 'materialOuts', 'itemsList', 'summary', 'materialSummaryPerItem', 'canViewPrices'));
     }
 
     public function update(Request $request, Project $project)
@@ -142,14 +162,22 @@ class ProjectController extends Controller
             'name' => ['required', 'string', 'max:255'],
             'location' => ['nullable', 'string', 'max:255'],
             'status' => ['nullable', 'string', 'max:50'],
+            'start_date' => ['nullable', 'date'],
+            'end_date' => ['nullable', 'date'],
             'budget' => ['nullable', 'numeric', 'min:0'],
             'description' => ['nullable', 'string'],
         ], [
             'name.required' => 'Nama Project wajib diisi.',
+            'start_date.date' => 'Format Tanggal Mulai tidak valid.',
+            'end_date.date' => 'Format Tanggal Selesai tidak valid.',
         ]);
 
         if (empty($validated['status'])) {
             $validated['status'] = $project->status ?? 'Ongoing';
+        }
+
+        if ($validated['status'] === 'Completed' && empty($validated['end_date'])) {
+            $validated['end_date'] = $project->end_date ? $project->end_date->toDateString() : now()->toDateString();
         }
 
         $project->update($validated);
@@ -166,7 +194,13 @@ class ProjectController extends Controller
     public function toggleStatus(Project $project)
     {
         $newStatus = ($project->status === 'Completed') ? 'Ongoing' : 'Completed';
-        $project->update(['status' => $newStatus]);
+        $updateData = ['status' => $newStatus];
+
+        if ($newStatus === 'Completed' && empty($project->end_date)) {
+            $updateData['end_date'] = now()->toDateString();
+        }
+
+        $project->update($updateData);
 
         $statusText = $newStatus === 'Completed' ? 'Selesai (Completed)' : 'Berjalan (Ongoing)';
 

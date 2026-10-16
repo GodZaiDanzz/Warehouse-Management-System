@@ -1,10 +1,14 @@
 @extends('layouts.app')
 
+@php
+    $canViewPrices = $canViewPrices ?? (auth()->user() && auth()->user()->canViewPrices());
+@endphp
+
 @section('content')
 <div x-data="{ 
     openCreateModal: false, 
     openEditModal: false, 
-    editData: { id: '', code: '', name: '', location: '', status: 'Ongoing', description: '' }
+    editData: { id: '', code: '', name: '', location: '', status: 'Ongoing', start_date: '', end_date: '', description: '' }
 }" class="p-4 sm:p-6 space-y-6">
 
 
@@ -18,7 +22,7 @@
     </div>
 
     <!-- Summary Cards -->
-    <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4 print:hidden">
+    <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 {{ $canViewPrices ? 'lg:grid-cols-5' : 'lg:grid-cols-4' }} print:hidden">
         <!-- Total Projects -->
         <div class="rounded-2xl border border-gray-200 bg-white p-5 dark:border-gray-800 dark:bg-gray-900 shadow-xs">
             <div class="flex items-center justify-between">
@@ -84,6 +88,26 @@
             </div>
             <p class="mt-3 text-xs text-gray-400">Akumulasi pengeluaran material</p>
         </div>
+
+        @if($canViewPrices)
+        <!-- Total Nilai Material (Khusus Web Admin & Finance) -->
+        <div class="rounded-2xl border border-gray-200 bg-white p-5 dark:border-gray-800 dark:bg-gray-900 shadow-xs">
+            <div class="flex items-center justify-between">
+                <div>
+                    <span class="text-xs font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400">Total Nilai Material</span>
+                    <h3 class="mt-2 text-2xl font-black text-emerald-700 dark:text-emerald-400 font-mono truncate" title="Rp {{ number_format($overallTotalCost ?? 0, 0, ',', '.') }}">
+                        Rp {{ number_format($overallTotalCost ?? 0, 0, ',', '.') }}
+                    </h3>
+                </div>
+                <div class="flex h-11 w-11 items-center justify-center rounded-xl bg-emerald-50 text-emerald-600 dark:bg-emerald-950/50 dark:text-emerald-400">
+                    <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                </div>
+            </div>
+            <p class="mt-3 text-xs text-gray-400">Valuasi riil material seluruh project</p>
+        </div>
+        @endif
     </div>
 
     <!-- Chart Top Projects -->
@@ -205,12 +229,13 @@
                 <thead class="theme-table-header text-white font-extrabold uppercase border-b border-gray-200 dark:border-gray-800">
                     <tr>
                         <th class="px-4 py-3 text-center w-12 border-r border-white/10">NO</th>
-                        <th class="px-4 py-3 min-w-[260px] border-r border-white/10">PROJECT & TEMPAT FABRIKASI</th>
-                        <th class="px-4 py-3 text-center w-36 border-r border-white/10">STATUS</th>
-                        <th class="px-4 py-3 text-center w-36 border-r border-white/10">TRANSAKSI</th>
-                        <th class="px-4 py-3 text-center w-40 border-r border-white/10">TERPAKAI</th>
-                        <th class="px-4 py-3 text-center w-36 border-r border-white/10">RIWAYAT</th>
-                        <th class="px-4 py-3 text-center min-w-[320px]">UBAH STATUS & AKSI</th>
+                        <th class="px-4 py-3 min-w-[240px] border-r border-white/10">PROJECT & TEMPAT FABRIKASI</th>
+                        <th class="px-4 py-3 text-center w-32 border-r border-white/10">STATUS</th>
+                        <th class="px-4 py-3 text-center min-w-[170px] border-r border-white/10">PERIODE & TANGGAL</th>
+                        <th class="px-4 py-3 text-center w-28 border-r border-white/10">TRANSAKSI</th>
+                        <th class="px-4 py-3 text-center w-36 border-r border-white/10">TERPAKAI</th>
+                        <th class="px-4 py-3 text-center w-32 border-r border-white/10">RIWAYAT</th>
+                        <th class="px-4 py-3 text-center min-w-[280px]">UBAH STATUS & AKSI</th>
                     </tr>
                 </thead>
                 <tbody class="divide-y divide-gray-100 dark:divide-gray-800">
@@ -268,11 +293,54 @@
                                     </span>
                                 @endif
                             </td>
+                            <!-- PERIODE & TANGGAL PROJECT -->
+                            <td class="px-4 py-3 text-center border-r border-gray-100 dark:border-gray-800">
+                                @if($row->status === 'Completed')
+                                    <div class="inline-flex flex-col items-center gap-1">
+                                        <span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-black bg-emerald-50 text-emerald-700 border border-emerald-200 dark:bg-emerald-950/80 dark:text-emerald-300 dark:border-emerald-700 shadow-2xs">
+                                            <svg class="w-3 h-3 text-emerald-600 dark:text-emerald-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/></svg>
+                                            <span>Selesai: {{ $row->end_date ? format_date($row->end_date) : '-' }}</span>
+                                        </span>
+                                        @if($row->start_date)
+                                            <span class="text-[10px] text-gray-500 dark:text-gray-400 font-medium">
+                                                Mulai: {{ format_date($row->start_date) }}
+                                            </span>
+                                        @endif
+                                    </div>
+                                @else
+                                    <div class="inline-flex flex-col items-center gap-0.5 text-xs">
+                                        @if($row->start_date && $row->end_date)
+                                            <span class="font-mono font-bold text-gray-800 dark:text-gray-200 text-[11px]">
+                                                {{ format_date($row->start_date) }}
+                                            </span>
+                                            <span class="text-[10px] text-gray-400 font-semibold uppercase tracking-wider">s/d</span>
+                                            <span class="font-mono font-bold text-gray-800 dark:text-gray-200 text-[11px]">
+                                                {{ format_date($row->end_date) }}
+                                            </span>
+                                        @elseif($row->start_date)
+                                            <span class="font-mono font-bold text-gray-800 dark:text-gray-200 text-[11px]">
+                                                Mulai: {{ format_date($row->start_date) }}
+                                            </span>
+                                            <span class="text-[10px] text-brand-600 dark:text-brand-400 font-medium">
+                                                (Sedang Berjalan)
+                                            </span>
+                                        @elseif($row->end_date)
+                                            <span class="font-mono font-bold text-gray-800 dark:text-gray-200 text-[11px]">
+                                                Target: {{ format_date($row->end_date) }}
+                                            </span>
+                                        @else
+                                            <span class="text-gray-400 font-medium text-[11px] italic">
+                                                Belum diatur
+                                            </span>
+                                        @endif
+                                    </div>
+                                @endif
+                            </td>
                             <!-- TOTAL TRANSAKSI -->
                             <td class="px-4 py-3 text-center font-mono font-bold text-gray-700 dark:text-gray-300 border-r border-gray-100 dark:border-gray-800">
                                 {{ number_format($row->total_trans ?? 0) }} Kali
                             </td>
-                            <!-- TOTAL VOLUME -->
+                            <!-- TOTAL VOLUME & VALUE -->
                             <td class="px-4 py-3 text-center font-mono border-r border-gray-100 dark:border-gray-800">
                                 @if(($row->discrete_qty ?? 0) > 0 || !empty($row->decimal_string))
                                     <div class="inline-flex flex-col items-center gap-1">
@@ -284,6 +352,11 @@
                                         @if(!empty($row->decimal_string))
                                             <span class="px-2 py-0.5 rounded-md text-[11px] font-extrabold bg-amber-50 text-amber-700 border border-amber-200 dark:bg-amber-950/50 dark:text-amber-400">
                                                 + {{ $row->decimal_string }}
+                                            </span>
+                                        @endif
+                                        @if($canViewPrices && ($row->total_cost ?? 0) > 0)
+                                            <span class="px-2 py-0.5 rounded text-[11px] font-black bg-emerald-50 text-emerald-700 border border-emerald-200 dark:bg-emerald-950/50 dark:text-emerald-400 font-mono" title="Total Nilai Material Project">
+                                                Rp {{ number_format($row->total_cost, 0, ',', '.') }}
                                             </span>
                                         @endif
                                     </div>
@@ -320,6 +393,8 @@
                                         name: '{{ addslashes($row->name) }}',
                                         location: '{{ addslashes($row->location ?? '') }}',
                                         status: '{{ $row->status }}',
+                                        start_date: '{{ $row->start_date ? $row->start_date->format('Y-m-d') : '' }}',
+                                        end_date: '{{ $row->end_date ? $row->end_date->format('Y-m-d') : '' }}',
                                         description: '{{ addslashes($row->description ?? '') }}'
                                     }; openEditModal = true" class="p-1.5 rounded-lg text-brand-600 hover:bg-brand-50 dark:text-brand-400 dark:hover:bg-brand-950/40 transition cursor-pointer" title="Edit Rincian Data Project">
                                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
@@ -346,7 +421,7 @@
                             $hasActiveFilters = request('search') || request('status') || request('location') || request('category_id');
                         @endphp
                         <tr>
-                            <td colspan="7" class="py-16 text-center">
+                            <td colspan="8" class="py-16 text-center">
                                 <div class="mx-auto flex max-w-sm flex-col items-center justify-center text-center">
                                     <div class="flex h-14 w-14 items-center justify-center rounded-2xl bg-gray-100 text-gray-400 dark:bg-gray-800 dark:text-gray-500 mb-3.5">
                                         @if($hasActiveFilters)
@@ -441,6 +516,22 @@
                         </select>
                     </div>
 
+                    <!-- Tanggal Mulai & Tanggal Selesai -->
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                        <div>
+                            <label class="block text-xs font-bold text-gray-700 dark:text-gray-300 mb-1">
+                                Tanggal Mulai <span class="text-xs font-normal text-gray-400">(Opsional)</span>
+                            </label>
+                            <input type="date" name="start_date" class="w-full rounded-xl border border-gray-200 bg-gray-50 px-3.5 py-2 text-xs font-medium text-gray-800 outline-none focus:border-brand-500 focus:bg-white dark:border-gray-700 dark:bg-gray-800 dark:text-white cursor-pointer">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold text-gray-700 dark:text-gray-300 mb-1">
+                                Tanggal Selesai <span class="text-xs font-normal text-gray-400">(Opsional)</span>
+                            </label>
+                            <input type="date" name="end_date" class="w-full rounded-xl border border-gray-200 bg-gray-50 px-3.5 py-2 text-xs font-medium text-gray-800 outline-none focus:border-brand-500 focus:bg-white dark:border-gray-700 dark:bg-gray-800 dark:text-white cursor-pointer">
+                        </div>
+                    </div>
+
                     <!-- Deskripsi -->
                     <div>
                         <label class="block text-xs font-bold text-gray-700 dark:text-gray-300 mb-1">Keterangan / Deskripsi Project</label>
@@ -516,6 +607,22 @@
                             <option value="Planning">Planning (Perencanaan)</option>
                             <option value="On Hold">On Hold (Ditunda)</option>
                         </select>
+                    </div>
+
+                    <!-- Tanggal Mulai & Tanggal Selesai -->
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                        <div>
+                            <label class="block text-xs font-bold text-gray-700 dark:text-gray-300 mb-1">
+                                Tanggal Mulai <span class="text-xs font-normal text-gray-400">(Opsional)</span>
+                            </label>
+                            <input type="date" name="start_date" x-model="editData.start_date" class="w-full rounded-xl border border-gray-200 bg-gray-50 px-3.5 py-2 text-xs font-medium text-gray-800 outline-none focus:border-brand-500 focus:bg-white dark:border-gray-700 dark:bg-gray-800 dark:text-white cursor-pointer">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold text-gray-700 dark:text-gray-300 mb-1">
+                                Tanggal Selesai <span class="text-xs font-normal text-gray-400">(Opsional)</span>
+                            </label>
+                            <input type="date" name="end_date" x-model="editData.end_date" class="w-full rounded-xl border border-gray-200 bg-gray-50 px-3.5 py-2 text-xs font-medium text-gray-800 outline-none focus:border-brand-500 focus:bg-white dark:border-gray-700 dark:bg-gray-800 dark:text-white cursor-pointer">
+                        </div>
                     </div>
 
                     <!-- Deskripsi -->

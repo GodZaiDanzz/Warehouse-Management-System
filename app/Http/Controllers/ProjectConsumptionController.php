@@ -90,6 +90,7 @@ class ProjectConsumptionController extends Controller
                 material_outs.project,
                 UPPER(TRIM(COALESCE(material_outs.unit, items.unit, 'PCS'))) as item_unit,
                 SUM(material_outs.quantity) as sum_qty,
+                SUM(material_outs.quantity * COALESCE(items.unit_price, 0)) as sum_cost,
                 COUNT(material_outs.id) as trans_count,
                 MAX(material_outs.date) as max_date
             ")->groupBy('material_outs.project_id', 'material_outs.project', 'item_unit')->get();
@@ -110,6 +111,7 @@ class ProjectConsumptionController extends Controller
                     $projectAggMap[$k] = [
                         'rows' => [],
                         'total_trans' => 0,
+                        'total_cost' => 0,
                         'max_date' => null,
                     ];
                 }
@@ -118,6 +120,7 @@ class ProjectConsumptionController extends Controller
                     'qty' => (float) $row->sum_qty,
                 ];
                 $projectAggMap[$k]['total_trans'] += (int) $row->trans_count;
+                $projectAggMap[$k]['total_cost'] += (float) $row->sum_cost;
                 if (!$projectAggMap[$k]['max_date'] || $row->max_date > $projectAggMap[$k]['max_date']) {
                     $projectAggMap[$k]['max_date'] = $row->max_date;
                 }
@@ -148,6 +151,7 @@ class ProjectConsumptionController extends Controller
             $p->decimal_totals = $decimalTotals;
             $p->decimal_string = format_unit_breakdown($decimalTotals);
             $p->total_trans = (int) ($pData['total_trans'] ?? 0);
+            $p->total_cost = (float) ($pData['total_cost'] ?? 0);
             $p->last_date = $pData['max_date'] ?? null;
             $p->formatted_qty = format_unit_breakdown($allUnitTotals);
             $p->sort_metric = $discreteQty + array_sum($decimalTotals);
@@ -199,14 +203,21 @@ class ProjectConsumptionController extends Controller
 
         $overallRows = $overallQuery
             ->leftJoin('items', 'material_outs.item_id', '=', 'items.id')
-            ->select('material_outs.quantity', DB::raw("UPPER(TRIM(COALESCE(material_outs.unit, items.unit, 'PCS'))) as item_unit"))
+            ->select(
+                'material_outs.quantity',
+                'items.unit_price',
+                DB::raw("UPPER(TRIM(COALESCE(material_outs.unit, items.unit, 'PCS'))) as item_unit")
+            )
             ->get();
 
         $overallDiscreteQty = 0;
         $overallDecimalTotals = [];
+        $overallTotalCost = 0;
         foreach ($overallRows as $or) {
             $u = $or->item_unit;
             $q = (float) $or->quantity;
+            $price = (float) ($or->unit_price ?? 0);
+            $overallTotalCost += ($q * $price);
             if (is_decimal_unit($u)) {
                 $overallDecimalTotals[$u] = ($overallDecimalTotals[$u] ?? 0) + $q;
             } else {
@@ -229,6 +240,9 @@ class ProjectConsumptionController extends Controller
         $defaultSuggestions = collect(['Workshop 1', 'Workshop 2']);
         $allLocationSuggestions = $fabricationLocations->merge($defaultSuggestions)->unique()->values();
 
+        $currentUser = \Illuminate\Support\Facades\Auth::user();
+        $canViewPrices = $currentUser && $currentUser->canViewPrices();
+
         return view('pages.projects.index', [
             'title' => 'Rekapitulasi Penyerapan Material per Project',
             'projects' => $paginatedProjects,
@@ -241,6 +255,8 @@ class ProjectConsumptionController extends Controller
             'totalOverallQty' => $overallDiscreteQty,
             'overallDiscreteQty' => $overallDiscreteQty,
             'overallDecimalString' => $overallDecimalString,
+            'overallTotalCost' => $overallTotalCost,
+            'canViewPrices' => $canViewPrices,
             'totalOverallProjects' => $totalOverallProjects,
             'ongoingProjectsCount' => $ongoingProjectsCount,
             'completedProjectsCount' => $completedProjectsCount,

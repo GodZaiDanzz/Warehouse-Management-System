@@ -1,5 +1,9 @@
 @extends('layouts.app')
 
+@php
+    $canViewPrices = $canViewPrices ?? (auth()->user() && auth()->user()->canViewPrices());
+@endphp
+
 @section('content')
 <div class="p-4 sm:p-6 space-y-6" x-data="{ openAddMaterialModal: false, openEditModal: false, selectedUnit: 'PCS' }">
     <!-- Header -->
@@ -68,6 +72,27 @@
                         {{ $project->code ?: '-' }}
                     </p>
                 </div>
+                <div class="rounded-xl bg-gray-50 dark:bg-gray-800/50 p-3 border border-gray-100 dark:border-gray-800">
+                    <span class="text-gray-500 dark:text-gray-400 font-semibold block text-[11px] uppercase tracking-wider">Tanggal Mulai</span>
+                    <p class="font-mono font-extrabold text-gray-900 dark:text-white mt-1 flex items-center gap-1.5 text-sm">
+                        <svg class="w-4 h-4 text-brand-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+                        <span>{{ $project->start_date ? format_date($project->start_date) : 'Belum diatur' }}</span>
+                    </p>
+                </div>
+                <div class="rounded-xl bg-gray-50 dark:bg-gray-800/50 p-3 border border-gray-100 dark:border-gray-800">
+                    <span class="text-gray-500 dark:text-gray-400 font-semibold block text-[11px] uppercase tracking-wider">
+                        {{ $project->status === 'Completed' ? 'Tanggal Selesai' : 'Target / Tanggal Selesai' }}
+                    </span>
+                    <p class="font-mono font-extrabold {{ $project->status === 'Completed' ? 'text-emerald-600 dark:text-emerald-400' : 'text-gray-900 dark:text-white' }} mt-1 flex items-center gap-1.5 text-sm">
+                        @if($project->status === 'Completed')
+                            <svg class="w-4 h-4 text-emerald-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/></svg>
+                            <span>{{ $project->end_date ? format_date($project->end_date) : 'Selesai' }}</span>
+                        @else
+                            <svg class="w-4 h-4 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+                            <span>{{ $project->end_date ? format_date($project->end_date) : 'Masih berjalan' }}</span>
+                        @endif
+                    </p>
+                </div>
             </div>
 
             @if($project->description)
@@ -83,7 +108,27 @@
         </div>
 
         <!-- Material Consumption Metrics -->
-        <div class="lg:col-span-5 grid grid-cols-1 sm:grid-cols-3 lg:grid-cols-1 gap-3">
+        <div class="lg:col-span-5 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-1 gap-3">
+            @if($canViewPrices)
+            <div class="rounded-2xl border border-gray-100 bg-white p-4 shadow-xs dark:border-gray-800 dark:bg-gray-900 flex items-center justify-between">
+                <div>
+                    <div class="flex items-center gap-1.5">
+                        <span class="text-xs font-semibold text-gray-500 dark:text-gray-400">Total Nilai Biaya Material</span>
+                        <span class="px-1.5 py-0.5 rounded text-[10px] font-black bg-emerald-50 text-emerald-700 dark:bg-emerald-950/60 dark:text-emerald-300">Finance & Admin</span>
+                    </div>
+                    <div class="flex items-baseline gap-1.5 mt-0.5">
+                        <h4 class="text-2xl font-black text-emerald-700 dark:text-emerald-400 font-mono">Rp {{ number_format($summary['total_cost'] ?? 0, 0, ',', '.') }}</h4>
+                    </div>
+                    <p class="text-[11px] text-gray-400 mt-0.5">Total valuasi penyerapan riil</p>
+                </div>
+                <div class="flex h-10 w-10 items-center justify-center rounded-xl bg-emerald-50 text-emerald-600 dark:bg-emerald-950/40 dark:text-emerald-400">
+                    <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                </div>
+            </div>
+            @endif
+
             <div class="rounded-2xl border border-gray-100 bg-white p-4 shadow-xs dark:border-gray-800 dark:bg-gray-900 flex items-center justify-between">
                 <div>
                     <span class="text-xs font-semibold text-gray-500 dark:text-gray-400">Total Material Terpakai</span>
@@ -154,6 +199,13 @@
                                 {{ $topSub->item->name ?? '-' }}
                             </h4>
                             <span class="text-[10px] text-gray-500 dark:text-gray-400">{{ $topSub->total_trans }}x Transaksi</span>
+                            @if($canViewPrices)
+                                <div class="mt-1">
+                                    <span class="text-[11px] font-bold text-emerald-700 dark:text-emerald-300 font-mono">
+                                        Rp {{ number_format(($topSub->total_qty ?? 0) * ($topSub->item->unit_price ?? 0), 0, ',', '.') }}
+                                    </span>
+                                </div>
+                            @endif
                         </div>
                         <div class="text-right shrink-0">
                             <span class="text-lg font-black text-rose-600 dark:text-rose-400 font-mono">-{{ format_unit_quantity($topSub->total_qty, $topSub->unit) }}</span>
@@ -172,6 +224,10 @@
                             <th class="px-4 py-2.5 border-r border-gray-200 dark:border-gray-700">NAMA BARANG</th>
                             <th class="px-4 py-2.5 text-center border-r border-gray-200 dark:border-gray-700">SUBTOTAL QTY TERPAKAI</th>
                             <th class="px-4 py-2.5 text-center border-r border-gray-200 dark:border-gray-700">SATUAN</th>
+                            @if($canViewPrices)
+                                <th class="px-4 py-2.5 text-center border-r border-gray-200 dark:border-gray-700">HARGA SATUAN</th>
+                                <th class="px-4 py-2.5 text-center border-r border-gray-200 dark:border-gray-700">TOTAL BIAYA</th>
+                            @endif
                             <th class="px-4 py-2.5 text-center border-r border-gray-200 dark:border-gray-700">FREKUENSI TRANSAKSI</th>
                             <th class="px-4 py-2.5 text-center">PENGGUNAAN TERAKHIR</th>
                         </tr>
@@ -187,6 +243,14 @@
                                 <td class="px-4 py-2 text-center font-bold text-gray-700 dark:text-gray-300 border-r border-gray-100 dark:border-gray-800">
                                     {{ strtoupper($sum->unit) }}
                                 </td>
+                                @if($canViewPrices)
+                                    <td class="px-4 py-2 text-right font-mono font-bold text-gray-700 dark:text-gray-300 border-r border-gray-100 dark:border-gray-800">
+                                        Rp {{ number_format($sum->item->unit_price ?? 0, 0, ',', '.') }}
+                                    </td>
+                                    <td class="px-4 py-2 text-right font-mono font-black text-emerald-700 dark:text-emerald-400 border-r border-gray-100 dark:border-gray-800">
+                                        Rp {{ number_format(($sum->total_qty ?? 0) * ($sum->item->unit_price ?? 0), 0, ',', '.') }}
+                                    </td>
+                                @endif
                                 <td class="px-4 py-2 text-center text-gray-700 dark:text-gray-300 border-r border-gray-100 dark:border-gray-800">
                                     <span class="rounded-lg bg-gray-100 dark:bg-gray-800 px-2.5 py-0.5 font-semibold text-gray-800 dark:text-gray-200">
                                         {{ number_format($sum->total_trans) }}x Transaksi
@@ -198,6 +262,18 @@
                             </tr>
                         @endforeach
                     </tbody>
+                    @if($canViewPrices)
+                    <tfoot class="border-t-2 border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800/60 font-bold text-xs">
+                        <tr>
+                            <td colspan="4" class="px-4 py-2.5 text-right uppercase tracking-wider text-gray-600 dark:text-gray-300">
+                                Total Akumulasi Nilai Material:
+                            </td>
+                            <td colspan="4" class="px-4 py-2.5 text-left font-mono font-black text-emerald-700 dark:text-emerald-400 text-sm">
+                                Rp {{ number_format($summary['total_cost'] ?? 0, 0, ',', '.') }}
+                            </td>
+                        </tr>
+                    </tfoot>
+                    @endif
                 </table>
             </div>
         @else
@@ -226,6 +302,10 @@
                         <th class="px-4 py-3.5">NAMA BARANG</th>
                         <th class="px-4 py-3.5 text-center">JUMLAH TERPAKAI</th>
                         <th class="px-4 py-3.5 text-center">SATUAN</th>
+                        @if($canViewPrices)
+                            <th class="px-4 py-3.5 text-right">HARGA SATUAN</th>
+                            <th class="px-4 py-3.5 text-right">TOTAL NILAI</th>
+                        @endif
                         <th class="px-4 py-3.5">PIC PENERIMA</th>
                         <th class="px-4 py-3.5">CATATAN</th>
                     </tr>
@@ -240,7 +320,7 @@
                             <td class="px-4 py-3 font-bold text-gray-900 dark:text-white">
                                 {{ $mo->item->name ?? '-' }}
                             </td>
-                            <td class="px-4 py-3 text-center font-bold text-rose-600 dark:text-rose-400">
+                            <td class="px-4 py-3 text-center font-bold text-rose-600 dark:text-rose-400 font-mono">
                                 -{{ format_unit_quantity($mo->quantity, $mo->unit) }}
                             </td>
                             <td class="px-4 py-3 text-center">
@@ -248,6 +328,14 @@
                                     {{ strtoupper($mo->unit) }}
                                 </span>
                             </td>
+                            @if($canViewPrices)
+                                <td class="px-4 py-3 text-right font-mono font-bold text-gray-700 dark:text-gray-300 whitespace-nowrap">
+                                    Rp {{ number_format($mo->item->unit_price ?? 0, 0, ',', '.') }}
+                                </td>
+                                <td class="px-4 py-3 text-right font-mono font-black text-emerald-700 dark:text-emerald-400 whitespace-nowrap">
+                                    Rp {{ number_format(($mo->quantity ?? 0) * ($mo->item->unit_price ?? 0), 0, ',', '.') }}
+                                </td>
+                            @endif
                             <td class="px-4 py-3 text-gray-800 dark:text-gray-200">
                                 <span class="inline-flex items-center gap-1.5 rounded-lg bg-gray-100 px-2.5 py-1 text-xs font-bold text-gray-900 dark:bg-gray-800 dark:text-white border border-gray-300 dark:border-gray-700">
                                     <svg class="h-3.5 w-3.5 text-gray-700 dark:text-gray-300" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/></svg>
@@ -260,7 +348,7 @@
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="7" class="px-4 py-8 text-center text-gray-500 dark:text-gray-400">
+                            <td colspan="{{ $canViewPrices ? 9 : 7 }}" class="px-4 py-8 text-center text-gray-500 dark:text-gray-400">
                                 Belum ada material yang dicatat untuk project ini.
                             </td>
                         </tr>
@@ -421,6 +509,22 @@
                             <option value="Planning" {{ $project->status === 'Planning' ? 'selected' : '' }}>Planning (Perencanaan)</option>
                             <option value="On Hold" {{ $project->status === 'On Hold' ? 'selected' : '' }}>On Hold (Ditunda)</option>
                         </select>
+                    </div>
+
+                    <!-- Tanggal Mulai & Tanggal Selesai -->
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                        <div>
+                            <label class="block text-xs font-bold text-gray-700 dark:text-gray-300 mb-1">
+                                Tanggal Mulai <span class="text-xs font-normal text-gray-400">(Opsional)</span>
+                            </label>
+                            <input type="date" name="start_date" value="{{ $project->start_date ? $project->start_date->format('Y-m-d') : '' }}" class="w-full rounded-xl border border-gray-200 bg-gray-50 px-3.5 py-2 text-xs font-medium text-gray-800 outline-none focus:border-brand-500 focus:bg-white dark:border-gray-700 dark:bg-gray-800 dark:text-white cursor-pointer">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold text-gray-700 dark:text-gray-300 mb-1">
+                                Tanggal Selesai <span class="text-xs font-normal text-gray-400">(Opsional)</span>
+                            </label>
+                            <input type="date" name="end_date" value="{{ $project->end_date ? $project->end_date->format('Y-m-d') : '' }}" class="w-full rounded-xl border border-gray-200 bg-gray-50 px-3.5 py-2 text-xs font-medium text-gray-800 outline-none focus:border-brand-500 focus:bg-white dark:border-gray-700 dark:bg-gray-800 dark:text-white cursor-pointer">
+                        </div>
                     </div>
 
                     <!-- Deskripsi -->
