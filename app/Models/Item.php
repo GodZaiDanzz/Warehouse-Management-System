@@ -251,6 +251,95 @@ class Item extends Model
             || str_contains(strtoupper($this->name), 'THINNER');
     }
 
+    public const STORAGE_1 = 'STORAGE 1';
+    public const STORAGE_2 = 'STORAGE 2';
+
+    /**
+     * Check if item is in Raw Material category.
+     */
+    public function isRawMaterial(): bool
+    {
+        if (!$this->relationLoaded('category')) {
+            $this->load('category');
+        }
+        return ($this->category && str_contains(strtolower($this->category->name), 'raw'))
+            || str_starts_with(strtoupper($this->code_item ?? ''), 'RAW')
+            || str_contains(strtolower($this->name), 'raw material');
+    }
+
+    /**
+     * Get designated storage name ('STORAGE 1' or 'STORAGE 2').
+     * STORAGE 2 is designated for Raw Material.
+     * STORAGE 1 is designated for all other materials.
+     */
+    public function getStorageLocationAttribute(): string
+    {
+        if (!empty($this->location)) {
+            $locUpper = strtoupper($this->location);
+            if (str_contains($locUpper, 'STORAGE 2') || str_contains($locUpper, 'GUDANG 2')) {
+                return self::STORAGE_2;
+            }
+            if (str_contains($locUpper, 'STORAGE 1') || str_contains($locUpper, 'GUDANG 1')) {
+                return self::STORAGE_1;
+            }
+        }
+
+        return $this->isRawMaterial() ? self::STORAGE_2 : self::STORAGE_1;
+    }
+
+    /**
+     * Get clean display location with storage and sub-rack info.
+     */
+    public function getDisplayLocationAttribute(): string
+    {
+        $storage = $this->storage_location;
+        if (!empty($this->location)) {
+            $loc = trim($this->location);
+            if (strcasecmp($loc, $storage) === 0) {
+                return $storage;
+            }
+            if (stripos($loc, $storage) === 0) {
+                return $loc;
+            }
+            return "{$storage} ({$loc})";
+        }
+        return $storage;
+    }
+
+    /**
+     * Scope a query to filter by storage ('STORAGE 1' or 'STORAGE 2').
+     */
+    public function scopeInStorage($query, string $storage)
+    {
+        $storage = strtoupper(trim($storage));
+        $rawCatIds = Category::where('name', 'like', '%raw%')->pluck('id')->toArray();
+
+        if ($storage === self::STORAGE_2) {
+            return $query->where(function ($q) use ($rawCatIds) {
+                $q->where('location', 'like', '%STORAGE 2%')
+                  ->orWhere('location', 'like', '%GUDANG 2%')
+                  ->orWhereIn('category_id', $rawCatIds)
+                  ->orWhere('code_item', 'like', 'RAW-%')
+                  ->orWhere('name', 'like', '%raw material%');
+            });
+        } elseif ($storage === self::STORAGE_1) {
+            return $query->where(function ($q) use ($rawCatIds) {
+                $q->where(function ($sub) {
+                    $sub->whereNull('location')
+                        ->orWhere('location', 'not like', '%STORAGE 2%');
+                })->where(function ($sub) use ($rawCatIds) {
+                    $sub->whereNotIn('category_id', $rawCatIds)
+                        ->orWhereNull('category_id');
+                })->where(function ($sub) {
+                    $sub->where('code_item', 'not like', 'RAW-%')
+                        ->orWhereNull('code_item');
+                });
+            });
+        }
+
+        return $query;
+    }
+
     /**
      * Check if item is in Consumable category.
      */

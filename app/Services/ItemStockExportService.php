@@ -82,6 +82,15 @@ class ItemStockExportService
             }
         }
 
+        // 1.1 Resolve Storage Filter (STORAGE 1 vs STORAGE 2)
+        $storageParam = trim((string) $request->get('storage', ''));
+        if (!empty($storageParam)) {
+            $query->inStorage($storageParam);
+            $cleanStorageName = strtoupper($storageParam) === 'STORAGE 2' ? 'STORAGE 2' : 'STORAGE 1';
+            $categoryLabel .= ' (Lokasi: ' . $cleanStorageName . ')';
+            $fileCategorySlug = str_replace(' ', '_', $cleanStorageName) . '_' . $fileCategorySlug;
+        }
+
         // Additional Optional Filters
         if ($request->filled('search')) {
             $s = trim($request->search);
@@ -185,7 +194,7 @@ class ItemStockExportService
             $sheet->setCellValue('B' . $currentRow, $item->code_item ?: '-');
             $sheet->setCellValue('C' . $currentRow, $item->name);
             $sheet->setCellValue('D' . $currentRow, $item->category?->name ?? 'Uncategorized');
-            $sheet->setCellValue('E' . $currentRow, $item->location ?: '-');
+            $sheet->setCellValue('E' . $currentRow, $item->display_location ?: '-');
             $sheet->setCellValue('F' . $currentRow, $stk);
             $sheet->setCellValue('G' . $currentRow, strtoupper($item->unit ?: 'PCS'));
             $sheet->setCellValue('H' . $currentRow, $minStk);

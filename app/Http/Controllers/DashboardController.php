@@ -29,6 +29,8 @@ class DashboardController extends Controller
         }
 
         $totalItems = Item::count();
+        $storage1Count = Item::inStorage(Item::STORAGE_1)->count();
+        $storage2Count = Item::inStorage(Item::STORAGE_2)->count();
         $lowStockCount = Item::whereColumn('stock', '<=', 'min_stock')->count();
         $allItems = Item::select(['id', 'name', 'stock', 'unit', 'category_id', 'manufacturing_date', 'created_at'])->get();
         $totalCategories = Category::count();
@@ -652,6 +654,8 @@ class DashboardController extends Controller
             'chartProjectDiscreteTotals' => $chartProjectDiscreteTotals,
             'chartProjectDecimalTotals' => $chartProjectDecimalTotals,
             'chartProjectFormatted' => $chartProjectFormatted,
+            'storage1Count' => $storage1Count,
+            'storage2Count' => $storage2Count,
         ]);
     }
 }

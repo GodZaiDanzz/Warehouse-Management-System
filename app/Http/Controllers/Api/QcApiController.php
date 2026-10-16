@@ -99,6 +99,8 @@ class QcApiController extends Controller
             'data' => [
                 'inventory' => [
                     'total_items' => $totalItems,
+                    'storage_1_items' => Item::inStorage(Item::STORAGE_1)->count(),
+                    'storage_2_items' => Item::inStorage(Item::STORAGE_2)->count(),
                     'out_of_stock' => $outOfStockCount,
                     'low_stock' => $lowStockCount,
                     'expired_items' => $expiredCount,
@@ -143,6 +145,11 @@ class QcApiController extends Controller
             $query->whereHas('category', function ($q) use ($categoryName) {
                 $q->where('name', 'like', "%{$categoryName}%");
             });
+        }
+
+        // Filter: Gudang Penyimpanan (STORAGE 1 vs STORAGE 2)
+        if ($request->filled('storage')) {
+            $query->inStorage($request->query('storage'));
         }
 
         // Filter: Status Stok
@@ -198,7 +205,9 @@ class QcApiController extends Controller
                 'stock' => $stock,
                 'unit' => $item->unit,
                 'min_stock' => $minStock,
+                'storage' => $item->storage_location,
                 'location' => $item->location,
+                'display_location' => $item->display_location,
                 'manufacturing_date' => $item->manufacturing_date ? $item->manufacturing_date->format('Y-m-d') : null,
                 'expiry_date' => $item->expiry_date ? $item->expiry_date->format('Y-m-d') : null,
                 'is_expired' => $isExpired,

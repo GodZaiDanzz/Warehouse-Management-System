@@ -480,6 +480,14 @@
                                             width="38" height="38"></canvas>
                                     </div>
                                 </div>
+
+                                <!-- Footer: Storage / Lokasi & Tanggal Cetak -->
+                                <div class="flex items-center justify-between text-[8px] text-gray-500 font-medium pt-0.5 border-t border-gray-100">
+                                    <span class="font-bold text-gray-800 truncate max-w-[70%]" title="{{ $label['location'] ?? $label['storage'] ?? 'STORAGE 1' }}">
+                                        Lokasi: {{ $label['location'] ?? $label['storage'] ?? 'STORAGE 1' }}
+                                    </span>
+                                    <span class="text-gray-400 shrink-0">{{ $label['date'] }}</span>
+                                </div>
                             </div>
                         @endforeach
                     </div>

@@ -23,6 +23,7 @@ class ItemTableComponent extends Component
     public $category_id = '';
     public $unit_id = '';
     public $stock_status = '';
+    public $storage_filter = '';
     public $sortField = 'created_at';
     public $sortDirection = 'desc';
     public $perPage = 25;
@@ -54,6 +55,9 @@ class ItemTableComponent extends Component
     public function mount()
     {
         $this->perPage = session('item_per_page', CompanyProfile::getDefaultPerPage());
+        if (request()->has('storage_filter')) {
+            $this->storage_filter = request()->query('storage_filter');
+        }
     }
 
     protected $queryString = [
@@ -61,6 +65,7 @@ class ItemTableComponent extends Component
         'category_id' => ['except' => ''],
         'unit_id' => ['except' => ''],
         'stock_status' => ['except' => ''],
+        'storage_filter' => ['except' => ''],
         'sortField' => ['except' => 'created_at'],
         'sortDirection' => ['except' => 'desc'],
     ];
@@ -85,6 +90,11 @@ class ItemTableComponent extends Component
         $this->resetPage();
     }
 
+    public function updatingStorageFilter()
+    {
+        $this->resetPage();
+    }
+
     public function updatingPerPage()
     {
         $this->resetPage();
@@ -92,7 +102,7 @@ class ItemTableComponent extends Component
 
     public function resetFilters()
     {
-        $this->reset(['search', 'category_id', 'unit_id', 'stock_status']);
+        $this->reset(['search', 'category_id', 'unit_id', 'stock_status', 'storage_filter']);
         $this->resetPage();
     }
 
@@ -463,6 +473,11 @@ class ItemTableComponent extends Component
             $query->whereColumn('stock', '>', 'min_stock');
         }
 
+        // Filter Lokasi Storage (STORAGE 1 vs STORAGE 2)
+        if (!empty($this->storage_filter)) {
+            $query->inStorage($this->storage_filter);
+        }
+
         $query->orderBy($this->sortField, $this->sortDirection);
         if ($this->sortField !== 'id') {
             $query->orderBy('id', $this->sortDirection);
@@ -484,6 +499,10 @@ class ItemTableComponent extends Component
         $criticalTotalCount = (int) ($metrics->critical_count ?? 0);
         $outOfStockCount = (int) ($metrics->out_of_stock_count ?? 0);
         $safeStockCount = max(0, $totalItemsCount - $criticalTotalCount);
+
+        // Storage 1 & Storage 2 Counts
+        $storage1Count = Item::inStorage(Item::STORAGE_1)->count();
+        $storage2Count = Item::inStorage(Item::STORAGE_2)->count();
 
         // Akumulasi Stok Terpisah per Satuan (mencegah pencampuran satuan berbeda seperti KG dengan PCS)
         $stockByUnitsRaw = Item::selectRaw('COALESCE(unit, "PCS") as unit_symbol, COUNT(*) as item_count, SUM(stock) as total_stock')
@@ -531,7 +550,7 @@ class ItemTableComponent extends Component
 
         // Total Nilai Aset Stok Gudang & Filtered Valuation (Hanya dihitung jika user diizinkan melihat harga)
         $canViewPrices = auth()->user() && auth()->user()->canViewPrices();
-        $isFiltered = !empty($this->search) || !empty($this->category_id) || !empty($this->unit_id) || !empty($this->stock_status);
+        $isFiltered = !empty($this->search) || !empty($this->category_id) || !empty($this->unit_id) || !empty($this->stock_status) || !empty($this->storage_filter);
         $totalAssetValue = $canViewPrices ? (float) Item::sum(DB::raw('COALESCE(stock, 0) * COALESCE(unit_price, 0)')) : 0;
         $filteredAssetValue = $canViewPrices 
             ? ($isFiltered 
@@ -551,6 +570,9 @@ class ItemTableComponent extends Component
             'safeStockCount' => $safeStockCount,
             'criticalTotalCount' => $criticalTotalCount,
             'outOfStockCount' => $outOfStockCount,
+            'storage_filter' => $this->storage_filter,
+            'storage1Count' => $storage1Count,
+            'storage2Count' => $storage2Count,
             'stockByUnits' => $stockByUnits,
             'selectedUnitObj' => $selectedUnitObj,
             'selectedUnitStock' => $selectedUnitStock,

@@ -41,6 +41,8 @@ class ItemBarcodeController extends Controller
                 'code' => $code,
                 'category' => $item->category->name ?? 'Umum',
                 'unit' => $item->unit ?: 'Pcs',
+                'storage' => $item->storage_location,
+                'location' => $item->display_location,
                 'barcode_svg' => $barcodeSvg,
                 'date' => now()->format('d/m/Y'),
             ];
@@ -89,6 +91,8 @@ class ItemBarcodeController extends Controller
                     'code' => $code,
                     'category' => $item->category->name ?? 'Umum',
                     'unit' => $item->unit ?: 'Pcs',
+                    'storage' => $item->storage_location,
+                    'location' => $item->display_location,
                     'barcode_svg' => $barcodeSvg,
                     'date' => now()->format('d/m/Y'),
                 ];

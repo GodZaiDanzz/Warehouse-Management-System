@@ -6,7 +6,7 @@
         openCreateModal: false,
         openEditModal: false,
         openPrModal: false,
-        editItem: { id: null, code_item: '', name: '', category_id: '', unit_id: '', stock: 0, unit: 'PCS', min_stock: 0, unit_price: 0, wholesale_unit: '', conversion_factor: 1, manufacturing_date: '', expiry_date: '' },
+        editItem: { id: null, code_item: '', name: '', category_id: '', unit_id: '', stock: 0, unit: 'PCS', min_stock: 0, unit_price: 0, storage: 'STORAGE 1', location: '', wholesale_unit: '', conversion_factor: 1, manufacturing_date: '', expiry_date: '' },
         prData: {
             document_no: '095/FPBJ/MGI/MEI/IX/2026',
             required_date: '',
@@ -18,8 +18,16 @@
         }
     }"
     @trigger-edit-item.window="
-        editItem = Object.assign({}, $event.detail, {
-            conversion_factor: ($event.detail && parseFloat($event.detail.conversion_factor) > 0) ? parseFloat($event.detail.conversion_factor) : 1
+        const detail = $event.detail || {};
+        let initialStorage = detail.storage || 'STORAGE 1';
+        let initialLoc = detail.location || '';
+        if (!detail.storage) {
+            initialStorage = (detail.category_id == 194 || (detail.code_item && detail.code_item.startsWith('RAW'))) ? 'STORAGE 2' : 'STORAGE 1';
+        }
+        editItem = Object.assign({}, detail, {
+            storage: initialStorage,
+            location: initialLoc,
+            conversion_factor: (detail && parseFloat(detail.conversion_factor) > 0) ? parseFloat(detail.conversion_factor) : 1
         });
         openEditModal = true;
     "
@@ -158,6 +166,26 @@
                             Cat - Thinner
                         </a>
                     </div>
+
+                    <div class="my-1 border-t border-gray-100 dark:border-gray-800"></div>
+
+                    <div class="px-2.5 py-1 text-[11px] font-bold uppercase tracking-wider text-gray-400 dark:text-gray-500">
+                        Lokasi Gudang
+                    </div>
+
+                    <a href="{{ route('items.export', ['storage' => 'STORAGE 1']) }}" class="flex items-center justify-between px-2.5 py-1.5 rounded-xl text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 transition">
+                        <div class="flex items-center gap-2">
+                            <span class="w-2 h-2 rounded-full bg-brand-500"></span>
+                            <span>STORAGE 1 (Consumable, Part, Cat, Gas)</span>
+                        </div>
+                    </a>
+
+                    <a href="{{ route('items.export', ['storage' => 'STORAGE 2']) }}" class="flex items-center justify-between px-2.5 py-1.5 rounded-xl text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 transition">
+                        <div class="flex items-center gap-2">
+                            <span class="w-2 h-2 rounded-full bg-amber-500"></span>
+                            <span>STORAGE 2 (Raw Material)</span>
+                        </div>
+                    </a>
                 </div>
             </div>
         </div>
@@ -221,6 +249,16 @@
                     bulkCategory: '',
                     bulkUnit: 'PCS',
                     bulkMinStock: 5,
+                    singleStorage: 'STORAGE 1',
+                    singleLocation: '',
+                    singleCategoryChanged(e) {
+                        const text = e.target.options[e.target.selectedIndex]?.text?.toLowerCase() || '';
+                        if (text.includes('raw')) {
+                            this.singleStorage = 'STORAGE 2';
+                        } else {
+                            this.singleStorage = 'STORAGE 1';
+                        }
+                    },
                     rows: [
                         { code_item: '', category_id: '', name: '', stock: 0, unit: 'PCS', min_stock: 5, unit_price: 0 },
                         { code_item: '', category_id: '', name: '', stock: 0, unit: 'PCS', min_stock: 5, unit_price: 0 },
@@ -502,12 +540,45 @@
 
                             <div class="space-y-1">
                                 <label class="block text-xs font-bold text-gray-700 dark:text-gray-300">Kategori Barang <span class="text-rose-500">*</span></label>
-                                <select name="category_id" :disabled="activeTab !== 'single'" class="w-full rounded-xl border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 px-3 py-2 text-sm text-gray-900 dark:text-white focus:border-brand-500">
+                                <select name="category_id" :disabled="activeTab !== 'single'" @change="singleCategoryChanged($event)" class="w-full rounded-xl border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 px-3 py-2 text-sm text-gray-900 dark:text-white focus:border-brand-500">
                                     <option value="">Pilih Kategori</option>
                                     @foreach($categories as $cat)
                                         <option value="{{ $cat->id }}">{{ $cat->name }}</option>
                                     @endforeach
                                 </select>
+                            </div>
+
+                            <!-- Lokasi Penyimpanan Gudang (Storage 1 / Storage 2) & Rak Detail -->
+                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 p-3 rounded-xl bg-gray-50 dark:bg-gray-800/40 border border-gray-200 dark:border-gray-700">
+                                <div class="space-y-1.5">
+                                    <label class="block text-xs font-bold text-gray-700 dark:text-gray-300">
+                                        Gudang Penyimpanan <span class="text-rose-500">*</span>
+                                    </label>
+                                    <div class="grid grid-cols-2 gap-2">
+                                        <label class="relative flex items-center justify-center p-2 rounded-lg border cursor-pointer text-xs font-bold transition"
+                                            :class="singleStorage === 'STORAGE 1' ? 'border-brand-500 bg-brand-50 dark:bg-brand-950/40 text-brand-700 dark:text-brand-300 ring-1 ring-brand-500' : 'border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-50'">
+                                            <input type="radio" name="storage" value="STORAGE 1" x-model="singleStorage" :disabled="activeTab !== 'single'" class="sr-only">
+                                            <span>STORAGE 1</span>
+                                        </label>
+                                        <label class="relative flex items-center justify-center p-2 rounded-lg border cursor-pointer text-xs font-bold transition"
+                                            :class="singleStorage === 'STORAGE 2' ? 'border-amber-500 bg-amber-50 dark:bg-amber-950/40 text-amber-700 dark:text-amber-300 ring-1 ring-amber-500' : 'border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-50'">
+                                            <input type="radio" name="storage" value="STORAGE 2" x-model="singleStorage" :disabled="activeTab !== 'single'" class="sr-only">
+                                            <span>STORAGE 2</span>
+                                        </label>
+                                    </div>
+                                    <p class="text-[10px] text-gray-500 dark:text-gray-400">
+                                        STORAGE 2 khusus Raw Material, STORAGE 1 untuk Consumable, Gas, Part, Cat, dll.
+                                    </p>
+                                </div>
+                                <div class="space-y-1.5">
+                                    <label class="block text-xs font-bold text-gray-700 dark:text-gray-300">
+                                        Detail Lokasi / Rak <span class="text-xs font-normal text-gray-400">(Opsional)</span>
+                                    </label>
+                                    <input type="text" name="location" x-model="singleLocation" :disabled="activeTab !== 'single'" placeholder="Contoh: Rak A-02, Baris 3" class="w-full rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 px-3 py-2 text-xs text-gray-900 dark:text-white focus:border-brand-500">
+                                    <p class="text-[10px] text-gray-500 dark:text-gray-400">
+                                        Keterangan nomor rak atau zona dalam gudang.
+                                    </p>
+                                </div>
                             </div>
 
                             <div class="space-y-1">
@@ -795,12 +866,52 @@
 
                         <div class="space-y-1">
                             <label class="block text-xs font-bold text-gray-700 dark:text-gray-300">Kategori Barang <span class="text-rose-500">*</span></label>
-                            <select name="category_id" x-model="editItem.category_id" required class="w-full rounded-xl border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 px-3 py-2 text-sm text-gray-900 dark:text-white focus:border-brand-500">
+                            <select name="category_id" x-model="editItem.category_id" @change="
+                                const text = $event.target.options[$event.target.selectedIndex]?.text?.toLowerCase() || '';
+                                if (text.includes('raw')) {
+                                    editItem.storage = 'STORAGE 2';
+                                } else {
+                                    editItem.storage = 'STORAGE 1';
+                                }
+                            " required class="w-full rounded-xl border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 px-3 py-2 text-sm text-gray-900 dark:text-white focus:border-brand-500">
                                 <option value="">Pilih Kategori</option>
                                 @foreach($categories as $cat)
                                     <option value="{{ $cat->id }}">{{ $cat->name }}</option>
                                 @endforeach
                             </select>
+                        </div>
+
+                        <!-- Lokasi Penyimpanan Gudang (Storage 1 / Storage 2) & Rak Detail -->
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 p-3 rounded-xl bg-gray-50 dark:bg-gray-800/40 border border-gray-200 dark:border-gray-700">
+                            <div class="space-y-1.5">
+                                <label class="block text-xs font-bold text-gray-700 dark:text-gray-300">
+                                    Gudang Penyimpanan <span class="text-rose-500">*</span>
+                                </label>
+                                <div class="grid grid-cols-2 gap-2">
+                                    <label class="relative flex items-center justify-center p-2 rounded-lg border cursor-pointer text-xs font-bold transition"
+                                        :class="editItem.storage === 'STORAGE 2' ? 'border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-50' : 'border-brand-500 bg-brand-50 dark:bg-brand-950/40 text-brand-700 dark:text-brand-300 ring-1 ring-brand-500'">
+                                        <input type="radio" name="storage" value="STORAGE 1" x-model="editItem.storage" class="sr-only">
+                                        <span>STORAGE 1</span>
+                                    </label>
+                                    <label class="relative flex items-center justify-center p-2 rounded-lg border cursor-pointer text-xs font-bold transition"
+                                        :class="editItem.storage === 'STORAGE 2' ? 'border-amber-500 bg-amber-50 dark:bg-amber-950/40 text-amber-700 dark:text-amber-300 ring-1 ring-amber-500' : 'border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-50'">
+                                        <input type="radio" name="storage" value="STORAGE 2" x-model="editItem.storage" class="sr-only">
+                                        <span>STORAGE 2</span>
+                                    </label>
+                                </div>
+                                <p class="text-[10px] text-gray-500 dark:text-gray-400">
+                                    STORAGE 2 khusus Raw Material, STORAGE 1 untuk material lainnya.
+                                </p>
+                            </div>
+                            <div class="space-y-1.5">
+                                <label class="block text-xs font-bold text-gray-700 dark:text-gray-300">
+                                    Detail Lokasi / Rak <span class="text-xs font-normal text-gray-400">(Opsional)</span>
+                                </label>
+                                <input type="text" name="location" x-model="editItem.location" placeholder="Contoh: Rak A-02, Baris 3" class="w-full rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 px-3 py-2 text-xs text-gray-900 dark:text-white focus:border-brand-500">
+                                <p class="text-[10px] text-gray-500 dark:text-gray-400">
+                                    Keterangan nomor rak atau zona dalam gudang.
+                                </p>
+                            </div>
                         </div>
 
                         <div class="space-y-1">

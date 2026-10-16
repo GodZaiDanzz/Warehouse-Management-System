@@ -178,6 +178,51 @@
         @endif
     </div>
 
+    <!-- Warehouse Storage Overview (STORAGE 1 vs STORAGE 2) -->
+    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <!-- Storage 1 Card -->
+        <a href="{{ route('items.index', ['storage_filter' => 'STORAGE 1']) }}" 
+            class="group relative overflow-hidden rounded-2xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 p-4.5 shadow-xs hover:border-brand-500 hover:shadow-md transition flex items-center justify-between">
+            <div class="space-y-1">
+                <div class="flex items-center gap-2">
+                    <span class="w-2.5 h-2.5 rounded-full bg-brand-500"></span>
+                    <span class="text-xs font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400">Gudang Utama</span>
+                    <span class="px-2 py-0.5 rounded-md text-[10px] font-black bg-brand-100 text-brand-700 dark:bg-brand-950/60 dark:text-brand-300">STORAGE 1</span>
+                </div>
+                <h4 class="text-2xl font-black text-gray-900 dark:text-white font-mono">
+                    {{ number_format($storage1Count ?? 0) }} <span class="text-xs font-normal text-gray-500">Item</span>
+                </h4>
+                <p class="text-[11px] text-gray-500 dark:text-gray-400">
+                    Consumable, Secondary Part, Gas, Cat, Thinner, dll.
+                </p>
+            </div>
+            <div class="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-brand-50 text-brand-600 dark:bg-brand-950/40 dark:text-brand-400 group-hover:scale-105 transition-transform">
+                <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/></svg>
+            </div>
+        </a>
+
+        <!-- Storage 2 Card -->
+        <a href="{{ route('items.index', ['storage_filter' => 'STORAGE 2']) }}" 
+            class="group relative overflow-hidden rounded-2xl border border-amber-200 dark:border-amber-900/60 bg-white dark:bg-gray-900 p-4.5 shadow-xs hover:border-amber-500 hover:shadow-md transition flex items-center justify-between">
+            <div class="space-y-1">
+                <div class="flex items-center gap-2">
+                    <span class="w-2.5 h-2.5 rounded-full bg-amber-500"></span>
+                    <span class="text-xs font-bold uppercase tracking-wider text-amber-700 dark:text-amber-400">Gudang Bahan Baku</span>
+                    <span class="px-2 py-0.5 rounded-md text-[10px] font-black bg-amber-100 text-amber-800 dark:bg-amber-950/60 dark:text-amber-300">STORAGE 2</span>
+                </div>
+                <h4 class="text-2xl font-black text-amber-600 dark:text-amber-400 font-mono">
+                    {{ number_format($storage2Count ?? 0) }} <span class="text-xs font-normal text-gray-500">Item</span>
+                </h4>
+                <p class="text-[11px] text-gray-500 dark:text-gray-400">
+                    Khusus penyimpanan Raw Material & Bahan Baku Pabrikasi.
+                </p>
+            </div>
+            <div class="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-amber-50 text-amber-600 dark:bg-amber-950/40 dark:text-amber-400 group-hover:scale-105 transition-transform">
+                <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/></svg>
+            </div>
+        </a>
+    </div>
+
     <!-- CHARTS SECTION: LINE CHART & BAR CHARTS -->
     <div class="w-full max-w-full min-w-0 overflow-hidden space-y-6">
         <div class="grid grid-cols-1 gap-6 xl:grid-cols-12">

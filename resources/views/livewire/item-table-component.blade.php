@@ -341,6 +341,33 @@
         $activeCatItem = $catCategories->firstWhere('id', $category_id);
         $isCatActive = !empty($activeCatItem);
     @endphp
+    <!-- Storage Location Switcher Tabs (STORAGE 1 vs STORAGE 2) -->
+    <div class="flex flex-wrap items-center gap-2">
+        <span class="text-[11px] font-bold uppercase tracking-wider text-gray-400 dark:text-gray-500 mr-1 flex items-center gap-1">
+            <svg class="w-3.5 h-3.5 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/></svg>
+            Gudang:
+        </span>
+        <button type="button" wire:click="$set('storage_filter', '')" 
+            class="px-3.5 py-1.5 rounded-xl text-xs font-bold transition cursor-pointer flex items-center gap-1.5 {{ empty($storage_filter) ? 'bg-brand-600 text-white shadow-xs' : 'bg-gray-100 text-gray-700 hover:bg-gray-200 dark:bg-gray-800 dark:text-gray-300' }}">
+            <span>Semua Storage</span>
+            <span class="text-[10px] px-1.5 py-0.2 rounded-full {{ empty($storage_filter) ? 'bg-brand-700 text-white' : 'bg-gray-200 dark:bg-gray-700 text-gray-600 dark:text-gray-300' }}">{{ $totalItemsCount }}</span>
+        </button>
+        <button type="button" wire:click="$set('storage_filter', 'STORAGE 1')" 
+            class="px-3.5 py-1.5 rounded-xl text-xs font-bold transition cursor-pointer flex items-center gap-1.5 {{ $storage_filter === 'STORAGE 1' ? 'bg-slate-700 text-white shadow-xs' : 'bg-slate-100 text-slate-800 hover:bg-slate-200 dark:bg-gray-800 dark:text-gray-300' }}"
+            title="Gudang Utama: Menyimpan Consumable, Secondary Part, Cat, Gas, dan material umum lainnya">
+            <span class="w-2 h-2 rounded-full bg-blue-500"></span>
+            <span>STORAGE 1 (Umum &amp; Part)</span>
+            <span class="text-[10px] px-1.5 py-0.2 rounded-full {{ $storage_filter === 'STORAGE 1' ? 'bg-slate-800 text-white' : 'bg-slate-200 dark:bg-gray-700 text-slate-700 dark:text-gray-300' }}">{{ $storage1Count }}</span>
+        </button>
+        <button type="button" wire:click="$set('storage_filter', 'STORAGE 2')" 
+            class="px-3.5 py-1.5 rounded-xl text-xs font-bold transition cursor-pointer flex items-center gap-1.5 {{ $storage_filter === 'STORAGE 2' ? 'bg-amber-600 text-white shadow-xs' : 'bg-amber-100 text-amber-900 hover:bg-amber-200 dark:bg-amber-950/60 dark:text-amber-300' }}"
+            title="Khusus Bahan Baku Fabrikasi (Raw Material: Besi Plat, Pipa, Siku, Hollow, Round Bar)">
+            <span class="w-2 h-2 rounded-full bg-amber-500"></span>
+            <span>STORAGE 2 (Raw Material)</span>
+            <span class="text-[10px] px-1.5 py-0.2 rounded-full {{ $storage_filter === 'STORAGE 2' ? 'bg-amber-700 text-white' : 'bg-amber-200 dark:bg-amber-900/60 text-amber-900 dark:text-amber-200' }}">{{ $storage2Count }}</span>
+        </button>
+    </div>
+
     <div class="flex flex-wrap items-center gap-2">
         <button type="button" wire:click="$set('category_id', '')" 
             class="px-3.5 py-1.5 rounded-xl text-xs font-bold transition cursor-pointer {{ empty($category_id) ? 'bg-brand-600 text-white shadow-xs' : 'bg-gray-100 text-gray-700 hover:bg-gray-200 dark:bg-gray-800 dark:text-gray-300' }}">
@@ -432,7 +459,7 @@
                     <span>Scan Barcode</span>
                 </button>
 
-                @if(!empty($search) || !empty($category_id) || !empty($unit_id) || !empty($stock_status))
+                @if(!empty($search) || !empty($category_id) || !empty($unit_id) || !empty($stock_status) || !empty($storage_filter))
                     <button type="button" wire:click="resetFilters" 
                         class="inline-flex items-center gap-1.5 px-3.5 py-2.5 rounded-xl text-xs sm:text-sm font-medium text-rose-600 hover:text-rose-700 bg-rose-50 hover:bg-rose-100 dark:text-rose-400 dark:bg-rose-950/40 dark:hover:bg-rose-900/50 border border-rose-200 dark:border-rose-900/60 transition cursor-pointer" 
                         title="Reset Semua Filter">
@@ -446,8 +473,20 @@
         <!-- Baris 2: Filter Data & Pengaturan Densitas Tampilan -->
         <div class="pt-3.5 border-t border-gray-100 dark:border-gray-800/80 flex flex-col lg:flex-row lg:items-center lg:justify-between gap-3">
             
-            <!-- 3 Dropdown Filter Data dalam Grid yang Rapi -->
-            <div class="grid grid-cols-1 sm:grid-cols-3 gap-2.5 flex-1 max-w-3xl">
+            <!-- 4 Dropdown Filter Data dalam Grid yang Rapi -->
+            <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-2.5 flex-1 max-w-4xl">
+                <!-- Filter Storage Dropdown -->
+                <div class="relative">
+                    <select wire:model.live.debounce.150ms="storage_filter" class="w-full appearance-none rounded-xl border border-gray-300 bg-gray-50/80 pl-3.5 pr-8 py-2 text-xs sm:text-sm font-medium text-gray-700 focus:border-brand-500 focus:bg-white focus:outline-none dark:border-gray-700 dark:bg-gray-800 dark:text-gray-200 cursor-pointer transition">
+                        <option value="">Semua Storage</option>
+                        <option value="STORAGE 1">STORAGE 1 (Umum &amp; Part)</option>
+                        <option value="STORAGE 2">STORAGE 2 (Raw Material)</option>
+                    </select>
+                    <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-2.5 text-gray-400">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+                    </div>
+                </div>
+
                 <!-- Filter Kategori Dropdown -->
                 <div class="relative">
                     <select wire:model.live.debounce.150ms="category_id" class="w-full appearance-none rounded-xl border border-gray-300 bg-gray-50/80 pl-3.5 pr-8 py-2 text-xs sm:text-sm font-medium text-gray-700 focus:border-brand-500 focus:bg-white focus:outline-none dark:border-gray-700 dark:bg-gray-800 dark:text-gray-200 cursor-pointer transition">
@@ -552,6 +591,8 @@
                         'stock' => (float)$item->stock,
                         'unit' => $item->unit ?: 'Pcs',
                         'min_stock' => (float)$item->min_stock,
+                        'location' => $item->location ?? '',
+                        'storage' => $item->storage_location,
                         'unit_price' => $canViewPrices ? (float)($item->unit_price ?? 0) : 0,
                         'wholesale_unit' => $item->wholesale_unit ?? '',
                         'conversion_factor' => (float)($item->conversion_factor ?? 1),
@@ -560,7 +601,7 @@
                     ], JSON_UNESCAPED_UNICODE);
                 @endphp
                 <div wire:key="item-mobile-card-{{ $item->id }}" class="rounded-2xl border p-4 transition shadow-xs {{ $isLow || $isExpired ? 'border-rose-300 bg-rose-50/40 dark:border-rose-900/60 dark:bg-rose-950/20' : ($isExpiringSoon ? 'border-amber-300 bg-amber-50/40 dark:border-amber-900/60 dark:bg-amber-950/20' : 'border-gray-200 bg-white dark:border-gray-800 dark:bg-gray-900') }}">
-                    <!-- Card Header: Checkbox + Name & Code + Category -->
+                    <!-- Card Header: Checkbox + Name & Code + Category & Storage -->
                     <div class="flex items-start justify-between gap-2.5">
                         <div class="flex items-start gap-3 min-w-0">
                             <div class="pt-0.5 shrink-0">
@@ -585,10 +626,21 @@
                             </div>
                         </div>
 
-                        <!-- Category Pill -->
-                        <span class="shrink-0 inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-gray-100 text-gray-700 border border-gray-200 dark:bg-gray-800 dark:text-gray-300 dark:border-gray-700">
-                            {{ $item->category->name ?? '-' }}
-                        </span>
+                        <!-- Category & Storage Pills -->
+                        <div class="shrink-0 flex flex-col items-end gap-1">
+                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-gray-100 text-gray-700 border border-gray-200 dark:bg-gray-800 dark:text-gray-300 dark:border-gray-700">
+                                {{ $item->category->name ?? '-' }}
+                            </span>
+                            @if($item->storage_location === \App\Models\Item::STORAGE_2)
+                                <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[9.5px] font-black bg-amber-100 text-amber-900 border border-amber-300 dark:bg-amber-950/70 dark:text-amber-300 dark:border-amber-800" title="{{ $item->display_location }}">
+                                    STORAGE 2
+                                </span>
+                            @else
+                                <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[9.5px] font-black bg-slate-100 text-slate-800 border border-slate-300 dark:bg-gray-800 dark:text-gray-300 dark:border-gray-700" title="{{ $item->display_location }}">
+                                    STORAGE 1
+                                </span>
+                            @endif
+                        </div>
                     </div>
 
                     <!-- Card Body: Stock Numbers & Progress Bar -->
@@ -797,6 +849,8 @@
                                 'stock' => (float)$item->stock,
                                 'unit' => $item->unit ?: 'Pcs',
                                 'min_stock' => (float)$item->min_stock,
+                                'location' => $item->location ?? '',
+                                'storage' => $item->storage_location,
                                 'unit_price' => $canViewPrices ? (float)($item->unit_price ?? 0) : 0,
                                 'wholesale_unit' => $item->wholesale_unit ?? '',
                                 'conversion_factor' => (float)($item->conversion_factor ?? 1),
@@ -836,9 +890,27 @@
                                 </div>
                             </td>
                             <td class="whitespace-nowrap px-4 py-4 text-center">
-                                <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-bold bg-gray-100 text-gray-800 border border-gray-200 dark:bg-gray-800 dark:text-gray-200 dark:border-gray-700">
-                                    {{ $item->category->name ?? '-' }}
-                                </span>
+                                <div class="flex flex-col items-center gap-1.5">
+                                    <span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-bold bg-gray-100 text-gray-800 border border-gray-200 dark:bg-gray-800 dark:text-gray-200 dark:border-gray-700">
+                                        {{ $item->category->name ?? '-' }}
+                                    </span>
+                                    @if($item->storage_location === \App\Models\Item::STORAGE_2)
+                                        <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-black bg-amber-100 text-amber-900 border border-amber-300 dark:bg-amber-950/70 dark:text-amber-300 dark:border-amber-800" title="{{ $item->display_location }}">
+                                            <svg class="w-3 h-3 text-amber-600 dark:text-amber-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/></svg>
+                                            STORAGE 2
+                                        </span>
+                                    @else
+                                        <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-black bg-slate-100 text-slate-800 border border-slate-300 dark:bg-gray-800 dark:text-gray-300 dark:border-gray-700" title="{{ $item->display_location }}">
+                                            <svg class="w-3 h-3 text-slate-500 dark:text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z"/></svg>
+                                            STORAGE 1
+                                        </span>
+                                    @endif
+                                    @if(!empty($item->location) && strcasecmp(trim($item->location), $item->storage_location) !== 0)
+                                        <span class="text-[10px] text-gray-500 dark:text-gray-400 font-mono">
+                                            {{ $item->location }}
+                                        </span>
+                                    @endif
+                                </div>
                             </td>
                             <td class="whitespace-nowrap px-4 py-3.5 font-bold text-gray-900 dark:text-white text-center">
                                 <div class="space-y-1 flex flex-col items-center justify-center">
@@ -1275,11 +1347,21 @@
                                     <span class="text-xs font-bold text-gray-500 uppercase">{{ $scannedItem->unit ?: 'Pcs' }}</span>
                                 </div>
                             </div>
-                            @if($scannedItem->location)
-                                <div class="text-[11px] text-gray-500 dark:text-gray-400 flex items-center gap-1 pt-1 border-t border-brand-100 dark:border-brand-900/40">
-                                    <span class="flex items-center gap-1"><svg class="w-3.5 h-3.5 text-brand-600 dark:text-brand-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/></svg>Lokasi Rak: <strong>{{ $scannedItem->location }}</strong></span>
-                                </div>
-                            @endif
+                            <div class="text-[11px] text-gray-600 dark:text-gray-300 flex items-center justify-between gap-2 pt-1 border-t border-brand-100 dark:border-brand-900/40">
+                                <span class="flex items-center gap-1">
+                                    <svg class="w-3.5 h-3.5 text-brand-600 dark:text-brand-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+                                    Lokasi: <strong class="text-brand-700 dark:text-brand-300">{{ $scannedItem->display_location }}</strong>
+                                </span>
+                                @if($scannedItem->storage_location === \App\Models\Item::STORAGE_2)
+                                    <span class="px-2 py-0.5 rounded text-[10px] font-black bg-amber-100 text-amber-900 dark:bg-amber-950 dark:text-amber-300">
+                                        STORAGE 2 (Raw Material)
+                                    </span>
+                                @else
+                                    <span class="px-2 py-0.5 rounded text-[10px] font-black bg-slate-100 text-slate-800 dark:bg-gray-800 dark:text-gray-300">
+                                        STORAGE 1 (Umum)
+                                    </span>
+                                @endif
+                            </div>
                         </div>
 
                         <!-- STATE 1: MENU PILIHAN (Material Masuk / Keluar) -->

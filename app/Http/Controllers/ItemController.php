@@ -194,6 +194,7 @@ class ItemController extends Controller
             'unit_id' => 'required_without:unit|nullable|exists:units,id',
             'unit' => 'required_without:unit_id|nullable|string|max:50',
             'min_stock' => 'required|numeric|min:0',
+            'storage' => 'nullable|string|max:50',
             'location' => 'nullable|string|max:255',
             'wholesale_unit' => 'nullable|string|max:50',
             'conversion_factor' => 'nullable|numeric|min:0.001',
@@ -226,6 +227,27 @@ class ItemController extends Controller
                 $validated['unit'] = $unitObj->symbol;
             }
         }
+
+        $storageInput = trim($request->input('storage', ''));
+        $locationDetail = trim($request->input('location', ''));
+
+        if (!empty($storageInput)) {
+            $storageName = strtoupper($storageInput) === 'STORAGE 2' ? 'STORAGE 2' : 'STORAGE 1';
+            if (!empty($locationDetail)) {
+                if (!str_contains(strtoupper($locationDetail), 'STORAGE')) {
+                    $validated['location'] = "{$storageName} ({$locationDetail})";
+                } else {
+                    $validated['location'] = $locationDetail;
+                }
+            } else {
+                $validated['location'] = $storageName;
+            }
+        } elseif (!empty($locationDetail)) {
+            $validated['location'] = $locationDetail;
+        } else {
+            $validated['location'] = null;
+        }
+        unset($validated['storage']);
 
         $cleanName = trim($validated['name']);
         $existsInDb = Item::whereRaw('LOWER(TRIM(name)) = ?', [strtolower($cleanName)])->exists();
@@ -302,6 +324,7 @@ class ItemController extends Controller
             'unit_id' => 'required_without:unit|nullable|exists:units,id',
             'unit' => 'required_without:unit_id|nullable|string|max:50',
             'min_stock' => 'required|numeric|min:0',
+            'storage' => 'nullable|string|max:50',
             'location' => 'nullable|string|max:255',
             'wholesale_unit' => 'nullable|string|max:50',
             'conversion_factor' => 'nullable|numeric|min:0.001',
@@ -333,6 +356,29 @@ class ItemController extends Controller
                 $validated['unit'] = $unitObj->symbol;
             }
         }
+
+        $storageInput = trim($request->input('storage', ''));
+        $locationDetail = trim($request->input('location', ''));
+
+        if (!empty($storageInput)) {
+            $storageName = strtoupper($storageInput) === 'STORAGE 2' ? 'STORAGE 2' : 'STORAGE 1';
+            if (!empty($locationDetail)) {
+                $cleanDetail = preg_replace('/^STORAGE\s+[12]\s*(\((.*?)\)|[-:]\s*(.*?))?$/i', '$2$3', $locationDetail);
+                $cleanDetail = trim($cleanDetail);
+                if (!empty($cleanDetail) && !str_contains(strtoupper($cleanDetail), 'STORAGE')) {
+                    $validated['location'] = "{$storageName} ({$cleanDetail})";
+                } else {
+                    $validated['location'] = $storageName;
+                }
+            } else {
+                $validated['location'] = $storageName;
+            }
+        } elseif (!empty($locationDetail)) {
+            $validated['location'] = $locationDetail;
+        } else {
+            $validated['location'] = null;
+        }
+        unset($validated['storage']);
 
         $cleanName = trim($validated['name']);
         $existsInDb = Item::where('id', '!=', $item->id)
