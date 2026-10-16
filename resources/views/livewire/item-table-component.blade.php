@@ -3,8 +3,13 @@
     @unlock-body-scroll.window="document.body.classList.remove('overflow-hidden'); document.documentElement.classList.remove('overflow-hidden')"
     @reopen-scanner.window="openScanner()"
     @play-success-sound.window="if (typeof window.playSuccessSound === 'function') window.playSuccessSound()">
+@php
+    $itemAuthUser = auth()->user();
+    $canManageWarehouse = $itemAuthUser ? $itemAuthUser->canManageWarehouse() : false;
+    $canViewPrices = $itemAuthUser ? $itemAuthUser->canViewPrices() : false;
+@endphp
     <!-- PPIC / Warehouse Inventory Mini Dashboard KPI Cards -->
-    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4">
+    <div class="grid grid-cols-1 sm:grid-cols-2 {{ $canViewPrices ? 'lg:grid-cols-3 xl:grid-cols-5' : 'lg:grid-cols-2 xl:grid-cols-4' }} gap-4">
         <!-- Card 1: Stok Kritis / Re-Order Point -->
         <div wire:click="$set('stock_status', '{{ $stock_status === 'low' ? '' : 'low' }}')" 
             class="relative overflow-hidden rounded-2xl border p-4.5 transition cursor-pointer shadow-xs {{ $stock_status === 'low' ? 'border-rose-500 bg-rose-50/90 dark:bg-rose-950/40 ring-2 ring-rose-500/20' : 'border-gray-200 bg-white hover:border-rose-300 dark:border-gray-800 dark:bg-gray-900 dark:hover:border-rose-800' }}">
@@ -230,7 +235,8 @@
             @endif
         </div>
 
-        <!-- Card 5: Total Nilai Aset Stok Gudang (Valuasi Inventory) -->
+        <!-- Card 5: Total Nilai Aset Stok Gudang (Valuasi Inventory - Khusus Web Admin & Finance) -->
+        @if($canViewPrices)
         <div class="relative overflow-hidden rounded-2xl border border-gray-200 bg-white p-4.5 shadow-xs dark:border-gray-800 dark:bg-gray-900 transition flex flex-col justify-between">
             <div>
                 <div class="flex items-center justify-between">
@@ -263,6 +269,7 @@
                 @endif
             </div>
         </div>
+        @endif
     </div>
 
     <!-- PPIC Inventory Alert Smart Banner -->
@@ -545,7 +552,7 @@
                         'stock' => (float)$item->stock,
                         'unit' => $item->unit ?: 'Pcs',
                         'min_stock' => (float)$item->min_stock,
-                        'unit_price' => (float)($item->unit_price ?? 0),
+                        'unit_price' => $canViewPrices ? (float)($item->unit_price ?? 0) : 0,
                         'wholesale_unit' => $item->wholesale_unit ?? '',
                         'conversion_factor' => (float)($item->conversion_factor ?? 1),
                         'manufacturing_date' => $item->manufacturing_date ? \Carbon\Carbon::parse($item->manufacturing_date)->format('Y-m-d') : '',
@@ -620,7 +627,8 @@
                             </div>
                         @endif
 
-                        <!-- Harga Satuan & Nilai Aset Stok -->
+                        <!-- Harga Satuan & Nilai Aset Stok (Khusus Web Admin & Finance) -->
+                        @if($canViewPrices)
                         <div class="grid grid-cols-2 gap-2 pt-2 border-t border-gray-100 dark:border-gray-800/80 text-xs">
                             <div>
                                 <span class="text-[10px] text-gray-400 block uppercase font-bold tracking-wider">Harga Satuan</span>
@@ -645,6 +653,7 @@
                                 </span>
                             </div>
                         </div>
+                        @endif
                     </div>
 
                     <!-- Card Footer: Status & Actions -->
@@ -756,10 +765,12 @@
                             @if($sortField === 'stock') <span>{{ $sortDirection === 'asc' ? '↑' : '↓' }}</span> @endif
                         </th>
                         <th class="px-4 py-4 font-semibold text-center">Min. Stok</th>
+                        @if($canViewPrices)
                         <th class="px-5 py-4 font-semibold text-right cursor-pointer select-none" wire:click="sortBy('unit_price')">
                             Nilai Aset &amp; Harga
                             @if($sortField === 'unit_price') <span>{{ $sortDirection === 'asc' ? '↑' : '↓' }}</span> @endif
                         </th>
+                        @endif
                         <th class="px-4 py-4 font-semibold text-center select-none cursor-pointer" wire:click="sortBy('updated_at')">
                             Last Update
                             @if($sortField === 'updated_at') <span>{{ $sortDirection === 'asc' ? '↑' : '↓' }}</span> @endif
@@ -786,7 +797,7 @@
                                 'stock' => (float)$item->stock,
                                 'unit' => $item->unit ?: 'Pcs',
                                 'min_stock' => (float)$item->min_stock,
-                                'unit_price' => (float)($item->unit_price ?? 0),
+                                'unit_price' => $canViewPrices ? (float)($item->unit_price ?? 0) : 0,
                                 'wholesale_unit' => $item->wholesale_unit ?? '',
                                 'conversion_factor' => (float)($item->conversion_factor ?? 1),
                                 'manufacturing_date' => $item->manufacturing_date ? \Carbon\Carbon::parse($item->manufacturing_date)->format('Y-m-d') : '',
@@ -876,6 +887,7 @@
                                     </span>
                                 </div>
                             </td>
+                            @if($canViewPrices)
                             <td class="whitespace-nowrap px-5 py-3.5 text-right font-mono text-xs">
                                 @php
                                     $unitPrice = (float) $item->unit_price;
@@ -908,6 +920,7 @@
                                     </div>
                                 </div>
                             </td>
+                            @endif
                             <td class="whitespace-nowrap px-4 py-4 text-center">
                                 @if($item->updated_at)
                                     <div class="inline-flex flex-col items-center justify-center px-2.5 py-1 rounded-lg bg-gray-100 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 shadow-2xs">
@@ -983,7 +996,7 @@
                     @empty
                         <tr>
                             @php
-                                $totalCols = 7 + ($canManageWarehouse ? 1 : 0);
+                                $totalCols = 7 + ($canViewPrices ? 1 : 0) + ($canManageWarehouse ? 1 : 0);
                                 $hasActiveFilters = !empty($search) || !empty($category_id) || !empty($unit_id) || !empty($stock_status);
                             @endphp
                             <td colspan="{{ $totalCols }}" class="px-6 py-14 text-center">

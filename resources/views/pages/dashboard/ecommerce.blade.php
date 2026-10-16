@@ -67,8 +67,12 @@
         </div>
     @endif
 
+    @php
+        $dashAuthUser = auth()->user();
+        $canViewPrices = $dashAuthUser && $dashAuthUser->canViewPrices();
+    @endphp
     <!-- Metric Cards Grid -->
-    <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 md:gap-6">
+    <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 {{ $canViewPrices ? 'lg:grid-cols-3 xl:grid-cols-5' : 'lg:grid-cols-2 xl:grid-cols-4' }} md:gap-6">
         <!-- Metric 1: Total Jenis Barang -->
         <div class="rounded-2xl border border-gray-200 bg-white p-5 dark:border-gray-800 dark:bg-gray-900 shadow-sm min-w-0">
             <div class="flex items-center justify-between">
@@ -151,7 +155,8 @@
             <p class="mt-4 text-xs text-gray-500 dark:text-gray-400 truncate">Klasifikasi sektor material EPC & Energi</p>
         </div>
 
-        <!-- Metric 5: Nilai Aset Persediaan (Valuasi Gudang) -->
+        <!-- Metric 5: Nilai Aset Persediaan (Valuasi Gudang - Khusus Web Admin & Finance) -->
+        @if($canViewPrices)
         <div class="rounded-2xl border border-gray-200 bg-white p-5 dark:border-gray-800 dark:bg-gray-900 shadow-sm min-w-0">
             <div class="flex items-center justify-between">
                 <div class="min-w-0 pr-1">
@@ -170,6 +175,7 @@
                 {{ number_format($pricedItemsCount ?? 0) }} dari {{ number_format($totalItems ?? 0) }} item berharga beli
             </p>
         </div>
+        @endif
     </div>
 
     <!-- CHARTS SECTION: LINE CHART & BAR CHARTS -->

@@ -69,7 +69,7 @@ class ItemController extends Controller
                         'location' => trim($row['location'] ?? ''),
                         'stock' => ($stockStr !== null && is_numeric($stockStr)) ? max(0, (float) $stockStr) : 0,
                         'unit' => trim($row['unit'] ?? '') ?: 'Pcs',
-                        'unit_price' => ($unitPriceStr !== null && is_numeric($unitPriceStr)) ? max(0, (float) $unitPriceStr) : 0,
+                        'unit_price' => (auth()->user()?->canViewPrices() && $unitPriceStr !== null && is_numeric($unitPriceStr)) ? max(0, (float) $unitPriceStr) : 0,
                         'min_stock' => ($minStockStr !== null && is_numeric($minStockStr)) ? max(0, (float) $minStockStr) : 20,
                         'manufacturing_date' => !empty($row['manufacturing_date']) ? $row['manufacturing_date'] : null,
                         'expiry_date' => !empty($row['expiry_date']) ? $row['expiry_date'] : null,
@@ -236,8 +236,12 @@ class ItemController extends Controller
         if (empty($validated['conversion_factor']) || (float)$validated['conversion_factor'] <= 0) {
             $validated['conversion_factor'] = 1;
         }
-        if (!isset($validated['unit_price']) || $validated['unit_price'] === null || $validated['unit_price'] === '') {
+        if (!auth()->user()?->canViewPrices()) {
             $validated['unit_price'] = 0;
+        } else {
+            if (!isset($validated['unit_price']) || $validated['unit_price'] === null || $validated['unit_price'] === '') {
+                $validated['unit_price'] = 0;
+            }
         }
         if (empty($validated['wholesale_unit'])) {
             $validated['wholesale_unit'] = null;
@@ -341,8 +345,13 @@ class ItemController extends Controller
         if (empty($validated['conversion_factor']) || (float)$validated['conversion_factor'] <= 0) {
             $validated['conversion_factor'] = 1;
         }
-        if (!isset($validated['unit_price']) || $validated['unit_price'] === null || $validated['unit_price'] === '') {
-            $validated['unit_price'] = 0;
+        if (!auth()->user()?->canViewPrices()) {
+            // Keep existing unit_price untouched so editing item details does not wipe existing price
+            unset($validated['unit_price']);
+        } else {
+            if (!isset($validated['unit_price']) || $validated['unit_price'] === null || $validated['unit_price'] === '') {
+                $validated['unit_price'] = 0;
+            }
         }
         if (empty($validated['wholesale_unit'])) {
             $validated['wholesale_unit'] = null;

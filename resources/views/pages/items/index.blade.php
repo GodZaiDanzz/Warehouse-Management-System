@@ -64,6 +64,7 @@
     @php
         $currentUser = auth()->user();
         $canManage = $currentUser && $currentUser->canManageWarehouse();
+        $canViewPrices = $currentUser && $currentUser->canViewPrices();
     @endphp
     <div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
@@ -87,7 +88,7 @@
             @else
                 <div class="inline-flex items-center gap-2 px-3.5 py-2 rounded-xl bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-200 border border-gray-200 dark:border-gray-700 text-xs font-bold shadow-2xs">
                     <span class="w-2 h-2 rounded-full bg-gray-500"></span>
-                    Akses {{ $currentUser && $currentUser->isPpic() ? 'PPIC' : ($currentUser && $currentUser->isQc() ? 'QC' : 'Pengguna') }}: Mode Baca (Hanya Melihat Ketersediaan Stok)
+                    Akses {{ $currentUser && $currentUser->isPpic() ? 'PPIC' : ($currentUser && $currentUser->isQc() ? 'QC' : ($currentUser && $currentUser->isFinance() ? 'Finance' : 'Pengguna')) }}: Mode Baca (Hanya Melihat Ketersediaan Stok)
                 </div>
             @endif
 
@@ -392,7 +393,9 @@
                                             <th class="px-3 py-3 w-20 text-center">Stok Awal</th>
                                             <th class="px-3 py-3 w-32 min-w-[120px] text-center">Satuan</th>
                                             <th class="px-3 py-3 w-20 text-center">Stok Min</th>
+                                            @if($canViewPrices)
                                             <th class="px-3 py-3 w-32 text-right">Harga Beli (Rp)</th>
+                                            @endif
                                             <th class="px-2 py-3 w-12 text-center">Aksi</th>
                                         </tr>
                                     </thead>
@@ -457,6 +460,7 @@
                                                         step="any"
                                                         class="w-full rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 px-2 py-1.5 text-center font-bold text-xs text-gray-900 dark:text-white outline-none focus:border-brand-500">
                                                 </td>
+                                                @if($canViewPrices)
                                                 <td class="px-2 py-2 text-right w-32">
                                                     <input type="number" 
                                                         :name="'items[' + index + '][unit_price]'" 
@@ -467,6 +471,7 @@
                                                         placeholder="0" 
                                                         class="w-full rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 px-2 py-1.5 text-right font-mono text-xs text-gray-900 dark:text-white outline-none focus:border-brand-500">
                                                 </td>
+                                                @endif
                                                 <td class="px-2 py-2 text-center w-12">
                                                     <button type="button" @click="removeRow(index)" class="p-1.5 rounded-lg text-gray-400 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/40 transition cursor-pointer" title="Hapus Baris Ini">
                                                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
@@ -550,6 +555,7 @@
                                         }
                                     }
                                 }">
+                                @if($canViewPrices)
                                 <div class="flex items-center justify-between">
                                     <label class="block text-xs font-bold text-gray-700 dark:text-gray-300">
                                         Harga Satuan Beli / Unit Cost (Rp)
@@ -610,6 +616,7 @@
                                         </button>
                                     </div>
                                 </div>
+                                @endif
                             </div>
 
                             <!-- Khusus Cat / Painting: Tanggal Pembuatan (Manufacturing Date) -->
@@ -821,6 +828,7 @@
                             </div>
                         </div>
 
+                        @if($canViewPrices)
                         <div class="space-y-2 rounded-xl p-3 bg-gray-50 dark:bg-gray-800/40 border border-gray-200 dark:border-gray-700"
                             x-data="{
                                 showCalc: false,
@@ -902,6 +910,7 @@
                                 </div>
                             </div>
                         </div>
+                        @endif
 
                         <!-- Khusus Cat: Manufacturing Date -->
                         <div class="rounded-xl p-3 bg-brand-50/50 dark:bg-brand-950/20 border border-brand-200 dark:border-brand-800/60 space-y-2"

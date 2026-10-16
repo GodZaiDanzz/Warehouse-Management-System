@@ -529,13 +529,16 @@ class ItemTableComponent extends Component
                 || str_contains(strtolower($selectedCatObj->name), 'thinner') 
                 || str_contains(strtolower($selectedCatObj->name), 'paint'));
 
-        // Total Nilai Aset Stok Gudang & Filtered Valuation (hindari duplicate query jika tanpa filter)
+        // Total Nilai Aset Stok Gudang & Filtered Valuation (Hanya dihitung jika user diizinkan melihat harga)
+        $canViewPrices = auth()->user() && auth()->user()->canViewPrices();
         $isFiltered = !empty($this->search) || !empty($this->category_id) || !empty($this->unit_id) || !empty($this->stock_status);
-        $totalAssetValue = (float) Item::sum(DB::raw('COALESCE(stock, 0) * COALESCE(unit_price, 0)'));
-        $filteredAssetValue = $isFiltered 
-            ? (float) (clone $query)->reorder()->sum(DB::raw('COALESCE(stock, 0) * COALESCE(unit_price, 0)'))
-            : $totalAssetValue;
-        $itemsWithPriceCount = (int) Item::where('unit_price', '>', 0)->count();
+        $totalAssetValue = $canViewPrices ? (float) Item::sum(DB::raw('COALESCE(stock, 0) * COALESCE(unit_price, 0)')) : 0;
+        $filteredAssetValue = $canViewPrices 
+            ? ($isFiltered 
+                ? (float) (clone $query)->reorder()->sum(DB::raw('COALESCE(stock, 0) * COALESCE(unit_price, 0)'))
+                : $totalAssetValue)
+            : 0;
+        $itemsWithPriceCount = $canViewPrices ? (int) Item::where('unit_price', '>', 0)->count() : 0;
 
         $projects = Project::select(['id', 'name', 'code'])->orderBy('name')->get();
 

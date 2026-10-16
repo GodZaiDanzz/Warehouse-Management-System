@@ -62,7 +62,12 @@
                                 {{ $usr->email }}
                             </td>
                             <td class="px-6 py-4 text-center">
-                                @if($usr->role === 'ppic')
+                                @if($usr->role === 'finance')
+                                    <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-indigo-50 text-indigo-800 dark:bg-indigo-950/50 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-800/60 shadow-2xs">
+                                        <span class="w-1.5 h-1.5 rounded-full bg-indigo-500"></span>
+                                        Finance (Keuangan)
+                                    </span>
+                                @elseif($usr->role === 'ppic')
                                     <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300 border border-slate-200 dark:border-slate-700 shadow-2xs">
                                         <span class="w-1.5 h-1.5 rounded-full bg-slate-500"></span>
                                         PPIC (View Only)
@@ -150,6 +155,7 @@
                             <label class="block text-xs font-bold text-gray-700 dark:text-gray-300">Hak Akses (Role) <span class="text-amber-500">*</span></label>
                             <select name="role" required class="w-full rounded-xl border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 px-3 py-2 text-sm text-gray-900 dark:text-white focus:border-brand-500 cursor-pointer">
                                 <option value="admin">Web Administrator (Full Access Seluruh Data Website, Sistem, Debugging & Profil)</option>
+                                <option value="finance">Finance / Keuangan (Akses Stok, Nilai Aset & Rekap Harga)</option>
                                 <option value="warehouse">Gudang / Warehouse (Kelola Data Stok & Transaksi Gudang)</option>
                                 <option value="ppic">PPIC (View Only - Ketersediaan Stok, Riwayat & Laporan)</option>
                                 <option value="qc">Quality Control (Inspeksi & Approval Penerimaan Barang)</option>
@@ -197,6 +203,7 @@
                             <label class="block text-xs font-bold text-gray-700 dark:text-gray-300">Hak Akses (Role)</label>
                             <select name="role" x-model="editUser.role" required class="w-full rounded-xl border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 px-3 py-2 text-sm text-gray-900 dark:text-white focus:border-brand-500 cursor-pointer">
                                 <option value="admin">Web Administrator (Full Access Seluruh Data Website, Sistem, Debugging & Profil)</option>
+                                <option value="finance">Finance / Keuangan (Akses Stok, Nilai Aset & Rekap Harga)</option>
                                 <option value="warehouse">Gudang / Warehouse (Kelola Data Stok & Transaksi Gudang)</option>
                                 <option value="ppic">PPIC (View Only - Ketersediaan Stok, Riwayat & Laporan)</option>
                                 <option value="qc">Quality Control (Inspeksi & Approval Penerimaan Barang)</option>

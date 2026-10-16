@@ -41,7 +41,7 @@ class UserController extends Controller
             'name' => 'required|string|max:255',
             'email' => 'required|email|max:255|unique:users,email',
             'password' => 'required|string|min:6',
-            'role' => 'required|string|in:admin,web_admin,warehouse,ppic,qc',
+            'role' => 'required|string|in:admin,web_admin,warehouse,ppic,qc,finance',
         ], [
             'name.required' => 'Nama pengguna wajib diisi.',
             'email.required' => 'Email wajib diisi.',
@@ -83,7 +83,7 @@ class UserController extends Controller
             'name' => 'required|string|max:255',
             'email' => 'required|email|max:255|unique:users,email,' . $user->id,
             'password' => 'nullable|string|min:6',
-            'role' => 'required|string|in:admin,web_admin,warehouse,ppic,qc',
+            'role' => 'required|string|in:admin,web_admin,warehouse,ppic,qc,finance',
         ], [
             'name.required' => 'Nama pengguna wajib diisi.',
             'email.required' => 'Email wajib diisi.',

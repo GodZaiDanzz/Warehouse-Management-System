@@ -32,8 +32,9 @@ class DashboardController extends Controller
         $lowStockCount = Item::whereColumn('stock', '<=', 'min_stock')->count();
         $allItems = Item::select(['id', 'name', 'stock', 'unit', 'category_id', 'manufacturing_date', 'created_at'])->get();
         $totalCategories = Category::count();
-        $totalAssetValue = (float) Item::sum(DB::raw('COALESCE(stock, 0) * COALESCE(unit_price, 0)'));
-        $pricedItemsCount = (int) Item::where('unit_price', '>', 0)->count();
+        $canViewPrices = $user->canViewPrices();
+        $totalAssetValue = $canViewPrices ? (float) Item::sum(DB::raw('COALESCE(stock, 0) * COALESCE(unit_price, 0)')) : 0;
+        $pricedItemsCount = $canViewPrices ? (int) Item::where('unit_price', '>', 0)->count() : 0;
 
         $recentLogs = StockLog::with(['item', 'user'])
             ->latest()
