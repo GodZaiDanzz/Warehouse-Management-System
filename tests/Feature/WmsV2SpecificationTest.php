@@ -334,6 +334,22 @@ class WmsV2SpecificationTest extends TestCase
     }
 
     /**
+     * Test Material Out Raw Material and Gas Modules
+     */
+    public function test_material_out_raw_material_and_gas_modules(): void
+    {
+        $this->actingAs($this->warehouseUser);
+
+        \Livewire\Livewire::test(\App\Livewire\MaterialOutComponent::class)
+            ->assertSee('4. Pengeluaran Raw Material')
+            ->assertSee('5. Pengeluaran Gas')
+            ->call('setActiveModule', 'Raw Material')
+            ->assertSet('activeModule', 'Raw Material')
+            ->call('setActiveModule', 'Gas')
+            ->assertSet('activeModule', 'Gas');
+    }
+
+    /**
      * 6. STOK OPNAME PER SHIFT (Shift 1 & Shift 2)
      */
     public function test_stock_opname_per_shift(): void

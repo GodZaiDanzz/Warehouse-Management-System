@@ -766,6 +766,10 @@ class MaterialOutComponent extends Component
             $query->whereHas('item.category', function ($cq) use ($mod) {
                 if ($mod === 'Cat / Painting') {
                     $cq->where('name', 'like', '%Cat%');
+                } elseif ($mod === 'Raw Material') {
+                    $cq->where('name', 'like', '%Raw Material%');
+                } elseif ($mod === 'Gas') {
+                    $cq->where('name', 'like', '%Gas%');
                 } else {
                     $cq->where('name', $mod);
                 }
@@ -832,6 +836,10 @@ class MaterialOutComponent extends Component
             $itemsQuery->whereHas('category', function ($q) use ($mod) {
                 if ($mod === 'Cat / Painting') {
                     $q->where('name', 'like', '%Cat%');
+                } elseif ($mod === 'Raw Material') {
+                    $q->where('name', 'like', '%Raw Material%');
+                } elseif ($mod === 'Gas') {
+                    $q->where('name', 'like', '%Gas%');
                 } else {
                     $q->where('name', $mod);
                 }
@@ -890,7 +898,7 @@ class MaterialOutComponent extends Component
         }
         $monthDecimalString = format_unit_breakdown($monthDecimalTotals);
 
-        // Module specific counts in 1 consolidated query (menggantikan 3x whereHas bertingkat)
+        // Module specific counts in 1 consolidated query
         $catCategoryIds = Category::getCatCategoryIds();
         $catIdsSql = !empty($catCategoryIds) ? implode(',', $catCategoryIds) : '0';
         $moduleCounts = MaterialOut::leftJoin('items', 'material_outs.item_id', '=', 'items.id')
@@ -898,12 +906,16 @@ class MaterialOutComponent extends Component
             ->selectRaw("
                 COUNT(CASE WHEN categories.name = 'Consumable' THEN 1 END) as consumable_count,
                 COUNT(CASE WHEN categories.name = 'Secondary Part' THEN 1 END) as secondary_count,
-                COUNT(CASE WHEN categories.name LIKE '%Cat%' OR items.category_id IN ({$catIdsSql}) THEN 1 END) as cat_count
+                COUNT(CASE WHEN categories.name LIKE '%Cat%' OR items.category_id IN ({$catIdsSql}) THEN 1 END) as cat_count,
+                COUNT(CASE WHEN categories.name LIKE '%Raw Material%' THEN 1 END) as raw_material_count,
+                COUNT(CASE WHEN categories.name LIKE '%Gas%' THEN 1 END) as gas_count
             ")->first();
 
         $consumableCount = (int) ($moduleCounts->consumable_count ?? 0);
         $secondaryCount = (int) ($moduleCounts->secondary_count ?? 0);
         $catCount = (int) ($moduleCounts->cat_count ?? 0);
+        $rawMaterialCount = (int) ($moduleCounts->raw_material_count ?? 0);
+        $gasCount = (int) ($moduleCounts->gas_count ?? 0);
 
         $projectsJsonList = $allRegisteredProjects->map(fn($p) => [
             'id' => $p->id,
@@ -969,6 +981,8 @@ class MaterialOutComponent extends Component
             'consumableCount' => $consumableCount,
             'secondaryCount' => $secondaryCount,
             'catCount' => $catCount,
+            'rawMaterialCount' => $rawMaterialCount,
+            'gasCount' => $gasCount,
         ]);
     }
 }

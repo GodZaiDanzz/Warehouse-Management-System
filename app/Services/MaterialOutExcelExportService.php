@@ -48,6 +48,8 @@ class MaterialOutExcelExportService
                 'consumable' => 'LAPORAN PEMAKAIAN MATERIAL CONSUMABLE',
                 'secondary part' => 'LAPORAN PENGELUARAN SECONDARY PART GUDANG',
                 'cat / painting', 'cat', 'painting' => 'LAPORAN PENGELUARAN CAT GUDANG',
+                'raw material', 'raw' => 'LAPORAN PENGELUARAN RAW MATERIAL GUDANG (STORAGE 2)',
+                'gas' => 'LAPORAN PENGELUARAN GAS GUDANG',
                 default => 'LAPORAN PENGELUARAN MATERIAL GUDANG',
             };
         }

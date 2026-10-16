@@ -22,6 +22,10 @@ class MaterialOutController extends Controller
             $query->whereHas('item.category', function ($cq) use ($module) {
                 if ($module === 'Cat' || $module === 'Cat / Painting') {
                     $cq->where('name', 'like', '%Cat%');
+                } elseif ($module === 'Raw Material') {
+                    $cq->where('name', 'like', '%Raw Material%');
+                } elseif ($module === 'Gas') {
+                    $cq->where('name', 'like', '%Gas%');
                 } else {
                     $cq->where('name', $module);
                 }

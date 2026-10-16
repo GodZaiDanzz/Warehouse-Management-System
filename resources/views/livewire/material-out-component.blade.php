@@ -106,6 +106,16 @@
                 <span>3. Pengeluaran Cat / Painting</span>
                 <span class="rounded-full px-2 py-0.5 text-[10px] {{ $activeModule === 'Cat / Painting' ? 'bg-white/20 text-white' : 'bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300' }}">{{ $catCount }}</span>
             </button>
+
+            <button type="button" wire:click="setActiveModule('Raw Material')" class="flex items-center gap-2 rounded-xl px-4 py-2.5 text-xs font-bold transition cursor-pointer {{ $activeModule === 'Raw Material' ? 'bg-brand-600 text-white shadow-xs' : 'text-gray-600 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-800' }}">
+                <span>4. Pengeluaran Raw Material</span>
+                <span class="rounded-full px-2 py-0.5 text-[10px] {{ $activeModule === 'Raw Material' ? 'bg-white/20 text-white' : 'bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300' }}">{{ $rawMaterialCount }}</span>
+            </button>
+
+            <button type="button" wire:click="setActiveModule('Gas')" class="flex items-center gap-2 rounded-xl px-4 py-2.5 text-xs font-bold transition cursor-pointer {{ $activeModule === 'Gas' ? 'bg-brand-600 text-white shadow-xs' : 'text-gray-600 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-800' }}">
+                <span>5. Pengeluaran Gas</span>
+                <span class="rounded-full px-2 py-0.5 text-[10px] {{ $activeModule === 'Gas' ? 'bg-white/20 text-white' : 'bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300' }}">{{ $gasCount }}</span>
+            </button>
         </div>
     </div>
 
@@ -121,6 +131,44 @@
             <a href="{{ route('reports.cat-painting') }}" class="inline-flex items-center gap-1.5 rounded-xl bg-brand-600 px-3 py-1.5 text-xs font-bold text-white hover:bg-brand-700 transition">
                 <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
                 <span>Laporan Cat</span>
+            </a>
+        </div>
+    @endif
+
+    @if ($activeModule === 'Raw Material')
+        <!-- Special Raw Material Alert Info -->
+        <div class="mb-6 flex items-center justify-between rounded-2xl border border-amber-200 bg-amber-50 p-4 text-xs text-amber-900 dark:border-amber-900/50 dark:bg-amber-950/30 dark:text-amber-300 shadow-xs">
+            <div class="flex items-center gap-3">
+                <div class="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-amber-500 text-white shadow-xs">
+                    <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/></svg>
+                </div>
+                <div>
+                    <span class="font-extrabold text-amber-950 dark:text-amber-200 block">Modul Spesifik: Pengeluaran Raw Material (STORAGE 2)</span>
+                    <span>Monitoring pengeluaran bahan baku pabrikasi (Plat Besi, Pipa, Siku, Hollow, Round Bar) yang tersimpan di <strong>STORAGE 2</strong>.</span>
+                </div>
+            </div>
+            <a href="{{ route('items.index', ['storage_filter' => 'STORAGE 2']) }}" class="inline-flex items-center gap-1.5 rounded-xl bg-amber-600 px-3 py-1.5 text-xs font-bold text-white hover:bg-amber-700 transition">
+                <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg>
+                <span>Stok Storage 2</span>
+            </a>
+        </div>
+    @endif
+
+    @if ($activeModule === 'Gas')
+        <!-- Special Gas Alert Info -->
+        <div class="mb-6 flex items-center justify-between rounded-2xl border border-sky-200 bg-sky-50 p-4 text-xs text-sky-900 dark:border-sky-900/50 dark:bg-sky-950/30 dark:text-sky-300 shadow-xs">
+            <div class="flex items-center gap-3">
+                <div class="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-sky-500 text-white shadow-xs">
+                    <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z"/></svg>
+                </div>
+                <div>
+                    <span class="font-extrabold text-sky-950 dark:text-sky-200 block">Modul Spesifik: Pengeluaran Tabung Gas Industri</span>
+                    <span>Monitoring distribusi tabung gas operasional pabrikasi & pengelasan (Argon, CO2, Oxygen, Acetylene, LPG, Mixed Gas) dari <strong>STORAGE 1</strong>.</span>
+                </div>
+            </div>
+            <a href="{{ route('items.index', ['category_id' => \App\Models\Category::where('name', 'Gas')->value('id') ?? '']) }}" class="inline-flex items-center gap-1.5 rounded-xl bg-sky-600 px-3 py-1.5 text-xs font-bold text-white hover:bg-sky-700 transition">
+                <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg>
+                <span>Stok Gas</span>
             </a>
         </div>
     @endif
@@ -1256,13 +1304,23 @@
                                 @php
                                     $catName = $row->item->category->name ?? '-';
                                     $isCat = $row->item && $row->item->isCat();
+                                    $isRaw = ($row->item && $row->item->isRawMaterial()) || str_contains($catName, 'Raw Material');
+                                    $isGas = str_contains($catName, 'Gas');
                                 @endphp
                                 @if($isCat)
                                     <span class="inline-flex items-center gap-1 rounded-full bg-brand-100 px-2.5 py-0.5 text-[10px] font-extrabold text-brand-800 dark:bg-brand-950/60 dark:text-brand-300">
                                         {{ $catName }}
                                     </span>
+                                @elseif($isRaw)
+                                    <span class="inline-flex items-center gap-1 rounded-full bg-amber-100 px-2.5 py-0.5 text-[10px] font-extrabold text-amber-800 dark:bg-amber-950/60 dark:text-amber-300 border border-amber-200 dark:border-amber-800/60">
+                                        {{ $catName }}
+                                    </span>
+                                @elseif($isGas)
+                                    <span class="inline-flex items-center gap-1 rounded-full bg-sky-100 px-2.5 py-0.5 text-[10px] font-extrabold text-sky-800 dark:bg-sky-950/60 dark:text-sky-300 border border-sky-200 dark:border-sky-800/60">
+                                        {{ $catName }}
+                                    </span>
                                 @elseif(str_contains($catName, 'Secondary'))
-                                    <span class="inline-flex items-center gap-1 rounded-full bg-gray-100 px-2.5 py-0.5 text-[10px] font-extrabold text-gray-800 dark:bg-gray-800 dark:text-gray-300 border border-gray-200 dark:border-gray-700">
+                                    <span class="inline-flex items-center gap-1 rounded-full bg-emerald-100 px-2.5 py-0.5 text-[10px] font-extrabold text-emerald-800 dark:bg-emerald-950/60 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-700">
                                         {{ $catName }}
                                     </span>
                                 @else
@@ -1278,6 +1336,10 @@
                                     @if($row->item && $row->item->isCat())
                                         <span class="text-[10px] text-gray-500 dark:text-gray-400 mt-0.5">
                                             Tgl Pembuatan: <span class="font-semibold text-gray-700 dark:text-gray-300">{{ format_date($row->item->manufacturing_date, 'Belum diisi') }}</span>
+                                        </span>
+                                    @elseif($isRaw)
+                                        <span class="text-[10px] text-amber-600 dark:text-amber-400 mt-0.5 font-semibold">
+                                            Lokasi: STORAGE 2
                                         </span>
                                     @endif
                                 </div>
