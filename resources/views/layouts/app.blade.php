@@ -3,15 +3,19 @@
 
 <head>
     <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=5, viewport-fit=cover">
     <meta name="csrf-token" content="{{ csrf_token() }}">
 
     <title>{{ $title ?? 'Dashboard' }}</title>
 
-    <!-- Google Fonts Outfit (Preconnect & Non-blocking) -->
+    <!-- Google Fonts Outfit (Preconnect & High-Performance Asynchronous Loading) -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@100..900&display=swap" rel="stylesheet">
+    <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&display=swap">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&display=swap" media="print" onload="this.media='all'">
+    <noscript>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&display=swap">
+    </noscript>
 
     <!-- Scripts -->
     @vite(['resources/css/app.css', 'resources/js/app.js'])
@@ -25,6 +29,11 @@
         $globalBtnOtherColor = $globalCompany->btn_other_color ?? $globalThemeColor;
         $globalFaviconUrl = $globalCompany->getFaviconUrl();
     @endphp
+
+    <meta name="theme-color" content="{{ $globalThemeColor }}">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
 
     @if($globalFaviconUrl)
         <!-- Favicon Presisi Tanpa Margin Putih -->
@@ -41,6 +50,19 @@
             --theme-btn-other-bg: {{ $globalBtnOtherColor }};
             --theme-accent-amber: #F59E0B;
             --theme-accent-amber-hover: #D97706;
+        }
+        /* Mobile hardware acceleration & responsive performance */
+        .content-visibility-auto {
+            content-visibility: auto;
+            contain-intrinsic-size: 0 450px;
+        }
+        @media (max-width: 768px) {
+            .mobile-hw-accel {
+                transform: translateZ(0);
+                -webkit-transform: translateZ(0);
+                backface-visibility: hidden;
+                -webkit-backface-visibility: hidden;
+            }
         }
         [x-cloak] {
             display: none !important;

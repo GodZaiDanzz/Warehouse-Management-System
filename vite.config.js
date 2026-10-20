@@ -12,9 +12,9 @@ export default defineConfig({
     ],
     server: {
         host: '0.0.0.0',
+        cors: true,
         hmr: {
             host: 'localhost',
-            // host: '192.168.1.77',
         },
     },
     build: {
@@ -24,9 +24,18 @@ export default defineConfig({
                     if (id.includes('node_modules/apexcharts')) {
                         return 'apexcharts';
                     }
+                    if (id.includes('node_modules/html5-qrcode')) {
+                        return 'html5-qrcode';
+                    }
+                    if (id.includes('node_modules/qrcode')) {
+                        return 'qrcode';
+                    }
+                    if (id.includes('node_modules/sweetalert2')) {
+                        return 'sweetalert2';
+                    }
                 }
             }
         },
-        chunkSizeWarningLimit: 800,
+        chunkSizeWarningLimit: 1000,
     },
 });

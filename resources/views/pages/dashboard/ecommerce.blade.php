@@ -416,7 +416,7 @@
     </div>
 
     <!-- 4. Section: Informasi Penggunaan Material per Project -->
-    <div class="rounded-2xl border border-gray-200 bg-white p-5 dark:border-gray-800 dark:bg-gray-900 shadow-sm space-y-5">
+    <div class="rounded-2xl border border-gray-200 bg-white p-5 dark:border-gray-800 dark:bg-gray-900 shadow-sm space-y-5 content-visibility-auto">
         <!-- Section Header with Highlights -->
         <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4 border-b border-gray-100 dark:border-gray-800 pb-4">
             <div class="flex items-center gap-3">
@@ -596,7 +596,7 @@
     </div>
 
     <!-- Main Grid: Recent Activity & Stock Distribution -->
-    <div class="grid grid-cols-1 gap-6 xl:grid-cols-12 min-w-0">
+    <div class="grid grid-cols-1 gap-6 xl:grid-cols-12 min-w-0 content-visibility-auto">
         <!-- Recent Stock Movement Logs & Fast-Moving Items Card -->
         <div class="xl:col-span-8 rounded-2xl border border-gray-200 bg-white p-6 dark:border-gray-800 dark:bg-gray-900 shadow-sm space-y-5 min-w-0 overflow-hidden flex flex-col justify-between">
             <div class="space-y-4">
@@ -1040,7 +1040,9 @@ document.addEventListener('DOMContentLoaded', function () {
     const barChartEl = document.querySelector("#barChartKategoriStok");
     if (barChartEl && typeof ApexCharts !== 'undefined') {
         barChartInstance = new ApexCharts(barChartEl, barChartOptions);
-        barChartInstance.render();
+        setTimeout(() => {
+            barChartInstance.render();
+        }, 60);
     }
 
     window.switchBarChartUnit = function(mode) {
@@ -1162,7 +1164,9 @@ document.addEventListener('DOMContentLoaded', function () {
 
     const itemOutChartEl = document.querySelector("#chartPengeluaranMaterial");
     if (itemOutChartEl && typeof ApexCharts !== 'undefined') {
-        new ApexCharts(itemOutChartEl, itemOutChartOptions).render();
+        setTimeout(() => {
+            new ApexCharts(itemOutChartEl, itemOutChartOptions).render();
+        }, 120);
     }
 
     // 4. Donut Chart: All Inventory Aging
@@ -1255,7 +1259,9 @@ document.addEventListener('DOMContentLoaded', function () {
 
     const donutAgingChartEl = document.querySelector("#donutChartInventoryAging");
     if (donutAgingChartEl && typeof ApexCharts !== 'undefined' && agingTotalCount > 0) {
-        new ApexCharts(donutAgingChartEl, donutAgingChartOptions).render();
+        setTimeout(() => {
+            new ApexCharts(donutAgingChartEl, donutAgingChartOptions).render();
+        }, 180);
     }
 
     // 5. Horizontal/Vertical Bar Chart: Pemakaian Material per Project
@@ -1354,7 +1360,9 @@ document.addEventListener('DOMContentLoaded', function () {
     const projectChartEl = document.querySelector("#chartMaterialPerProject");
     if (projectChartEl && typeof ApexCharts !== 'undefined') {
         projectChartInstance = new ApexCharts(projectChartEl, projectChartOptions);
-        projectChartInstance.render();
+        setTimeout(() => {
+            projectChartInstance.render();
+        }, 240);
     }
 
     window.switchProjectChartMode = function(mode) {

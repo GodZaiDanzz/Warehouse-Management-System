@@ -2,8 +2,6 @@ import './bootstrap';
 import ApexCharts from 'apexcharts';
 import Swal from 'sweetalert2';
 import 'sweetalert2/dist/sweetalert2.min.css';
-import { Html5Qrcode } from 'html5-qrcode';
-import QRCode from 'qrcode';
 
 // flatpickr
 import flatpickr from 'flatpickr';
@@ -15,8 +13,44 @@ flatpickr.localize(Indonesian);
 window.ApexCharts = ApexCharts;
 window.flatpickr = flatpickr;
 window.Swal = Swal;
-window.Html5Qrcode = Html5Qrcode;
-window.QRCode = QRCode;
+
+// High-performance dynamic loader for heavy scanner & QR libraries (offloads ~400KB on initial load)
+let _Html5Qrcode = null;
+window.getHtml5Qrcode = async function() {
+    if (!_Html5Qrcode) {
+        const mod = await import('html5-qrcode');
+        _Html5Qrcode = mod.Html5Qrcode;
+        window.Html5Qrcode = _Html5Qrcode;
+    }
+    return _Html5Qrcode;
+};
+
+let _QRCode = null;
+window.getQRCode = async function() {
+    if (!_QRCode) {
+        const mod = await import('qrcode');
+        _QRCode = mod.default || mod;
+        window.QRCode = _QRCode;
+    }
+    return _QRCode;
+};
+
+if (typeof document !== 'undefined') {
+    const checkQR = () => {
+        if (document.querySelector('.qrcode-canvas')) {
+            window.getQRCode().then(() => {
+                if (typeof window.renderQRCodes === 'function') {
+                    window.renderQRCodes();
+                }
+            });
+        }
+    };
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', checkQR);
+    } else {
+        checkQR();
+    }
+}
 
 // =========================================================================
 // Global Mobile Camera Barcode & QR Code Scanner Controller
@@ -150,12 +184,17 @@ window.barcodeScanner = {
         }
         el.innerHTML = '';
 
-        if (typeof Html5Qrcode === 'undefined') {
+        let Html5QrcodeClass = window.Html5Qrcode;
+        if (!Html5QrcodeClass && typeof window.getHtml5Qrcode === 'function') {
+            Html5QrcodeClass = await window.getHtml5Qrcode();
+        }
+
+        if (!Html5QrcodeClass) {
             throw new Error('Library Html5Qrcode belum siap.');
         }
 
         try {
-            this.scanner = new Html5Qrcode(elementId);
+            this.scanner = new Html5QrcodeClass(elementId);
 
             const config = {
                 fps: 15,
@@ -202,8 +241,12 @@ window.barcodeScanner = {
     async switchCamera(elementId, onScanSuccess) {
         try {
             if (!this.cameras || this.cameras.length < 2) {
-                if (typeof Html5Qrcode !== 'undefined') {
-                    this.cameras = await Html5Qrcode.getCameras();
+                let Html5QrcodeClass = window.Html5Qrcode;
+                if (!Html5QrcodeClass && typeof window.getHtml5Qrcode === 'function') {
+                    Html5QrcodeClass = await window.getHtml5Qrcode();
+                }
+                if (Html5QrcodeClass) {
+                    this.cameras = await Html5QrcodeClass.getCameras();
                 }
             }
             if (!this.cameras || this.cameras.length < 2) return;
