@@ -8,7 +8,9 @@
 <div x-data="{ 
     openCreateModal: false, 
     openEditModal: false, 
-    editData: { id: '', code: '', name: '', location: '', status: 'Ongoing', start_date: '', end_date: '', description: '' }
+    openCompleteModal: false,
+    completeData: { id: '', name: '', end_date: '{{ date('Y-m-d') }}' },
+    editData: { id: '', code: '', po_number: '', client: '', name: '', location: '', status: 'Ongoing', start_date: '', end_date: '', description: '' }
 }" class="p-4 sm:p-6 space-y-6">
 
 
@@ -18,6 +20,16 @@
         <div>
             <h1 class="text-2xl font-black text-gray-900 dark:text-white mt-1">Rekapitulasi Penyerapan Material per Project</h1>
             <p class="text-sm text-gray-500 dark:text-gray-400">Ringkasan total volume material yang digunakan oleh setiap project aktif PT Mudalaya Energy Indonesia.</p>
+        </div>
+        <div class="flex flex-wrap items-center gap-2">
+            <button type="button" @click="openCreateModal = true" class="btn-add-theme inline-flex items-center gap-2 rounded-xl bg-brand-600 px-4 py-2.5 text-xs font-bold text-white hover:bg-brand-700 transition cursor-pointer shadow-xs">
+                <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4"/></svg>
+                Tambah Project Baru
+            </button>
+            <button type="button" onclick="window.print()" class="inline-flex items-center gap-2 rounded-xl border border-gray-300 bg-white px-4 py-2.5 text-xs font-bold text-gray-700 hover:bg-gray-50 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-200 transition cursor-pointer shadow-xs">
+                <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"/></svg>
+                Cetak Laporan
+            </button>
         </div>
     </div>
 
@@ -187,7 +199,7 @@
                 <!-- Search -->
                 <div>
                     <label class="block text-[11px] font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400 mb-1.5">Cari Project</label>
-                    <input type="text" name="search" value="{{ request('search') }}" placeholder="Cari nama, kode, tempat fabrikasi..." class="w-full rounded-xl border border-gray-200 bg-gray-50 px-3 py-2 text-xs font-semibold text-gray-700 outline-none focus:border-brand-500 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-200">
+                    <input type="text" name="search" value="{{ request('search') }}" placeholder="Cari nama, kode, nomor PO, tempat fabrikasi..." class="w-full rounded-xl border border-gray-200 bg-gray-50 px-3 py-2 text-xs font-semibold text-gray-700 outline-none focus:border-brand-500 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-200">
                 </div>
             </div>
 
@@ -254,6 +266,18 @@
                                         </a>
                                     </div>
                                     <div class="flex flex-wrap items-center gap-1.5">
+                                        @if($row->po_number)
+                                            <span class="inline-flex items-center gap-1 font-mono text-[10px] font-bold text-amber-700 dark:text-amber-300 bg-amber-50 dark:bg-amber-950/60 px-2 py-0.5 rounded border border-amber-200 dark:border-amber-800" title="Nomor PO">
+                                                <svg class="w-2.5 h-2.5 text-amber-600 dark:text-amber-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+                                                PO: {{ $row->po_number }}
+                                            </span>
+                                        @endif
+                                        @if($row->client)
+                                            <span class="inline-flex items-center gap-1 text-[10px] font-bold text-sky-700 dark:text-sky-300 bg-sky-50 dark:bg-sky-950/60 px-2 py-0.5 rounded border border-sky-200 dark:border-sky-800" title="Client / Pemilik Pekerjaan">
+                                                <svg class="w-2.5 h-2.5 text-sky-600 dark:text-sky-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/></svg>
+                                                {{ $row->client }}
+                                            </span>
+                                        @endif
                                         @if($row->code)
                                             <span class="inline-flex items-center gap-1 font-mono text-[10px] font-bold text-gray-600 dark:text-gray-400 bg-gray-100 dark:bg-gray-800 px-2 py-0.5 rounded border border-gray-200 dark:border-gray-700 tracking-wider">
                                                 <svg class="w-2.5 h-2.5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z"/></svg>
@@ -372,24 +396,26 @@
                             <td class="px-4 py-3 text-center">
                                 <div class="flex items-center justify-center gap-1.5">
                                     <!-- BUTTON 1: QUICK TOGGLE STATUS -->
-                                    <form method="POST" action="{{ route('projects.toggle-status', $row->id) }}" class="inline">
-                                        @csrf
-                                        @method('PATCH')
-                                        @if($row->status === 'Completed')
+                                    @if($row->status === 'Completed')
+                                        <form method="POST" action="{{ route('projects.toggle-status', $row->id) }}" class="inline">
+                                            @csrf
+                                            @method('PATCH')
                                             <button type="submit" title="Ubah status menjadi Berjalan (Ongoing)" class="p-1.5 rounded-lg text-amber-600 hover:bg-amber-50 dark:text-amber-400 dark:hover:bg-amber-950/40 transition cursor-pointer">
                                                 <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
                                             </button>
-                                        @else
-                                            <button type="submit" title="Tandai Project Sudah Selesai (Completed)" class="p-1.5 rounded-lg text-emerald-600 hover:bg-emerald-50 dark:text-emerald-400 dark:hover:bg-emerald-950/40 transition cursor-pointer">
-                                                <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/></svg>
-                                            </button>
-                                        @endif
-                                    </form>
+                                        </form>
+                                    @else
+                                        <button type="button" @click="completeData = { id: '{{ $row->id }}', name: '{{ addslashes($row->name) }}', end_date: '{{ $row->end_date ? $row->end_date->format('Y-m-d') : date('Y-m-d') }}' }; openCompleteModal = true" title="Tandai Project Sudah Selesai (Completed)" class="p-1.5 rounded-lg text-emerald-600 hover:bg-emerald-50 dark:text-emerald-400 dark:hover:bg-emerald-950/40 transition cursor-pointer">
+                                            <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/></svg>
+                                        </button>
+                                    @endif
 
                                     <!-- BUTTON 2: EDIT RINCIAN PROJECT -->
                                     <button type="button" @click="editData = {
                                         id: '{{ $row->id }}',
                                         code: '{{ addslashes($row->code ?? '') }}',
+                                        po_number: '{{ addslashes($row->po_number ?? '') }}',
+                                        client: '{{ addslashes($row->client ?? '') }}',
                                         name: '{{ addslashes($row->name) }}',
                                         location: '{{ addslashes($row->location ?? '') }}',
                                         status: '{{ $row->status }}',
@@ -463,13 +489,16 @@
     <!-- MODAL TAMBAH PROJECT BARU -->
     <template x-teleport="body">
         <div x-show="openCreateModal" x-cloak @click.self="openCreateModal = false" @keydown.escape.window="openCreateModal = false" class="fixed inset-0 z-[999999] flex items-center justify-center p-3 sm:p-4 bg-gray-950/80 backdrop-blur-xs overflow-y-auto animate-fadeIn">
-            <div class="w-full max-w-lg rounded-2xl bg-white p-6 shadow-2xl dark:bg-gray-900 dark:border dark:border-gray-800 space-y-4 max-h-[90vh] overflow-y-auto custom-scrollbar my-8">
+            <div class="w-full max-w-2xl rounded-2xl bg-white p-6 shadow-2xl dark:bg-gray-900 dark:border dark:border-gray-800 space-y-4 max-h-[92vh] overflow-y-auto custom-scrollbar my-auto">
                 <div class="flex items-center justify-between border-b border-gray-100 dark:border-gray-800 pb-3">
-                    <div class="flex items-center gap-2.5">
-                        <div class="flex h-9 w-9 items-center justify-center rounded-xl bg-brand-100 text-brand-600 dark:bg-brand-950/80 dark:text-brand-400">
+                    <div class="flex items-center gap-3">
+                        <div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-brand-50 text-brand-700 dark:bg-brand-950/80 dark:text-brand-400">
                             <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/></svg>
                         </div>
-                        <h3 class="text-base font-extrabold text-gray-900 dark:text-white">Tambah Project Baru</h3>
+                        <div>
+                            <h3 class="text-base font-bold text-gray-900 dark:text-white">Tambah Project Baru</h3>
+                            <p class="text-xs text-gray-500 dark:text-gray-400">Input data identitas, tempat fabrikasi, dan jadwal project</p>
+                        </div>
                     </div>
                     <button type="button" @click="openCreateModal = false" class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 cursor-pointer">
                         <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
@@ -478,16 +507,30 @@
 
                 <form method="POST" action="{{ route('projects.store') }}" class="space-y-4">
                     @csrf
-                    <!-- Kode Project -->
-                    <div>
-                        <label class="block text-xs font-bold text-gray-700 dark:text-gray-300 mb-1">Kode Project <span class="text-xs font-normal text-gray-400">(Opsional - Otomatis dibuat jika dikosongkan)</span></label>
-                        <input type="text" name="code" placeholder="Contoh: PRJ-2026-001 (Kosongkan untuk otomatis)" class="w-full rounded-xl border border-gray-200 bg-gray-50 px-3.5 py-2 text-xs font-mono uppercase text-gray-800 outline-none focus:border-brand-500 focus:bg-white dark:border-gray-700 dark:bg-gray-800 dark:text-white">
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                        <!-- Kode Project -->
+                        <div>
+                            <label class="block text-xs font-bold text-gray-700 dark:text-gray-300 mb-1">Kode Project <span class="text-xs font-normal text-gray-400">(Opsional)</span></label>
+                            <input type="text" name="code" placeholder="Contoh: PRJ-2026-001" class="w-full rounded-xl border border-gray-200 bg-gray-50 px-3.5 py-2 text-xs font-mono uppercase text-gray-800 outline-none focus:border-brand-500 focus:bg-white dark:border-gray-700 dark:bg-gray-800 dark:text-white">
+                        </div>
+                        <!-- Nomor PO -->
+                        <div>
+                            <label class="block text-xs font-bold text-gray-700 dark:text-gray-300 mb-1">Nomor PO <span class="text-xs font-normal text-gray-400">(Client / Kontrak)</span></label>
+                            <input type="text" name="po_number" placeholder="Contoh: PO-2026-MEI-088" class="w-full rounded-xl border border-gray-200 bg-gray-50 px-3.5 py-2 text-xs font-mono uppercase text-gray-800 outline-none focus:border-brand-500 focus:bg-white dark:border-gray-700 dark:bg-gray-800 dark:text-white">
+                        </div>
                     </div>
 
-                    <!-- Nama Project -->
-                    <div>
-                        <label class="block text-xs font-bold text-gray-700 dark:text-gray-300 mb-1">Nama Project / Pekerjaan <span class="text-rose-500">*</span></label>
-                        <input type="text" name="name" placeholder="Contoh: Pekerjaan Fabrikasi Piping Belawan" required class="w-full rounded-xl border border-gray-200 bg-gray-50 px-3.5 py-2 text-xs text-gray-800 outline-none focus:border-brand-500 focus:bg-white dark:border-gray-700 dark:bg-gray-800 dark:text-white">
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                        <!-- Nama Project -->
+                        <div>
+                            <label class="block text-xs font-bold text-gray-700 dark:text-gray-300 mb-1">Nama Project / Pekerjaan <span class="text-rose-500">*</span></label>
+                            <input type="text" name="name" placeholder="Contoh: Pekerjaan Fabrikasi Piping Belawan" required class="w-full rounded-xl border border-gray-200 bg-gray-50 px-3.5 py-2 text-xs text-gray-800 outline-none focus:border-brand-500 focus:bg-white dark:border-gray-700 dark:bg-gray-800 dark:text-white">
+                        </div>
+                        <!-- Client -->
+                        <div>
+                            <label class="block text-xs font-bold text-gray-700 dark:text-gray-300 mb-1">Client / Pemesan <span class="text-xs font-normal text-gray-400">(Opsional)</span></label>
+                            <input type="text" name="client" placeholder="Contoh: PT PLN / Pertamina" class="w-full rounded-xl border border-gray-200 bg-gray-50 px-3.5 py-2 text-xs text-gray-800 outline-none focus:border-brand-500 focus:bg-white dark:border-gray-700 dark:bg-gray-800 dark:text-white">
+                        </div>
                     </div>
 
                     <!-- Tempat Fabrikasi -->
@@ -516,19 +559,84 @@
                         </select>
                     </div>
 
-                    <!-- Tanggal Mulai & Tanggal Selesai -->
+                    <!-- Tanggal Mulai & Tanggal Selesai (Interactive Flatpickr Calendar) -->
                     <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                        <div>
-                            <label class="block text-xs font-bold text-gray-700 dark:text-gray-300 mb-1">
+                        <div x-data="{
+                                 fp: null,
+                                 init() {
+                                     const initPicker = () => {
+                                         if (typeof flatpickr === 'undefined') {
+                                             setTimeout(initPicker, 100);
+                                             return;
+                                         }
+                                         this.fp = flatpickr(this.$refs.createStartDate, {
+                                             dateFormat: 'Y-m-d',
+                                             altInput: true,
+                                             altFormat: 'd/m/Y',
+                                             allowInput: false,
+                                             locale: typeof flatpickr !== 'undefined' && flatpickr.l10ns && flatpickr.l10ns.id ? flatpickr.l10ns.id : 'default',
+                                             altInputClass: 'w-full rounded-xl border border-gray-200 bg-gray-50 pl-3.5 pr-10 py-2 text-xs font-semibold text-gray-800 outline-none focus:border-brand-500 focus:bg-white dark:border-gray-700 dark:bg-gray-800 dark:text-white cursor-pointer select-none transition shadow-2xs',
+                                             onChange: (selectedDates, dateStr) => {
+                                                 this.$refs.createStartDate.value = dateStr;
+                                             }
+                                         });
+                                     };
+                                     this.$nextTick(() => initPicker());
+                                 },
+                                 openPicker() {
+                                     if (this.fp) this.fp.open();
+                                 }
+                             }">
+                            <label class="block text-xs font-bold text-gray-700 dark:text-gray-300 mb-1 cursor-pointer" @click="openPicker()">
                                 Tanggal Mulai <span class="text-xs font-normal text-gray-400">(Opsional)</span>
                             </label>
-                            <input type="date" name="start_date" class="w-full rounded-xl border border-gray-200 bg-gray-50 px-3.5 py-2 text-xs font-medium text-gray-800 outline-none focus:border-brand-500 focus:bg-white dark:border-gray-700 dark:bg-gray-800 dark:text-white cursor-pointer">
+                            <div class="relative cursor-pointer" @click="openPicker()">
+                                <input type="text" x-ref="createStartDate" name="start_date" class="hidden">
+                                <button type="button" @click.stop="openPicker()" class="absolute right-3 top-2.5 text-gray-400 hover:text-brand-600 transition cursor-pointer" title="Buka Kalender">
+                                    <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2v12a2 2 0 002 2z"/>
+                                    </svg>
+                                </button>
+                            </div>
                         </div>
-                        <div>
-                            <label class="block text-xs font-bold text-gray-700 dark:text-gray-300 mb-1">
+
+                        <div x-data="{
+                                 fp: null,
+                                 init() {
+                                     const initPicker = () => {
+                                         if (typeof flatpickr === 'undefined') {
+                                             setTimeout(initPicker, 100);
+                                             return;
+                                         }
+                                         this.fp = flatpickr(this.$refs.createEndDate, {
+                                             dateFormat: 'Y-m-d',
+                                             altInput: true,
+                                             altFormat: 'd/m/Y',
+                                             allowInput: false,
+                                             locale: typeof flatpickr !== 'undefined' && flatpickr.l10ns && flatpickr.l10ns.id ? flatpickr.l10ns.id : 'default',
+                                             altInputClass: 'w-full rounded-xl border border-gray-200 bg-gray-50 pl-3.5 pr-10 py-2 text-xs font-semibold text-gray-800 outline-none focus:border-brand-500 focus:bg-white dark:border-gray-700 dark:bg-gray-800 dark:text-white cursor-pointer select-none transition shadow-2xs',
+                                             onChange: (selectedDates, dateStr) => {
+                                                 this.$refs.createEndDate.value = dateStr;
+                                             }
+                                         });
+                                     };
+                                     this.$nextTick(() => initPicker());
+                                 },
+                                 openPicker() {
+                                     if (this.fp) this.fp.open();
+                                 }
+                             }">
+                            <label class="block text-xs font-bold text-gray-700 dark:text-gray-300 mb-1 cursor-pointer" @click="openPicker()">
                                 Tanggal Selesai <span class="text-xs font-normal text-gray-400">(Opsional)</span>
                             </label>
-                            <input type="date" name="end_date" class="w-full rounded-xl border border-gray-200 bg-gray-50 px-3.5 py-2 text-xs font-medium text-gray-800 outline-none focus:border-brand-500 focus:bg-white dark:border-gray-700 dark:bg-gray-800 dark:text-white cursor-pointer">
+                            <div class="relative cursor-pointer" @click="openPicker()">
+                                <input type="text" x-ref="createEndDate" name="end_date" class="hidden">
+                                <button type="button" @click.stop="openPicker()" class="absolute right-3 top-2.5 text-gray-400 hover:text-brand-600 transition cursor-pointer" title="Buka Kalender">
+                                    <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2v12a2 2 0 002 2z"/>
+                                    </svg>
+                                </button>
+                            </div>
                         </div>
                     </div>
 
@@ -554,13 +662,16 @@
     <!-- MODAL EDIT PROJECT -->
     <template x-teleport="body">
         <div x-show="openEditModal" x-cloak @click.self="openEditModal = false" @keydown.escape.window="openEditModal = false" class="fixed inset-0 z-[999999] flex items-center justify-center p-3 sm:p-4 bg-gray-950/80 backdrop-blur-xs overflow-y-auto animate-fadeIn">
-            <div class="w-full max-w-lg rounded-2xl bg-white p-6 shadow-2xl dark:bg-gray-900 dark:border dark:border-gray-800 space-y-4 max-h-[90vh] overflow-y-auto custom-scrollbar my-8">
+            <div class="w-full max-w-2xl rounded-2xl bg-white p-6 shadow-2xl dark:bg-gray-900 dark:border dark:border-gray-800 space-y-4 max-h-[92vh] overflow-y-auto custom-scrollbar my-auto">
                 <div class="flex items-center justify-between border-b border-gray-100 dark:border-gray-800 pb-3">
-                    <div class="flex items-center gap-2.5">
-                        <div class="flex h-9 w-9 items-center justify-center rounded-xl bg-amber-100 text-amber-700 dark:bg-amber-950/80 dark:text-amber-400">
+                    <div class="flex items-center gap-3">
+                        <div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-amber-50 text-amber-700 dark:bg-amber-950/80 dark:text-amber-400">
                             <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
                         </div>
-                        <h3 class="text-base font-extrabold text-gray-900 dark:text-white">Edit Data Project</h3>
+                        <div>
+                            <h3 class="text-base font-bold text-gray-900 dark:text-white">Edit Data Project</h3>
+                            <p class="text-xs text-gray-500 dark:text-gray-400">Perbarui identitas, tempat fabrikasi, status, atau jadwal project</p>
+                        </div>
                     </div>
                     <button type="button" @click="openEditModal = false" class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 cursor-pointer">
                         <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
@@ -571,16 +682,30 @@
                     @csrf
                     @method('PUT')
 
-                    <!-- Kode Project -->
-                    <div>
-                        <label class="block text-xs font-bold text-gray-700 dark:text-gray-300 mb-1">Kode Project</label>
-                        <input type="text" name="code" x-model="editData.code" placeholder="PRJ-..." class="w-full rounded-xl border border-gray-200 bg-gray-50 px-3.5 py-2 text-xs font-mono font-bold uppercase text-gray-800 outline-none focus:border-brand-500 focus:bg-white dark:border-gray-700 dark:bg-gray-800 dark:text-white">
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                        <!-- Kode Project -->
+                        <div>
+                            <label class="block text-xs font-bold text-gray-700 dark:text-gray-300 mb-1">Kode Project</label>
+                            <input type="text" name="code" x-model="editData.code" placeholder="PRJ-..." class="w-full rounded-xl border border-gray-200 bg-gray-50 px-3.5 py-2 text-xs font-mono font-bold uppercase text-gray-800 outline-none focus:border-brand-500 focus:bg-white dark:border-gray-700 dark:bg-gray-800 dark:text-white">
+                        </div>
+                        <!-- Nomor PO -->
+                        <div>
+                            <label class="block text-xs font-bold text-gray-700 dark:text-gray-300 mb-1">Nomor PO <span class="text-xs font-normal text-gray-400">(Client / Kontrak)</span></label>
+                            <input type="text" name="po_number" x-model="editData.po_number" placeholder="PO-..." class="w-full rounded-xl border border-gray-200 bg-gray-50 px-3.5 py-2 text-xs font-mono uppercase text-gray-800 outline-none focus:border-brand-500 focus:bg-white dark:border-gray-700 dark:bg-gray-800 dark:text-white">
+                        </div>
                     </div>
 
-                    <!-- Nama Project -->
-                    <div>
-                        <label class="block text-xs font-bold text-gray-700 dark:text-gray-300 mb-1">Nama Project / Pekerjaan <span class="text-rose-500">*</span></label>
-                        <input type="text" name="name" x-model="editData.name" required class="w-full rounded-xl border border-gray-200 bg-gray-50 px-3.5 py-2 text-xs text-gray-800 outline-none focus:border-brand-500 focus:bg-white dark:border-gray-700 dark:bg-gray-800 dark:text-white">
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                        <!-- Nama Project -->
+                        <div>
+                            <label class="block text-xs font-bold text-gray-700 dark:text-gray-300 mb-1">Nama Project / Pekerjaan <span class="text-rose-500">*</span></label>
+                            <input type="text" name="name" x-model="editData.name" required class="w-full rounded-xl border border-gray-200 bg-gray-50 px-3.5 py-2 text-xs text-gray-800 outline-none focus:border-brand-500 focus:bg-white dark:border-gray-700 dark:bg-gray-800 dark:text-white">
+                        </div>
+                        <!-- Client -->
+                        <div>
+                            <label class="block text-xs font-bold text-gray-700 dark:text-gray-300 mb-1">Client / Pemesan <span class="text-xs font-normal text-gray-400">(Opsional)</span></label>
+                            <input type="text" name="client" x-model="editData.client" placeholder="Contoh: PT PLN / Pertamina" class="w-full rounded-xl border border-gray-200 bg-gray-50 px-3.5 py-2 text-xs text-gray-800 outline-none focus:border-brand-500 focus:bg-white dark:border-gray-700 dark:bg-gray-800 dark:text-white">
+                        </div>
                     </div>
 
                     <!-- Tempat Fabrikasi -->
@@ -609,19 +734,104 @@
                         </select>
                     </div>
 
-                    <!-- Tanggal Mulai & Tanggal Selesai -->
+                    <!-- Tanggal Mulai & Tanggal Selesai (Interactive Flatpickr Calendar) -->
                     <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                        <div>
-                            <label class="block text-xs font-bold text-gray-700 dark:text-gray-300 mb-1">
+                        <div x-data="{
+                                 fp: null,
+                                 init() {
+                                     const initPicker = () => {
+                                         if (typeof flatpickr === 'undefined') {
+                                             setTimeout(initPicker, 100);
+                                             return;
+                                         }
+                                         this.fp = flatpickr(this.$refs.editStartDate, {
+                                             dateFormat: 'Y-m-d',
+                                             altInput: true,
+                                             altFormat: 'd/m/Y',
+                                             allowInput: false,
+                                             locale: typeof flatpickr !== 'undefined' && flatpickr.l10ns && flatpickr.l10ns.id ? flatpickr.l10ns.id : 'default',
+                                             altInputClass: 'w-full rounded-xl border border-gray-200 bg-gray-50 pl-3.5 pr-10 py-2 text-xs font-semibold text-gray-800 outline-none focus:border-brand-500 focus:bg-white dark:border-gray-700 dark:bg-gray-800 dark:text-white cursor-pointer select-none transition shadow-2xs',
+                                             onChange: (selectedDates, dateStr) => {
+                                                 editData.start_date = dateStr;
+                                             }
+                                         });
+                                         if (editData.start_date) {
+                                             this.fp.setDate(editData.start_date);
+                                         }
+                                     };
+                                     this.$nextTick(() => initPicker());
+                                     this.$watch('editData.start_date', (val) => {
+                                         if (this.fp && val) {
+                                             this.fp.setDate(val);
+                                         } else if (this.fp && !val) {
+                                             this.fp.clear();
+                                         }
+                                     });
+                                 },
+                                 openPicker() {
+                                     if (this.fp) this.fp.open();
+                                 }
+                             }">
+                            <label class="block text-xs font-bold text-gray-700 dark:text-gray-300 mb-1 cursor-pointer" @click="openPicker()">
                                 Tanggal Mulai <span class="text-xs font-normal text-gray-400">(Opsional)</span>
                             </label>
-                            <input type="date" name="start_date" x-model="editData.start_date" class="w-full rounded-xl border border-gray-200 bg-gray-50 px-3.5 py-2 text-xs font-medium text-gray-800 outline-none focus:border-brand-500 focus:bg-white dark:border-gray-700 dark:bg-gray-800 dark:text-white cursor-pointer">
+                            <div class="relative cursor-pointer" @click="openPicker()">
+                                <input type="text" x-ref="editStartDate" name="start_date" :value="editData.start_date" class="hidden">
+                                <button type="button" @click.stop="openPicker()" class="absolute right-3 top-2.5 text-gray-400 hover:text-brand-600 transition cursor-pointer" title="Buka Kalender">
+                                    <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2v12a2 2 0 002 2z"/>
+                                    </svg>
+                                </button>
+                            </div>
                         </div>
-                        <div>
-                            <label class="block text-xs font-bold text-gray-700 dark:text-gray-300 mb-1">
+
+                        <div x-data="{
+                                 fp: null,
+                                 init() {
+                                     const initPicker = () => {
+                                         if (typeof flatpickr === 'undefined') {
+                                             setTimeout(initPicker, 100);
+                                             return;
+                                         }
+                                         this.fp = flatpickr(this.$refs.editEndDate, {
+                                             dateFormat: 'Y-m-d',
+                                             altInput: true,
+                                             altFormat: 'd/m/Y',
+                                             allowInput: false,
+                                             locale: typeof flatpickr !== 'undefined' && flatpickr.l10ns && flatpickr.l10ns.id ? flatpickr.l10ns.id : 'default',
+                                             altInputClass: 'w-full rounded-xl border border-gray-200 bg-gray-50 pl-3.5 pr-10 py-2 text-xs font-semibold text-gray-800 outline-none focus:border-brand-500 focus:bg-white dark:border-gray-700 dark:bg-gray-800 dark:text-white cursor-pointer select-none transition shadow-2xs',
+                                             onChange: (selectedDates, dateStr) => {
+                                                 editData.end_date = dateStr;
+                                             }
+                                         });
+                                         if (editData.end_date) {
+                                             this.fp.setDate(editData.end_date);
+                                         }
+                                     };
+                                     this.$nextTick(() => initPicker());
+                                     this.$watch('editData.end_date', (val) => {
+                                         if (this.fp && val) {
+                                             this.fp.setDate(val);
+                                         } else if (this.fp && !val) {
+                                             this.fp.clear();
+                                         }
+                                     });
+                                 },
+                                 openPicker() {
+                                     if (this.fp) this.fp.open();
+                                 }
+                             }">
+                            <label class="block text-xs font-bold text-gray-700 dark:text-gray-300 mb-1 cursor-pointer" @click="openPicker()">
                                 Tanggal Selesai <span class="text-xs font-normal text-gray-400">(Opsional)</span>
                             </label>
-                            <input type="date" name="end_date" x-model="editData.end_date" class="w-full rounded-xl border border-gray-200 bg-gray-50 px-3.5 py-2 text-xs font-medium text-gray-800 outline-none focus:border-brand-500 focus:bg-white dark:border-gray-700 dark:bg-gray-800 dark:text-white cursor-pointer">
+                            <div class="relative cursor-pointer" @click="openPicker()">
+                                <input type="text" x-ref="editEndDate" name="end_date" :value="editData.end_date" class="hidden">
+                                <button type="button" @click.stop="openPicker()" class="absolute right-3 top-2.5 text-gray-400 hover:text-brand-600 transition cursor-pointer" title="Buka Kalender">
+                                    <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2v12a2 2 0 002 2z"/>
+                                    </svg>
+                                </button>
+                            </div>
                         </div>
                     </div>
 
@@ -637,6 +847,95 @@
                         </button>
                         <button type="submit" class="btn-save-theme inline-flex items-center gap-2 rounded-xl bg-brand-600 px-5 py-2 text-xs font-bold text-white hover:bg-brand-700 focus:outline-none shadow-sm transition cursor-pointer">
                             Simpan Perubahan
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </template>
+
+    <!-- MODAL SELESAIKAN PROJECT DENGAN TANGGAL -->
+    <template x-teleport="body">
+        <div x-show="openCompleteModal" x-cloak @click.self="openCompleteModal = false" @keydown.escape.window="openCompleteModal = false" class="fixed inset-0 z-[999999] flex items-center justify-center p-3 sm:p-4 bg-gray-950/80 backdrop-blur-xs overflow-y-auto animate-fadeIn">
+            <div class="w-full max-w-md rounded-2xl bg-white p-6 shadow-2xl dark:bg-gray-900 dark:border dark:border-gray-800 space-y-4 max-h-[92vh] overflow-y-auto custom-scrollbar my-auto">
+                <div class="flex items-center justify-between border-b border-gray-100 dark:border-gray-800 pb-3">
+                    <div class="flex items-center gap-3">
+                        <div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-emerald-50 text-emerald-700 dark:bg-emerald-950/80 dark:text-emerald-400">
+                            <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/></svg>
+                        </div>
+                        <div>
+                            <h3 class="text-base font-bold text-gray-900 dark:text-white">Tandai Selesai (Completed)</h3>
+                            <p class="text-xs text-gray-500 dark:text-gray-400">Atur tanggal penyelesaian pekerjaan project ini</p>
+                        </div>
+                    </div>
+                    <button type="button" @click="openCompleteModal = false" class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 cursor-pointer">
+                        <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+                    </button>
+                </div>
+
+                <form method="POST" :action="'{{ url('/projects') }}/' + completeData.id + '/toggle-status'" class="space-y-4">
+                    @csrf
+                    @method('PATCH')
+
+                    <div class="rounded-xl bg-gray-50 dark:bg-gray-800/60 p-3 border border-gray-200 dark:border-gray-700">
+                        <span class="text-[11px] font-bold text-gray-400 uppercase tracking-wider block">Project:</span>
+                        <p class="text-sm font-black text-gray-900 dark:text-white uppercase mt-0.5" x-text="completeData.name"></p>
+                    </div>
+
+                    <div x-data="{
+                             fp: null,
+                             init() {
+                                 const initPicker = () => {
+                                     if (typeof flatpickr === 'undefined') {
+                                         setTimeout(initPicker, 100);
+                                         return;
+                                     }
+                                     this.fp = flatpickr(this.$refs.completeEndDate, {
+                                         dateFormat: 'Y-m-d',
+                                         altInput: true,
+                                         altFormat: 'd/m/Y',
+                                         allowInput: false,
+                                         locale: typeof flatpickr !== 'undefined' && flatpickr.l10ns && flatpickr.l10ns.id ? flatpickr.l10ns.id : 'default',
+                                         altInputClass: 'w-full rounded-xl border border-gray-200 bg-gray-50 pl-3.5 pr-10 py-2 text-xs font-bold text-gray-800 outline-none focus:border-brand-500 focus:bg-white dark:border-gray-700 dark:bg-gray-800 dark:text-white cursor-pointer select-none transition shadow-2xs',
+                                         onChange: (selectedDates, dateStr) => {
+                                             completeData.end_date = dateStr;
+                                         }
+                                     });
+                                     if (completeData.end_date) {
+                                         this.fp.setDate(completeData.end_date);
+                                     }
+                                 };
+                                 this.$nextTick(() => initPicker());
+                                 this.$watch('completeData.end_date', (val) => {
+                                     if (this.fp && val) {
+                                         this.fp.setDate(val);
+                                     }
+                                 });
+                             },
+                             openPicker() {
+                                 if (this.fp) this.fp.open();
+                             }
+                         }">
+                        <label class="block text-xs font-bold text-gray-700 dark:text-gray-300 mb-1 cursor-pointer" @click="openPicker()">
+                            Tanggal Selesai Pekerjaan <span class="text-rose-500">*</span>
+                        </label>
+                        <div class="relative cursor-pointer" @click="openPicker()">
+                            <input type="text" x-ref="completeEndDate" name="end_date" :value="completeData.end_date" required class="hidden">
+                            <button type="button" @click.stop="openPicker()" class="absolute right-3 top-2.5 text-gray-400 hover:text-emerald-600 transition cursor-pointer" title="Buka Kalender">
+                                <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2v12a2 2 0 002 2z"/>
+                                </svg>
+                            </button>
+                        </div>
+                        <p class="mt-1 text-[11px] text-gray-400">Pilih tanggal aktual selesainya pekerjaan fabrikasi project.</p>
+                    </div>
+
+                    <div class="flex items-center justify-end gap-3 pt-3 border-t border-gray-100 dark:border-gray-800">
+                        <button type="button" @click="openCompleteModal = false" class="rounded-xl border border-gray-200 bg-white px-4 py-2 text-xs font-semibold text-gray-700 hover:bg-gray-50 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-300 cursor-pointer">
+                            Batal
+                        </button>
+                        <button type="submit" class="inline-flex items-center gap-2 rounded-xl bg-emerald-600 px-5 py-2 text-xs font-bold text-white hover:bg-emerald-700 focus:outline-none shadow-sm transition cursor-pointer">
+                            Konfirmasi Selesai
                         </button>
                     </div>
                 </form>

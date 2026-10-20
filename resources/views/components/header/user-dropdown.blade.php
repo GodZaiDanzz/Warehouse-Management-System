@@ -135,7 +135,7 @@
     <!-- Modal Support Bantuan -->
     <template x-teleport="body">
         <div x-show="openSupportModal" x-cloak @click.self="openSupportModal = false" @keydown.escape.window="openSupportModal = false" class="fixed inset-0 z-[999999] flex items-center justify-center p-3 sm:p-4 bg-gray-950/80 backdrop-blur-xs overflow-y-auto animate-fadeIn" aria-modal="true">
-            <div x-show="openSupportModal" x-transition class="relative z-10 inline-block w-full max-w-md overflow-hidden rounded-2xl border border-gray-200 bg-white text-left shadow-2xl transition-all dark:border-gray-700 dark:bg-gray-900 p-6 my-8 space-y-4">
+            <div x-show="openSupportModal" x-transition class="relative z-10 inline-block w-full max-w-md overflow-hidden rounded-2xl border border-gray-200 bg-white text-left shadow-2xl transition-all dark:border-gray-700 dark:bg-gray-900 p-6 my-auto max-h-[92vh] overflow-y-auto custom-scrollbar space-y-4">
                 <div class="flex items-center justify-between border-b border-gray-100 dark:border-gray-800 pb-3">
                     <div class="flex items-center gap-2.5">
                         <div class="flex h-9 w-9 items-center justify-center rounded-xl bg-brand-50 text-brand-700 dark:bg-brand-950/60 dark:text-brand-300 font-bold">

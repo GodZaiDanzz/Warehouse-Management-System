@@ -135,12 +135,20 @@
     <!-- MODAL 1: TAMBAH PENGGUNA -->
     <template x-teleport="body">
         <div x-show="openCreateModal" x-cloak @click.self="openCreateModal = false" @keydown.escape.window="openCreateModal = false" class="fixed inset-0 z-[999999] flex items-center justify-center p-3 sm:p-4 bg-gray-950/80 backdrop-blur-xs overflow-y-auto animate-fadeIn" style="z-index: 999999;" aria-modal="true">
-            <div x-show="openCreateModal" x-transition class="relative z-10 inline-block w-full max-w-md overflow-hidden rounded-2xl border border-gray-200 bg-white text-left shadow-2xl transition-all dark:border-gray-700 dark:bg-gray-900 my-8">
+            <div x-show="openCreateModal" x-transition class="relative z-10 inline-block w-full max-w-md overflow-hidden rounded-2xl border border-gray-200 bg-white text-left shadow-2xl transition-all dark:border-gray-700 dark:bg-gray-900 my-auto max-h-[92vh] overflow-y-auto custom-scrollbar">
                 <form action="{{ route('users.store') }}" method="POST" x-data="{ submitting: false }" @submit="submitting = true">
                     @csrf
                     <div class="p-6 space-y-4">
                         <div class="flex items-center justify-between pb-3 border-b border-gray-200 dark:border-gray-800">
-                            <h3 class="text-lg font-bold text-gray-900 dark:text-white">Tambah Akun Pengguna Baru</h3>
+                            <div class="flex items-center gap-3">
+                                <div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-brand-50 text-brand-700 dark:bg-brand-950/80 dark:text-brand-400">
+                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z"/></svg>
+                                </div>
+                                <div>
+                                    <h3 class="text-base font-bold text-gray-900 dark:text-white">Tambah Pengguna Baru</h3>
+                                    <p class="text-xs text-gray-500 dark:text-gray-400">Buat akun untuk staf atau administrator</p>
+                                </div>
+                            </div>
                             <button type="button" @click="openCreateModal = false" class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 cursor-pointer"><svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg></button>
                         </div>
                         <div class="space-y-1">
@@ -182,13 +190,21 @@
     <!-- MODAL 2: EDIT PENGGUNA -->
     <template x-teleport="body">
         <div x-show="openEditModal" x-cloak @click.self="openEditModal = false" @keydown.escape.window="openEditModal = false" class="fixed inset-0 z-[999999] flex items-center justify-center p-3 sm:p-4 bg-gray-950/80 backdrop-blur-xs overflow-y-auto animate-fadeIn" style="z-index: 999999;" aria-modal="true">
-            <div x-show="openEditModal" x-transition class="relative z-10 inline-block w-full max-w-md overflow-hidden rounded-2xl border border-gray-200 bg-white text-left shadow-2xl transition-all dark:border-gray-700 dark:bg-gray-900 my-8">
+            <div x-show="openEditModal" x-transition class="relative z-10 inline-block w-full max-w-md overflow-hidden rounded-2xl border border-gray-200 bg-white text-left shadow-2xl transition-all dark:border-gray-700 dark:bg-gray-900 my-auto max-h-[92vh] overflow-y-auto custom-scrollbar">
                 <form :action="'/users/' + editUser.id" method="POST" x-data="{ submitting: false }" @submit="submitting = true">
                     @csrf
                     @method('PUT')
                     <div class="p-6 space-y-4">
                         <div class="flex items-center justify-between pb-3 border-b border-gray-200 dark:border-gray-800">
-                            <h3 class="text-lg font-bold text-gray-900 dark:text-white">Edit Data Pengguna</h3>
+                            <div class="flex items-center gap-3">
+                                <div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-amber-50 text-amber-700 dark:bg-amber-950/80 dark:text-amber-400">
+                                    <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
+                                </div>
+                                <div>
+                                    <h3 class="text-base font-bold text-gray-900 dark:text-white">Edit Data Pengguna</h3>
+                                    <p class="text-xs text-gray-500 dark:text-gray-400">Perbarui profil atau role pengguna</p>
+                                </div>
+                            </div>
                             <button type="button" @click="openEditModal = false" class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 cursor-pointer"><svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg></button>
                         </div>
                         <div class="space-y-1">

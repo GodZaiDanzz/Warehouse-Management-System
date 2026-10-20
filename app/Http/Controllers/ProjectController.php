@@ -51,7 +51,9 @@ class ProjectController extends Controller
     {
         $validated = $request->validate([
             'code' => ['nullable', 'string', 'max:100'],
+            'po_number' => ['nullable', 'string', 'max:100'],
             'name' => ['required', 'string', 'max:255'],
+            'client' => ['nullable', 'string', 'max:255'],
             'location' => ['nullable', 'string', 'max:255'],
             'status' => ['nullable', 'string', 'max:50'],
             'start_date' => ['nullable', 'date'],
@@ -86,7 +88,9 @@ class ProjectController extends Controller
 
     public function show($id)
     {
-        $project = Project::findOrFail($id);
+        $project = Project::with(['finishGoods' => function($q) {
+            $q->latest('production_date')->latest('id');
+        }])->findOrFail($id);
 
         $baseQuery = MaterialOut::where(function($q) use ($project) {
             $q->where('project_id', $project->id)
@@ -159,7 +163,9 @@ class ProjectController extends Controller
     {
         $validated = $request->validate([
             'code' => ['nullable', 'string', 'max:100'],
+            'po_number' => ['nullable', 'string', 'max:100'],
             'name' => ['required', 'string', 'max:255'],
+            'client' => ['nullable', 'string', 'max:255'],
             'location' => ['nullable', 'string', 'max:255'],
             'status' => ['nullable', 'string', 'max:50'],
             'start_date' => ['nullable', 'date'],
@@ -191,13 +197,14 @@ class ProjectController extends Controller
         return redirect()->back()->with('success', "Data project '{$project->name}' berhasil diperbarui!");
     }
 
-    public function toggleStatus(Project $project)
+    public function toggleStatus(Request $request, Project $project)
     {
         $newStatus = ($project->status === 'Completed') ? 'Ongoing' : 'Completed';
         $updateData = ['status' => $newStatus];
 
-        if ($newStatus === 'Completed' && empty($project->end_date)) {
-            $updateData['end_date'] = now()->toDateString();
+        if ($newStatus === 'Completed') {
+            $customEndDate = $request->input('end_date');
+            $updateData['end_date'] = !empty($customEndDate) ? $customEndDate : ($project->end_date ? $project->end_date->toDateString() : now()->toDateString());
         }
 
         $project->update($updateData);

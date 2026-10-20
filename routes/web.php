@@ -22,6 +22,7 @@ use App\Http\Controllers\AuthController;
 use App\Http\Controllers\ProjectConsumptionController;
 use App\Http\Controllers\ItemBarcodeController;
 use App\Http\Controllers\UnitController;
+use App\Http\Controllers\FinishGoodController;
 
 /*
 |--------------------------------------------------------------------------
@@ -94,6 +95,14 @@ Route::middleware(['auth'])->group(function () {
     Route::patch('/projects/{project}/toggle-status', [ProjectController::class, 'toggleStatus'])->name('projects.toggle-status');
     Route::delete('/projects/{project}', [ProjectController::class, 'destroy'])->name('projects.destroy');
     Route::post('/projects/{project}/add-material', [ProjectController::class, 'addMaterial'])->name('projects.add-material');
+
+    // Manajemen Barang Jadi / Finish Good (Menu WMS)
+    Route::get('/finish-goods', [FinishGoodController::class, 'index'])->name('finish-goods.index');
+    Route::post('/finish-goods', [FinishGoodController::class, 'store'])->name('finish-goods.store');
+    Route::put('/finish-goods/{finishGood}', [FinishGoodController::class, 'update'])->name('finish-goods.update');
+    Route::patch('/finish-goods/{finishGood}/delivery', [FinishGoodController::class, 'updateDelivery'])->name('finish-goods.delivery');
+    Route::delete('/finish-goods/{finishGood}', [FinishGoodController::class, 'destroy'])->name('finish-goods.destroy');
+    Route::get('/finish-goods-export', [FinishGoodController::class, 'exportExcel'])->name('finish-goods.export');
 
     // Warehouse Stock Movement Logs & Reports (Pencatatan Gudang)
     Route::get('/stock-logs', [StockLogController::class, 'index'])->name('logs.index');

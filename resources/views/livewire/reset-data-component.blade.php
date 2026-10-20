@@ -297,7 +297,7 @@
     <!-- Modal Confirmation Dialog -->
     @if ($isModalOpen)
         <div class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-gray-950/70 overflow-y-auto" wire:keydown.escape="closeModal" wire:click.self="closeModal" role="dialog" aria-modal="true" aria-labelledby="modal-headline">
-            <div class="w-full max-w-lg rounded-xl bg-white p-6 shadow-xl dark:bg-gray-900 dark:border dark:border-gray-800 my-8">
+            <div class="w-full max-w-lg rounded-xl bg-white p-6 shadow-xl dark:bg-gray-900 dark:border dark:border-gray-800 my-auto max-h-[92vh] overflow-y-auto custom-scrollbar">
                 <!-- Modal Header -->
                 <div class="flex items-start gap-3.5 mb-4">
                     <div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-rose-100 text-rose-600 dark:bg-rose-950/60 dark:text-rose-400">

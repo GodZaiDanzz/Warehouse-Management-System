@@ -91,6 +91,11 @@ class MenuHelper
                         'name' => 'Rekap Project',
                         'path' => '/projects-summary',
                     ],
+                    [
+                        'icon' => 'finish-goods',
+                        'name' => 'Barang Jadi (Finish Good)',
+                        'path' => '/finish-goods',
+                    ],
                 ]
             ],
             // Grup 2: PENCATATAN GUDANG
@@ -218,6 +223,9 @@ class MenuHelper
 
             // 5. Manajemen Project (Briefcase Blueprint)
             'projects' => '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="7" width="20" height="14" rx="2" ry="2"></rect><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"></path><circle cx="12" cy="12" r="1"></circle></svg>',
+
+            // 5b. Barang Jadi (Finish Good - Box Checkmark)
+            'finish-goods' => '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path><polyline points="9 12 12 15 16 10"></polyline></svg>',
 
             // 6. Kategori Barang (Category Tag)
             'categories' => '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"></path><line x1="7" y1="7" x2="7.01" y2="7"></line></svg>',

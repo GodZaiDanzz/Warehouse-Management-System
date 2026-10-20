@@ -5,21 +5,33 @@
 @endphp
 
 @section('content')
-<div class="p-4 sm:p-6 space-y-6" x-data="{ openAddMaterialModal: false, openEditModal: false, selectedUnit: 'PCS' }">
+<div class="p-4 sm:p-6 space-y-6" x-data="{ openAddMaterialModal: false, openEditModal: false, openAddFinishGoodModal: false, selectedUnit: 'PCS' }">
     <!-- Header -->
     <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
             <div class="flex items-center gap-3 mt-1">
                 <h1 class="text-2xl font-bold text-gray-900 dark:text-white">{{ $project->name }}</h1>
             </div>
-            @if($project->code)
-                <div class="mt-1">
+            <div class="mt-1.5 flex flex-wrap items-center gap-2">
+                @if($project->po_number)
+                    <span class="inline-flex items-center gap-1 font-mono text-xs font-bold text-amber-700 dark:text-amber-300 bg-amber-50 dark:bg-amber-950/60 px-2.5 py-0.5 rounded-lg border border-amber-200 dark:border-amber-800" title="Nomor PO">
+                        <svg class="w-3.5 h-3.5 text-amber-600 dark:text-amber-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+                        PO: {{ $project->po_number }}
+                    </span>
+                @endif
+                @if($project->client)
+                    <span class="inline-flex items-center gap-1 text-xs font-bold text-sky-700 dark:text-sky-300 bg-sky-50 dark:bg-sky-950/60 px-2.5 py-0.5 rounded-lg border border-sky-200 dark:border-sky-800" title="Client / Pemilik Pekerjaan">
+                        <svg class="w-3.5 h-3.5 text-sky-600 dark:text-sky-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/></svg>
+                        Client: {{ $project->client }}
+                    </span>
+                @endif
+                @if($project->code)
                     <span class="inline-flex items-center gap-1 font-mono text-xs font-bold text-gray-600 dark:text-gray-400 bg-gray-100 dark:bg-gray-800 px-2.5 py-0.5 rounded-lg border border-gray-200 dark:border-gray-700 tracking-wider">
                         <svg class="w-3.5 h-3.5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z"/></svg>
                         {{ $project->code }}
                     </span>
-                </div>
-            @endif
+                @endif
+            </div>
         </div>
         <div class="flex items-center gap-2 sm:gap-3 flex-wrap">
             <a href="{{ route('projects.index') }}" class="inline-flex items-center gap-2 rounded-xl border border-gray-200 bg-white px-4 py-2.5 text-xs font-semibold text-gray-700 hover:bg-gray-50 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-200 transition">
@@ -28,6 +40,10 @@
             <button type="button" @click="openEditModal = true" class="inline-flex items-center gap-2 rounded-xl border border-gray-200 bg-white px-4 py-2.5 text-xs font-semibold text-gray-700 hover:bg-gray-50 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-200 transition cursor-pointer">
                 <svg class="w-4 h-4 text-brand-600 dark:text-brand-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
                 Edit Rincian Project
+            </button>
+            <button type="button" @click="openAddFinishGoodModal = true" class="inline-flex items-center gap-2 rounded-xl bg-indigo-600 px-4 py-2.5 text-xs font-bold text-white shadow-xs hover:bg-indigo-700 transition cursor-pointer">
+                <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/></svg>
+                Tambah Barang Jadi
             </button>
             <button type="button" @click="openAddMaterialModal = true" class="inline-flex items-center gap-2 rounded-xl bg-emerald-600 px-5 py-2.5 text-xs font-bold text-white shadow-md hover:bg-emerald-700 transition cursor-pointer btn-add-theme">
                 <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
@@ -58,7 +74,21 @@
                 </div>
             </div>
 
-            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs">
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 text-xs">
+                <div class="rounded-xl bg-gray-50 dark:bg-gray-800/50 p-3 border border-gray-100 dark:border-gray-800">
+                    <span class="text-gray-500 dark:text-gray-400 font-semibold block text-[11px] uppercase tracking-wider">Nomor PO</span>
+                    <p class="font-mono font-extrabold text-amber-700 dark:text-amber-400 mt-1 flex items-center gap-1.5 text-sm">
+                        <svg class="w-4 h-4 text-amber-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+                        <span>{{ $project->po_number ?: '-' }}</span>
+                    </p>
+                </div>
+                <div class="rounded-xl bg-gray-50 dark:bg-gray-800/50 p-3 border border-gray-100 dark:border-gray-800">
+                    <span class="text-gray-500 dark:text-gray-400 font-semibold block text-[11px] uppercase tracking-wider">Client / Pemesan</span>
+                    <p class="font-extrabold text-sky-700 dark:text-sky-300 mt-1 flex items-center gap-1.5 text-sm">
+                        <svg class="w-4 h-4 text-sky-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/></svg>
+                        <span>{{ $project->client ?: '-' }}</span>
+                    </p>
+                </div>
                 <div class="rounded-xl bg-gray-50 dark:bg-gray-800/50 p-3 border border-gray-100 dark:border-gray-800">
                     <span class="text-gray-500 dark:text-gray-400 font-semibold block text-[11px] uppercase tracking-wider">Tempat Fabrikasi</span>
                     <p class="font-extrabold text-gray-900 dark:text-white mt-1 flex items-center gap-1.5 text-sm">
@@ -364,16 +394,150 @@
         @endif
     </div>
 
+    <!-- BARANG JADI (FINISH GOODS) HASIL FABRIKASI PROJECT -->
+    <div class="rounded-2xl border border-gray-100 bg-white p-5 shadow-xs dark:border-gray-800 dark:bg-gray-900 space-y-4">
+        <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 border-b border-gray-100 dark:border-gray-800 pb-3">
+            <div>
+                <h3 class="text-base font-extrabold text-gray-900 dark:text-white flex items-center gap-2">
+                    <svg class="w-5 h-5 text-indigo-600 dark:text-indigo-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/></svg>
+                    <span>Barang Jadi (Finish Goods) Hasil Fabrikasi</span>
+                    <span class="text-xs font-bold text-indigo-600 bg-indigo-50 dark:bg-indigo-950/50 dark:text-indigo-400 px-2.5 py-0.5 rounded-full border border-indigo-200 dark:border-indigo-800">
+                        {{ $project->finishGoods->count() }} Item Tercatat
+                    </span>
+                </h3>
+                <p class="text-xs text-gray-500 dark:text-gray-400">Daftar produk, komponen, atau hasil fabrikasi yang telah selesai dikerjakan untuk project ini.</p>
+            </div>
+            <div class="flex items-center gap-2">
+                <a href="{{ route('finish-goods.index', ['project_id' => $project->id]) }}" class="inline-flex items-center gap-1.5 rounded-xl border border-gray-200 bg-white px-3 py-2 text-xs font-semibold text-gray-700 hover:bg-gray-50 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-200 transition">
+                    <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/></svg>
+                    Buka Modul Finish Goods
+                </a>
+                <button type="button" @click="openAddFinishGoodModal = true" class="inline-flex items-center gap-1.5 rounded-xl bg-indigo-600 px-3.5 py-2 text-xs font-bold text-white shadow-xs hover:bg-indigo-700 transition cursor-pointer">
+                    <svg class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+                    Tambah Barang Jadi
+                </button>
+            </div>
+        </div>
+
+        <div class="overflow-x-auto rounded-xl border border-gray-100 dark:border-gray-800">
+            <table class="w-full text-left text-xs">
+                <thead class="bg-gray-50 text-[11px] font-bold text-gray-500 uppercase tracking-wider dark:bg-gray-800/80 dark:text-gray-400 border-b border-gray-100 dark:border-gray-800">
+                    <tr>
+                        <th class="px-4 py-3.5 text-center w-12">NO</th>
+                        <th class="px-4 py-3.5">NAMA BARANG JADI</th>
+                        <th class="px-4 py-3.5">KODE / SERI</th>
+                        <th class="px-4 py-3.5 text-center">JUMLAH HASIL</th>
+                        <th class="px-4 py-3.5 text-center">TGL SELESAI</th>
+                        <th class="px-4 py-3.5 text-center">STATUS QC</th>
+                        <th class="px-4 py-3.5 text-center">STATUS GUDANG</th>
+                        <th class="px-4 py-3.5">INFO PENGIRIMAN</th>
+                        <th class="px-4 py-3.5">CATATAN</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-gray-100 dark:divide-gray-800 font-medium">
+                    @forelse($project->finishGoods as $fg)
+                        <tr class="hover:bg-gray-50/80 dark:hover:bg-gray-800/50 transition">
+                            <td class="px-4 py-3 text-center text-gray-500">{{ $loop->iteration }}</td>
+                            <td class="px-4 py-3 font-extrabold text-gray-900 dark:text-white uppercase">
+                                {{ $fg->item_name }}
+                            </td>
+                            <td class="px-4 py-3 font-mono text-gray-600 dark:text-gray-400">
+                                {{ $fg->item_code ?: '-' }}
+                            </td>
+                            <td class="px-4 py-3 text-center font-bold text-emerald-600 dark:text-emerald-400 font-mono">
+                                {{ number_format($fg->quantity, 2, ',', '.') }} {{ $fg->unit }}
+                            </td>
+                            <td class="px-4 py-3 text-center whitespace-nowrap font-mono text-gray-700 dark:text-gray-300">
+                                {{ format_date($fg->production_date) }}
+                            </td>
+                            <td class="px-4 py-3 text-center">
+                                @if($fg->qc_status === 'Passed')
+                                    <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-black bg-emerald-50 text-emerald-700 border border-emerald-200 dark:bg-emerald-950/80 dark:text-emerald-300 dark:border-emerald-700">
+                                        Passed QC
+                                    </span>
+                                @elseif($fg->qc_status === 'Conditional')
+                                    <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-black bg-amber-50 text-amber-700 border border-amber-200 dark:bg-amber-950/80 dark:text-amber-300 dark:border-amber-700">
+                                        Conditional
+                                    </span>
+                                @elseif($fg->qc_status === 'Failed')
+                                    <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-black bg-rose-50 text-rose-700 border border-rose-200 dark:bg-rose-950/80 dark:text-rose-300 dark:border-rose-700">
+                                        Failed QC
+                                    </span>
+                                @else
+                                    <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-black bg-gray-100 text-gray-700 border border-gray-300 dark:bg-gray-800 dark:text-gray-300 dark:border-gray-700">
+                                        Pending QC
+                                    </span>
+                                @endif
+                            </td>
+                            <td class="px-4 py-3 text-center">
+                                @if($fg->status === 'Delivered')
+                                    <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-black bg-sky-50 text-sky-700 border border-sky-200 dark:bg-sky-950/80 dark:text-sky-300 dark:border-sky-700">
+                                        Terkirim (Delivered)
+                                    </span>
+                                @elseif($fg->status === 'Ready for Delivery')
+                                    <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-black bg-indigo-50 text-indigo-700 border border-indigo-200 dark:bg-indigo-950/80 dark:text-indigo-300 dark:border-indigo-700">
+                                        Ready for Delivery
+                                    </span>
+                                @elseif($fg->status === 'In Stock')
+                                    <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-black bg-teal-50 text-teal-700 border border-teal-200 dark:bg-teal-950/80 dark:text-teal-300 dark:border-teal-700">
+                                        In Stock (Gudang)
+                                    </span>
+                                @else
+                                    <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-black bg-gray-100 text-gray-600 border border-gray-300 dark:bg-gray-800 dark:text-gray-400 dark:border-gray-700">
+                                        {{ $fg->status }}
+                                    </span>
+                                @endif
+                            </td>
+                            <td class="px-4 py-3 text-gray-800 dark:text-gray-200">
+                                @if($fg->delivery_date || $fg->delivery_order_number)
+                                    <div class="text-[11px] leading-tight">
+                                        @if($fg->delivery_order_number)
+                                            <span class="font-mono font-bold text-gray-900 dark:text-white block">DO: {{ $fg->delivery_order_number }}</span>
+                                        @endif
+                                        @if($fg->delivery_date)
+                                            <span class="text-gray-500 dark:text-gray-400">Tgl: {{ format_date($fg->delivery_date) }}</span>
+                                        @endif
+                                    </div>
+                                @else
+                                    <span class="text-gray-400 italic">Belum dikirim</span>
+                                @endif
+                            </td>
+                            <td class="px-4 py-3 text-gray-500 dark:text-gray-400 max-w-xs truncate">
+                                {{ $fg->notes ?: '-' }}
+                            </td>
+                        </tr>
+                    @empty
+                        <tr>
+                            <td colspan="9" class="px-4 py-8 text-center text-gray-500 dark:text-gray-400">
+                                <p class="font-bold text-gray-700 dark:text-gray-300">Belum ada barang jadi (finish goods) yang dicatat untuk project ini.</p>
+                                <p class="text-xs text-gray-400 mt-0.5">Catat hasil fabrikasi yang sudah selesai agar terpantau stok dan status pengirimannya.</p>
+                                <button type="button" @click="openAddFinishGoodModal = true" class="mt-3 inline-flex items-center gap-1.5 rounded-xl bg-indigo-50 px-3 py-1.5 text-xs font-bold text-indigo-700 border border-indigo-200 dark:bg-indigo-950/50 dark:text-indigo-300 dark:border-indigo-800 hover:bg-indigo-100 transition cursor-pointer">
+                                    <svg class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+                                    Catat Barang Jadi Sekarang
+                                </button>
+                            </td>
+                        </tr>
+                    @endforelse
+                </tbody>
+            </table>
+        </div>
+    </div>
+
     <!-- Modal: Record Material Out for this Project -->
     <template x-teleport="body">
         <div x-show="openAddMaterialModal" x-cloak @click.self="openAddMaterialModal = false" @keydown.escape.window="openAddMaterialModal = false" class="fixed inset-0 z-[999999] flex items-center justify-center p-3 sm:p-4 bg-gray-950/80 backdrop-blur-xs overflow-y-auto animate-fadeIn">
-            <div class="w-full max-w-lg rounded-2xl bg-white p-6 shadow-2xl dark:bg-gray-900 dark:border dark:border-gray-800 space-y-4 max-h-[90vh] overflow-y-auto custom-scrollbar my-8">
+            <div class="w-full max-w-lg rounded-2xl bg-white p-6 shadow-2xl dark:bg-gray-900 dark:border dark:border-gray-800 space-y-4 max-h-[92vh] overflow-y-auto custom-scrollbar my-auto">
                 <div class="flex items-center justify-between pb-3 border-b border-gray-100 dark:border-gray-800 mb-4">
-                    <div>
-                        <h3 class="text-base font-extrabold text-gray-900 dark:text-white">Catat Pengeluaran Material Project</h3>
-                        <p class="text-xs text-emerald-600 dark:text-emerald-400 font-semibold">Project: {{ $project->name }}</p>
+                    <div class="flex items-center gap-3">
+                        <div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-emerald-50 text-emerald-700 dark:bg-emerald-950/80 dark:text-emerald-400">
+                            <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/></svg>
+                        </div>
+                        <div>
+                            <h3 class="text-base font-bold text-gray-900 dark:text-white">Catat Pengeluaran Material Project</h3>
+                            <p class="text-xs text-emerald-600 dark:text-emerald-400 font-semibold">Project: {{ $project->name }}</p>
+                        </div>
                     </div>
-                    <button type="button" @click="openAddMaterialModal = false" class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200">
+                    <button type="button" @click="openAddMaterialModal = false" class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 cursor-pointer">
                         <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
                     </button>
                 </div>
@@ -456,13 +620,16 @@
     <!-- MODAL EDIT PROJECT -->
     <template x-teleport="body">
         <div x-show="openEditModal" x-cloak @click.self="openEditModal = false" @keydown.escape.window="openEditModal = false" class="fixed inset-0 z-[999999] flex items-center justify-center p-3 sm:p-4 bg-gray-950/80 backdrop-blur-xs overflow-y-auto animate-fadeIn">
-            <div class="w-full max-w-lg rounded-2xl bg-white p-6 shadow-2xl dark:bg-gray-900 dark:border dark:border-gray-800 space-y-4 max-h-[90vh] overflow-y-auto custom-scrollbar my-8">
+            <div class="w-full max-w-2xl rounded-2xl bg-white p-6 shadow-2xl dark:bg-gray-900 dark:border dark:border-gray-800 space-y-4 max-h-[92vh] overflow-y-auto custom-scrollbar my-auto">
                 <div class="flex items-center justify-between border-b border-gray-100 dark:border-gray-800 pb-3">
-                    <div class="flex items-center gap-2.5">
-                        <div class="flex h-9 w-9 items-center justify-center rounded-xl bg-amber-100 text-amber-700 dark:bg-amber-950/80 dark:text-amber-400">
+                    <div class="flex items-center gap-3">
+                        <div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-amber-50 text-amber-700 dark:bg-amber-950/80 dark:text-amber-400">
                             <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
                         </div>
-                        <h3 class="text-base font-extrabold text-gray-900 dark:text-white">Edit Data Project</h3>
+                        <div>
+                            <h3 class="text-base font-bold text-gray-900 dark:text-white">Edit Data Project</h3>
+                            <p class="text-xs text-gray-500 dark:text-gray-400">Perbarui identitas, tempat fabrikasi, status, atau jadwal project</p>
+                        </div>
                     </div>
                     <button type="button" @click="openEditModal = false" class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 cursor-pointer">
                         <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
@@ -473,16 +640,30 @@
                     @csrf
                     @method('PUT')
 
-                    <!-- Kode Project -->
-                    <div>
-                        <label class="block text-xs font-bold text-gray-700 dark:text-gray-300 mb-1">Kode Project</label>
-                        <input type="text" name="code" value="{{ $project->code }}" placeholder="PRJ-..." class="w-full rounded-xl border border-gray-200 bg-gray-50 px-3.5 py-2 text-xs font-mono font-bold uppercase text-gray-800 outline-none focus:border-brand-500 focus:bg-white dark:border-gray-700 dark:bg-gray-800 dark:text-white">
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                        <!-- Kode Project -->
+                        <div>
+                            <label class="block text-xs font-bold text-gray-700 dark:text-gray-300 mb-1">Kode Project</label>
+                            <input type="text" name="code" value="{{ $project->code }}" placeholder="PRJ-..." class="w-full rounded-xl border border-gray-200 bg-gray-50 px-3.5 py-2 text-xs font-mono font-bold uppercase text-gray-800 outline-none focus:border-brand-500 focus:bg-white dark:border-gray-700 dark:bg-gray-800 dark:text-white">
+                        </div>
+                        <!-- Nomor PO -->
+                        <div>
+                            <label class="block text-xs font-bold text-gray-700 dark:text-gray-300 mb-1">Nomor PO <span class="text-xs font-normal text-gray-400">(Client / Kontrak)</span></label>
+                            <input type="text" name="po_number" value="{{ $project->po_number }}" placeholder="PO-..." class="w-full rounded-xl border border-gray-200 bg-gray-50 px-3.5 py-2 text-xs font-mono uppercase text-gray-800 outline-none focus:border-brand-500 focus:bg-white dark:border-gray-700 dark:bg-gray-800 dark:text-white">
+                        </div>
                     </div>
 
-                    <!-- Nama Project -->
-                    <div>
-                        <label class="block text-xs font-bold text-gray-700 dark:text-gray-300 mb-1">Nama Project / Pekerjaan <span class="text-rose-500">*</span></label>
-                        <input type="text" name="name" value="{{ $project->name }}" required class="w-full rounded-xl border border-gray-200 bg-gray-50 px-3.5 py-2 text-xs text-gray-800 outline-none focus:border-brand-500 focus:bg-white dark:border-gray-700 dark:bg-gray-800 dark:text-white">
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                        <!-- Nama Project -->
+                        <div>
+                            <label class="block text-xs font-bold text-gray-700 dark:text-gray-300 mb-1">Nama Project / Pekerjaan <span class="text-rose-500">*</span></label>
+                            <input type="text" name="name" value="{{ $project->name }}" required class="w-full rounded-xl border border-gray-200 bg-gray-50 px-3.5 py-2 text-xs text-gray-800 outline-none focus:border-brand-500 focus:bg-white dark:border-gray-700 dark:bg-gray-800 dark:text-white">
+                        </div>
+                        <!-- Client -->
+                        <div>
+                            <label class="block text-xs font-bold text-gray-700 dark:text-gray-300 mb-1">Client / Pemesan <span class="text-xs font-normal text-gray-400">(Opsional)</span></label>
+                            <input type="text" name="client" value="{{ $project->client }}" placeholder="Contoh: PT PLN / Pertamina" class="w-full rounded-xl border border-gray-200 bg-gray-50 px-3.5 py-2 text-xs text-gray-800 outline-none focus:border-brand-500 focus:bg-white dark:border-gray-700 dark:bg-gray-800 dark:text-white">
+                        </div>
                     </div>
 
                     <!-- Tempat Fabrikasi -->
@@ -511,19 +692,86 @@
                         </select>
                     </div>
 
-                    <!-- Tanggal Mulai & Tanggal Selesai -->
+                    <!-- Tanggal Mulai & Tanggal Selesai (Interactive Flatpickr Calendar) -->
                     <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                        <div>
-                            <label class="block text-xs font-bold text-gray-700 dark:text-gray-300 mb-1">
+                        <div x-data="{
+                                 fp: null,
+                                 init() {
+                                     const initPicker = () => {
+                                         if (typeof flatpickr === 'undefined') {
+                                             setTimeout(initPicker, 100);
+                                             return;
+                                         }
+                                         this.fp = flatpickr(this.$refs.editStartPicker, {
+                                             dateFormat: 'Y-m-d',
+                                             altInput: true,
+                                             altFormat: 'd/m/Y',
+                                             allowInput: false,
+                                             locale: typeof flatpickr !== 'undefined' && flatpickr.l10ns && flatpickr.l10ns.id ? flatpickr.l10ns.id : 'default',
+                                             altInputClass: 'w-full rounded-xl border border-gray-200 bg-gray-50 pl-3.5 pr-10 py-2 text-xs font-semibold text-gray-800 outline-none focus:border-brand-500 focus:bg-white dark:border-gray-700 dark:bg-gray-800 dark:text-white cursor-pointer select-none transition shadow-2xs',
+                                             defaultDate: '{{ $project->start_date ? $project->start_date->format('Y-m-d') : '' }}',
+                                             onChange: (selectedDates, dateStr) => {
+                                                 this.$refs.editStartPicker.value = dateStr;
+                                             }
+                                         });
+                                     };
+                                     this.$nextTick(() => initPicker());
+                                 },
+                                 openPicker() {
+                                     if (this.fp) this.fp.open();
+                                 }
+                             }">
+                            <label class="block text-xs font-bold text-gray-700 dark:text-gray-300 mb-1 cursor-pointer" @click="openPicker()">
                                 Tanggal Mulai <span class="text-xs font-normal text-gray-400">(Opsional)</span>
                             </label>
-                            <input type="date" name="start_date" value="{{ $project->start_date ? $project->start_date->format('Y-m-d') : '' }}" class="w-full rounded-xl border border-gray-200 bg-gray-50 px-3.5 py-2 text-xs font-medium text-gray-800 outline-none focus:border-brand-500 focus:bg-white dark:border-gray-700 dark:bg-gray-800 dark:text-white cursor-pointer">
+                            <div class="relative cursor-pointer" @click="openPicker()">
+                                <input type="text" x-ref="editStartPicker" name="start_date" value="{{ $project->start_date ? $project->start_date->format('Y-m-d') : '' }}" class="hidden">
+                                <button type="button" @click.stop="openPicker()" class="absolute right-3 top-2.5 text-gray-400 hover:text-brand-600 transition cursor-pointer" title="Buka Kalender">
+                                    <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2v12a2 2 0 002 2z"/>
+                                    </svg>
+                                </button>
+                            </div>
                         </div>
-                        <div>
-                            <label class="block text-xs font-bold text-gray-700 dark:text-gray-300 mb-1">
+
+                        <div x-data="{
+                                 fp: null,
+                                 init() {
+                                     const initPicker = () => {
+                                         if (typeof flatpickr === 'undefined') {
+                                             setTimeout(initPicker, 100);
+                                             return;
+                                         }
+                                         this.fp = flatpickr(this.$refs.editEndPicker, {
+                                             dateFormat: 'Y-m-d',
+                                             altInput: true,
+                                             altFormat: 'd/m/Y',
+                                             allowInput: false,
+                                             locale: typeof flatpickr !== 'undefined' && flatpickr.l10ns && flatpickr.l10ns.id ? flatpickr.l10ns.id : 'default',
+                                             altInputClass: 'w-full rounded-xl border border-gray-200 bg-gray-50 pl-3.5 pr-10 py-2 text-xs font-semibold text-gray-800 outline-none focus:border-brand-500 focus:bg-white dark:border-gray-700 dark:bg-gray-800 dark:text-white cursor-pointer select-none transition shadow-2xs',
+                                             defaultDate: '{{ $project->end_date ? $project->end_date->format('Y-m-d') : '' }}',
+                                             onChange: (selectedDates, dateStr) => {
+                                                 this.$refs.editEndPicker.value = dateStr;
+                                             }
+                                         });
+                                     };
+                                     this.$nextTick(() => initPicker());
+                                 },
+                                 openPicker() {
+                                     if (this.fp) this.fp.open();
+                                 }
+                             }">
+                            <label class="block text-xs font-bold text-gray-700 dark:text-gray-300 mb-1 cursor-pointer" @click="openPicker()">
                                 Tanggal Selesai <span class="text-xs font-normal text-gray-400">(Opsional)</span>
                             </label>
-                            <input type="date" name="end_date" value="{{ $project->end_date ? $project->end_date->format('Y-m-d') : '' }}" class="w-full rounded-xl border border-gray-200 bg-gray-50 px-3.5 py-2 text-xs font-medium text-gray-800 outline-none focus:border-brand-500 focus:bg-white dark:border-gray-700 dark:bg-gray-800 dark:text-white cursor-pointer">
+                            <div class="relative cursor-pointer" @click="openPicker()">
+                                <input type="text" x-ref="editEndPicker" name="end_date" value="{{ $project->end_date ? $project->end_date->format('Y-m-d') : '' }}" class="hidden">
+                                <button type="button" @click.stop="openPicker()" class="absolute right-3 top-2.5 text-gray-400 hover:text-brand-600 transition cursor-pointer" title="Buka Kalender">
+                                    <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2v12a2 2 0 002 2z"/>
+                                    </svg>
+                                </button>
+                            </div>
                         </div>
                     </div>
 
@@ -539,6 +787,138 @@
                         </button>
                         <button type="submit" class="btn-save-theme inline-flex items-center gap-2 rounded-xl bg-brand-600 px-5 py-2 text-xs font-bold text-white hover:bg-brand-700 focus:outline-none shadow-sm transition cursor-pointer">
                             Simpan Perubahan
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </template>
+
+    <!-- MODAL QUICK TAMBAH BARANG JADI (FINISH GOOD) KHUSUS PROJECT INI -->
+    <template x-teleport="body">
+        <div x-show="openAddFinishGoodModal" x-cloak @click.self="openAddFinishGoodModal = false" @keydown.escape.window="openAddFinishGoodModal = false" class="fixed inset-0 z-[999999] flex items-center justify-center p-3 sm:p-4 bg-gray-950/80 backdrop-blur-xs overflow-y-auto animate-fadeIn">
+            <div class="w-full max-w-2xl rounded-2xl bg-white p-6 shadow-2xl dark:bg-gray-900 dark:border dark:border-gray-800 space-y-4 max-h-[92vh] overflow-y-auto custom-scrollbar my-auto">
+                <div class="flex items-center justify-between pb-3 border-b border-gray-100 dark:border-gray-800 mb-4">
+                    <div class="flex items-center gap-3">
+                        <div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-indigo-50 text-indigo-700 dark:bg-indigo-950/80 dark:text-indigo-400">
+                            <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/></svg>
+                        </div>
+                        <div>
+                            <h3 class="text-base font-bold text-gray-900 dark:text-white">Catat Barang Jadi (Finish Good)</h3>
+                            <p class="text-xs text-indigo-600 dark:text-indigo-400 font-semibold">Project: {{ $project->name }}</p>
+                        </div>
+                    </div>
+                    <button type="button" @click="openAddFinishGoodModal = false" class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 cursor-pointer">
+                        <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+                    </button>
+                </div>
+
+                <form action="{{ route('finish-goods.store') }}" method="POST" class="space-y-4">
+                    @csrf
+                    <input type="hidden" name="project_id" value="{{ $project->id }}">
+
+                    <div>
+                        <label class="block text-xs font-bold text-gray-700 dark:text-gray-300 mb-1">Nama Barang Jadi / Komponen Hasil Fabrikasi <span class="text-rose-500">*</span></label>
+                        <input type="text" name="item_name" placeholder="Contoh: Tangki Storage 5000L / Spool Piping 4 Inch" required class="w-full rounded-xl border border-gray-200 bg-gray-50 px-3.5 py-2 text-xs text-gray-800 outline-none focus:border-indigo-500 focus:bg-white dark:border-gray-700 dark:bg-gray-800 dark:text-white">
+                    </div>
+
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                        <div>
+                            <label class="block text-xs font-bold text-gray-700 dark:text-gray-300 mb-1">Nomor / Kode Seri Produk <span class="text-xs font-normal text-gray-400">(Opsional)</span></label>
+                            <input type="text" name="item_code" placeholder="Contoh: FG-2026-TNK-01" class="w-full rounded-xl border border-gray-200 bg-gray-50 px-3.5 py-2 text-xs font-mono uppercase text-gray-800 outline-none focus:border-indigo-500 focus:bg-white dark:border-gray-700 dark:bg-gray-800 dark:text-white">
+                        </div>
+                        <div x-data="{
+                                 fp: null,
+                                 init() {
+                                     const initPicker = () => {
+                                         if (typeof flatpickr === 'undefined') {
+                                             setTimeout(initPicker, 100);
+                                             return;
+                                         }
+                                         this.fp = flatpickr(this.$refs.fgProdDate, {
+                                             dateFormat: 'Y-m-d',
+                                             altInput: true,
+                                             altFormat: 'd/m/Y',
+                                             allowInput: false,
+                                             locale: typeof flatpickr !== 'undefined' && flatpickr.l10ns && flatpickr.l10ns.id ? flatpickr.l10ns.id : 'default',
+                                             altInputClass: 'w-full rounded-xl border border-gray-200 bg-gray-50 pl-3.5 pr-10 py-2 text-xs font-semibold text-gray-800 outline-none focus:border-indigo-500 focus:bg-white dark:border-gray-700 dark:bg-gray-800 dark:text-white cursor-pointer select-none transition shadow-2xs',
+                                             defaultDate: '{{ date('Y-m-d') }}',
+                                             onChange: (selectedDates, dateStr) => {
+                                                 this.$refs.fgProdDate.value = dateStr;
+                                             }
+                                         });
+                                     };
+                                     this.$nextTick(() => initPicker());
+                                 },
+                                 openPicker() {
+                                     if (this.fp) this.fp.open();
+                                 }
+                             }">
+                            <label class="block text-xs font-bold text-gray-700 dark:text-gray-300 mb-1 cursor-pointer" @click="openPicker()">
+                                Tanggal Selesai Produksi <span class="text-rose-500">*</span>
+                            </label>
+                            <div class="relative cursor-pointer" @click="openPicker()">
+                                <input type="text" x-ref="fgProdDate" name="production_date" value="{{ date('Y-m-d') }}" required class="hidden">
+                                <button type="button" @click.stop="openPicker()" class="absolute right-3 top-2.5 text-gray-400 hover:text-indigo-600 transition cursor-pointer" title="Buka Kalender">
+                                    <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2v12a2 2 0 002 2z"/>
+                                    </svg>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-2 gap-3">
+                        <div>
+                            <label class="block text-xs font-bold text-gray-700 dark:text-gray-300 mb-1">Jumlah Hasil <span class="text-rose-500">*</span></label>
+                            <input type="number" step="any" name="quantity" min="0.01" value="1" required class="w-full rounded-xl border border-gray-200 bg-gray-50 px-3.5 py-2 text-xs font-bold text-gray-800 outline-none focus:border-indigo-500 focus:bg-white dark:border-gray-700 dark:bg-gray-800 dark:text-white">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold text-gray-700 dark:text-gray-300 mb-1">Satuan <span class="text-rose-500">*</span></label>
+                            <input type="text" name="unit" list="finish_good_unit_suggestions" value="UNIT" required class="w-full rounded-xl border border-gray-200 bg-gray-50 px-3.5 py-2 text-xs font-bold uppercase text-gray-800 outline-none focus:border-indigo-500 focus:bg-white dark:border-gray-700 dark:bg-gray-800 dark:text-white">
+                            <datalist id="finish_good_unit_suggestions">
+                                <option value="UNIT"></option>
+                                <option value="PCS"></option>
+                                <option value="SET"></option>
+                                <option value="BATANG"></option>
+                                <option value="LEMBAR"></option>
+                                <option value="ROLL"></option>
+                            </datalist>
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                        <div>
+                            <label class="block text-xs font-bold text-gray-700 dark:text-gray-300 mb-1">Hasil QC <span class="text-rose-500">*</span></label>
+                            <select name="qc_status" required class="w-full rounded-xl border border-gray-200 bg-gray-50 px-3.5 py-2 text-xs font-bold text-gray-800 outline-none focus:border-indigo-500 focus:bg-white dark:border-gray-700 dark:bg-gray-800 dark:text-white cursor-pointer">
+                                <option value="Passed" selected>Passed (Lolos Uji QC)</option>
+                                <option value="Conditional">Conditional (Lolos Bersyarat)</option>
+                                <option value="Pending">Pending (Dalam Pemeriksaan QC)</option>
+                                <option value="Failed">Failed (Gagal QC / Reject)</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold text-gray-700 dark:text-gray-300 mb-1">Status Gudang <span class="text-rose-500">*</span></label>
+                            <select name="status" required class="w-full rounded-xl border border-gray-200 bg-gray-50 px-3.5 py-2 text-xs font-bold text-gray-800 outline-none focus:border-indigo-500 focus:bg-white dark:border-gray-700 dark:bg-gray-800 dark:text-white cursor-pointer">
+                                <option value="In Stock" selected>In Stock (Tersimpan di Gudang/Workshop)</option>
+                                <option value="Ready for Delivery">Ready for Delivery (Siap Kirim)</option>
+                                <option value="Delivered">Delivered (Sudah Dikirim ke Client)</option>
+                                <option value="Scrapped">Scrapped (Dibuang / Rusak)</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div>
+                        <label class="block text-xs font-bold text-gray-700 dark:text-gray-300 mb-1">Catatan / Keterangan Teknis</label>
+                        <textarea name="notes" rows="2" placeholder="Catatan spesifikasi produk, dimensi, atau keterangan delivery..." class="w-full rounded-xl border border-gray-200 bg-gray-50 px-3.5 py-2 text-xs text-gray-800 outline-none focus:border-indigo-500 focus:bg-white dark:border-gray-700 dark:bg-gray-800 dark:text-white"></textarea>
+                    </div>
+
+                    <div class="flex items-center justify-end gap-3 pt-3 border-t border-gray-100 dark:border-gray-800">
+                        <button type="button" @click="openAddFinishGoodModal = false" class="rounded-xl border border-gray-200 bg-white px-4 py-2 text-xs font-semibold text-gray-700 hover:bg-gray-50 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-300 cursor-pointer">
+                            Batal
+                        </button>
+                        <button type="submit" class="inline-flex items-center gap-2 rounded-xl bg-indigo-600 px-5 py-2 text-xs font-bold text-white hover:bg-indigo-700 shadow-xs cursor-pointer">
+                            Simpan Barang Jadi
                         </button>
                     </div>
                 </form>

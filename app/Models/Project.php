@@ -12,6 +12,7 @@ class Project extends Model
 
     protected $fillable = [
         'code',
+        'po_number',
         'name',
         'client',
         'location',
@@ -41,6 +42,11 @@ class Project extends Model
     public function materialOuts()
     {
         return $this->hasMany(MaterialOut::class, 'project_id');
+    }
+
+    public function finishGoods()
+    {
+        return $this->hasMany(FinishGood::class, 'project_id');
     }
 
     public function creator()

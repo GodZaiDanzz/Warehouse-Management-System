@@ -45,6 +45,7 @@ class ProjectConsumptionController extends Controller
             $query->where(function($q) use ($s) {
                 $q->where('name', 'like', "%{$s}%")
                   ->orWhere('code', 'like', "%{$s}%")
+                  ->orWhere('po_number', 'like', "%{$s}%")
                   ->orWhere('location', 'like', "%{$s}%");
             });
         }
