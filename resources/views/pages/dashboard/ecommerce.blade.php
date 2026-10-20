@@ -834,7 +834,9 @@
 
 <!-- ApexCharts Script Initialization -->
 <script>
-document.addEventListener('DOMContentLoaded', function () {
+document.addEventListener('DOMContentLoaded', async function () {
+    const ApexCharts = await (window.getApexCharts ? window.getApexCharts() : Promise.resolve(window.ApexCharts));
+    if (!ApexCharts) return;
     const isDarkMode = document.documentElement.classList.contains('dark');
     const textColor = isDarkMode ? '#9CA3AF' : '#6B7280';
     const gridColor = isDarkMode ? '#374151' : '#F3F4F6';

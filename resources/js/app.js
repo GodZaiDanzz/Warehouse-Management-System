@@ -1,5 +1,4 @@
 import './bootstrap';
-import ApexCharts from 'apexcharts';
 import Swal from 'sweetalert2';
 import 'sweetalert2/dist/sweetalert2.min.css';
 
@@ -10,9 +9,19 @@ import 'flatpickr/dist/flatpickr.min.css';
 
 flatpickr.localize(Indonesian);
 
-window.ApexCharts = ApexCharts;
 window.flatpickr = flatpickr;
 window.Swal = Swal;
+
+// High-performance dynamic loader for ApexCharts (offloads ~620KB from initial bundle)
+let _ApexCharts = null;
+window.getApexCharts = async function() {
+    if (!_ApexCharts) {
+        const mod = await import('apexcharts');
+        _ApexCharts = mod.default || mod;
+        window.ApexCharts = _ApexCharts;
+    }
+    return _ApexCharts;
+};
 
 // High-performance dynamic loader for heavy scanner & QR libraries (offloads ~400KB on initial load)
 let _Html5Qrcode = null;
