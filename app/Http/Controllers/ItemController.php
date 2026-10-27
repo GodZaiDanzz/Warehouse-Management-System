@@ -174,9 +174,14 @@ class ItemController extends Controller
         }
 
         // 2. Single-item Creation Fallback
-        foreach (['stock', 'min_stock', 'conversion_factor'] as $field) {
-            if ($request->has($field) && $request->input($field) !== null) {
-                $request->merge([$field => str_replace(',', '.', (string)$request->input($field))]);
+        foreach (['stock', 'min_stock', 'requirement_per_ton', 'conversion_factor'] as $field) {
+            if ($request->has($field)) {
+                $val = $request->input($field);
+                if ($val === null || trim((string)$val) === '') {
+                    $request->merge([$field => null]);
+                } else {
+                    $request->merge([$field => str_replace(',', '.', (string)$val)]);
+                }
             }
         }
 
@@ -194,6 +199,7 @@ class ItemController extends Controller
             'unit_id' => 'required_without:unit|nullable|exists:units,id',
             'unit' => 'required_without:unit_id|nullable|string|max:50',
             'min_stock' => 'required|numeric|min:0',
+            'requirement_per_ton' => 'nullable|numeric|min:0',
             'storage' => 'nullable|string|max:50',
             'location' => 'nullable|string|max:255',
             'wholesale_unit' => 'nullable|string|max:50',
@@ -210,6 +216,8 @@ class ItemController extends Controller
             'unit_id.required_without' => 'Satuan barang wajib dipilih.',
             'unit.required_without' => 'Satuan barang wajib diisi.',
             'min_stock.required' => 'Stok minimum wajib diisi.',
+            'requirement_per_ton.numeric' => 'Kebutuhan per ton harus berupa angka yang valid.',
+            'requirement_per_ton.min' => 'Kebutuhan per ton tidak boleh bernilai negatif.',
             'manufacturing_date.required' => 'Khusus kategori Cat / Painting, Tanggal Pembuatan (Manufacturing Date) wajib diisi.',
         ];
 
@@ -301,9 +309,14 @@ class ItemController extends Controller
      */
     public function update(Request $request, Item $item)
     {
-        foreach (['stock', 'min_stock', 'conversion_factor'] as $field) {
-            if ($request->has($field) && $request->input($field) !== null) {
-                $request->merge([$field => str_replace(',', '.', (string)$request->input($field))]);
+        foreach (['stock', 'min_stock', 'requirement_per_ton', 'conversion_factor'] as $field) {
+            if ($request->has($field)) {
+                $val = $request->input($field);
+                if ($val === null || trim((string)$val) === '') {
+                    $request->merge([$field => null]);
+                } else {
+                    $request->merge([$field => str_replace(',', '.', (string)$val)]);
+                }
             }
         }
 
@@ -324,6 +337,7 @@ class ItemController extends Controller
             'unit_id' => 'required_without:unit|nullable|exists:units,id',
             'unit' => 'required_without:unit_id|nullable|string|max:50',
             'min_stock' => 'required|numeric|min:0',
+            'requirement_per_ton' => 'nullable|numeric|min:0',
             'storage' => 'nullable|string|max:50',
             'location' => 'nullable|string|max:255',
             'wholesale_unit' => 'nullable|string|max:50',
@@ -339,6 +353,8 @@ class ItemController extends Controller
             'unit_id.required_without' => 'Satuan barang wajib dipilih.',
             'unit.required_without' => 'Satuan barang wajib diisi.',
             'min_stock.required' => 'Stok minimum wajib diisi.',
+            'requirement_per_ton.numeric' => 'Kebutuhan per ton harus berupa angka yang valid.',
+            'requirement_per_ton.min' => 'Kebutuhan per ton tidak boleh bernilai negatif.',
             'manufacturing_date.required' => 'Khusus kategori Cat / Painting, Tanggal Pembuatan (Manufacturing Date) wajib diisi.',
         ];
 

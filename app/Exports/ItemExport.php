@@ -57,6 +57,7 @@ class ItemExport implements FromCollection, WithHeadings, WithMapping, ShouldAut
     */
     public function map($item): array
     {
+        $effectiveMin = (float) $item->effective_min_stock;
         return [
             $item->id,
             $item->code_item ?? '-',
@@ -66,8 +67,8 @@ class ItemExport implements FromCollection, WithHeadings, WithMapping, ShouldAut
             $item->unit,
             $item->unit_price ?? 0,
             (float)$item->stock * (float)($item->unit_price ?? 0),
-            $item->min_stock,
-            $item->stock <= $item->min_stock ? 'Warning Stok' : 'Aman',
+            $effectiveMin,
+            $item->stock <= $effectiveMin ? 'Warning Stok' : 'Aman',
             $item->updated_at?->format('Y-m-d H:i:s'),
         ];
     }

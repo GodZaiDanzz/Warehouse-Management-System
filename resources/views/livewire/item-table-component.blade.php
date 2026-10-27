@@ -275,18 +275,20 @@
     <!-- PPIC Inventory Alert Smart Banner -->
     @if($criticalTotalCount > 0)
         @php
-            $criticalItemsList = \App\Models\Item::whereColumn('stock', '<=', 'min_stock')
-                ->select(['id', 'name', 'stock', 'unit', 'min_stock'])
+            $criticalItemsList = \App\Models\Item::whereRaw('stock <= COALESCE(requirement_per_ton * ?, min_stock)', [$totalActiveTonnage])
+                ->select(['id', 'name', 'code_item', 'stock', 'unit', 'min_stock', 'requirement_per_ton'])
                 ->get()
-                ->map(function($i) {
+                ->map(function($i) use ($totalActiveTonnage) {
+                    $effMin = $i->getEffectiveMinStock($totalActiveTonnage);
                     return [
                         'id' => $i->id,
                         'name' => $i->name,
-                        'stock' => (int) $i->stock,
+                        'code_item' => $i->code_item,
+                        'stock' => (float) $i->stock,
                         'unit' => $i->unit ?: 'Pcs',
-                        'min_stock' => (int) $i->min_stock,
-                        'request_qty' => max(1, ($i->min_stock * 2) - $i->stock),
-                        'notes' => 'Digunakan untuk semua project'
+                        'min_stock' => $effMin,
+                        'request_qty' => max(1, ($effMin * 2) - $i->stock),
+                        'notes' => 'Digunakan untuk semua project aktif'
                     ];
                 })->values()->toArray();
         @endphp
@@ -564,19 +566,20 @@
         <div class="md:hidden space-y-3 p-3 sm:p-4 bg-gray-50/50 dark:bg-gray-900/40">
             @forelse($items as $item)
                 @php
-                    $isLow = $item->stock <= $item->min_stock;
+                    $effectiveMin = $item->getEffectiveMinStock($totalActiveTonnage);
+                    $isLow = $item->stock <= $effectiveMin;
                     $isExpired = $item->isExpired();
                     $isExpiringSoon = $item->isNearExpiry(30);
 
-                    $minVal = max(1, (int) $item->min_stock);
+                    $minVal = max(1, (int) $effectiveMin);
                     $targetVal = max($minVal * 2, (int) $item->stock);
                     $stockPct = $targetVal > 0 ? max(0, min(100, round(($item->stock / $targetVal) * 100))) : 0;
 
                     if ($item->stock <= 0) {
                         $barColor = 'bg-rose-600';
-                    } elseif ($item->stock <= $item->min_stock) {
+                    } elseif ($item->stock <= $effectiveMin) {
                         $barColor = 'bg-rose-500';
-                    } elseif ($item->stock <= $item->min_stock * 1.5) {
+                    } elseif ($item->stock <= $effectiveMin * 1.5) {
                         $barColor = 'bg-amber-500';
                     } else {
                         $barColor = 'bg-emerald-600';
@@ -591,6 +594,8 @@
                         'stock' => (float)$item->stock,
                         'unit' => $item->unit ?: 'Pcs',
                         'min_stock' => (float)$item->min_stock,
+                        'requirement_per_ton' => $item->requirement_per_ton !== null ? (float)$item->requirement_per_ton : null,
+                        'effective_min_stock' => $effectiveMin,
                         'location' => $item->location ?? '',
                         'storage' => $item->storage_location,
                         'unit_price' => $canViewPrices ? (float)($item->unit_price ?? 0) : 0,
@@ -652,7 +657,18 @@
                                     {{ format_quantity($item->stock) }}
                                 </span>
                                 <span class="text-[11px] font-bold text-gray-500 uppercase">{{ $item->unit ?: 'Pcs' }}</span>
-                                <span class="text-[10px] text-gray-400 ml-1">(Min: {{ format_quantity($item->min_stock) }})</span>
+                                @if($item->hasRequirementPerTon())
+                                    <button type="button" 
+                                        @click="$dispatch('show-min-stock-breakdown', {{ json_encode($item->getMinStockProjectBreakdown($activeProjects)) }})"
+                                        class="inline-flex items-center gap-0.5 text-[10px] font-bold text-brand-600 dark:text-brand-400 bg-brand-50 dark:bg-brand-950/60 px-1.5 py-0.5 rounded border border-brand-200 dark:border-brand-800 cursor-pointer ml-1"
+                                        title="Lihat Rincian Minimal Stok Project">
+                                        Min: {{ format_quantity($effectiveMin) }} (Auto)
+                                    </button>
+                                @else
+                                    <span class="inline-flex items-center gap-0.5 text-[9px] font-semibold text-amber-700 bg-amber-50 dark:bg-amber-950/60 dark:text-amber-300 px-1.5 py-0.5 rounded border border-amber-200 dark:border-amber-800 ml-1" title="Belum diisi: Menggunakan fallback manual">
+                                        Min: {{ format_quantity($effectiveMin) }} (Belum diisi)
+                                    </span>
+                                @endif
                             </div>
                         </div>
 
@@ -840,7 +856,8 @@
                 <tbody class="divide-y divide-gray-200 dark:divide-gray-800">
                     @forelse($items as $item)
                         @php
-                            $isLow = $item->stock <= $item->min_stock;
+                            $effectiveMin = $item->getEffectiveMinStock($totalActiveTonnage);
+                            $isLow = $item->stock <= $effectiveMin;
                             $isExpired = $item->isExpired();
                             $isExpiringSoon = $item->isNearExpiry(30);
 
@@ -853,6 +870,8 @@
                                 'stock' => (float)$item->stock,
                                 'unit' => $item->unit ?: 'Pcs',
                                 'min_stock' => (float)$item->min_stock,
+                                'requirement_per_ton' => $item->requirement_per_ton !== null ? (float)$item->requirement_per_ton : null,
+                                'effective_min_stock' => $effectiveMin,
                                 'location' => $item->location ?? '',
                                 'storage' => $item->storage_location,
                                 'unit_price' => $canViewPrices ? (float)($item->unit_price ?? 0) : 0,
@@ -927,15 +946,15 @@
                                     </span>
 
                                     @php
-                                        $minVal = max(1, (int) $item->min_stock);
+                                        $minVal = max(1, (int) $effectiveMin);
                                         $targetVal = max($minVal * 2, (int) $item->stock);
                                         $stockPct = $targetVal > 0 ? max(0, min(100, round(($item->stock / $targetVal) * 100))) : 0;
 
                                         if ($item->stock <= 0) {
                                             $barColor = 'bg-rose-600';
-                                        } elseif ($item->stock <= $item->min_stock) {
+                                        } elseif ($item->stock <= $effectiveMin) {
                                             $barColor = 'bg-rose-500';
-                                        } elseif ($item->stock <= $item->min_stock * 1.5) {
+                                        } elseif ($item->stock <= $effectiveMin * 1.5) {
                                             $barColor = 'bg-amber-500';
                                         } else {
                                             $barColor = 'bg-emerald-600';
@@ -943,7 +962,7 @@
                                     @endphp
 
                                     <!-- Stock Level Indicator Bar -->
-                                    <div class="w-20 bg-gray-200 dark:bg-gray-700 h-1.5 rounded-full overflow-hidden" title="Stok Saat Ini: {{ format_quantity($item->stock) }} | Batas Minimum: {{ format_quantity($item->min_stock) }} {{ $item->unit }}">
+                                    <div class="w-20 bg-gray-200 dark:bg-gray-700 h-1.5 rounded-full overflow-hidden" title="Stok Saat Ini: {{ format_quantity($item->stock) }} | Batas Minimum: {{ format_quantity($effectiveMin) }} {{ $item->unit }}">
                                         <div class="{{ $barColor }} h-1.5 rounded-full transition-all duration-500" style="width: {{ $stockPct }}%;"></div>
                                     </div>
 
@@ -963,8 +982,21 @@
                             <td class="whitespace-nowrap px-4 py-3.5 font-bold text-gray-900 dark:text-white text-center">
                                 <div class="space-y-1 flex flex-col items-center justify-center">
                                     <span class="text-xs font-mono font-bold {{ $isLow ? 'text-rose-600 dark:text-rose-400' : 'text-gray-800 dark:text-gray-200' }}">
-                                        {{ format_quantity($item->min_stock) }} {{ $item->unit }}
+                                        {{ format_quantity($effectiveMin) }} {{ $item->unit }}
                                     </span>
+                                    @if($item->hasRequirementPerTon())
+                                        <button type="button" 
+                                            @click="$dispatch('show-min-stock-breakdown', {{ json_encode($item->getMinStockProjectBreakdown($activeProjects)) }})"
+                                            class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-extrabold bg-brand-50 text-brand-700 border border-brand-200 dark:bg-brand-950/60 dark:text-brand-300 dark:border-brand-800 hover:bg-brand-100 dark:hover:bg-brand-900/80 transition cursor-pointer shadow-2xs"
+                                            title="Klik untuk melihat rincian hitungan minimal stok per project">
+                                            <svg class="w-2.5 h-2.5 text-brand-600 dark:text-brand-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                                            <span>Auto ({{ format_quantity($item->requirement_per_ton) }}/Ton)</span>
+                                        </button>
+                                    @else
+                                        <span class="inline-flex items-center gap-0.5 text-[9px] font-semibold text-amber-700 bg-amber-50 dark:bg-amber-950/60 dark:text-amber-300 px-1.5 py-0.5 rounded border border-amber-200 dark:border-amber-800" title="Kebutuhan per ton belum diisi. Menggunakan nilai minimal stok manual sebagai fallback.">
+                                            Manual: Belum diisi
+                                        </span>
+                                    @endif
                                 </div>
                             </td>
                             @if($canViewPrices)
@@ -1349,7 +1381,7 @@
                                 </div>
                                 <div class="text-right shrink-0">
                                     <span class="text-[10px] uppercase font-bold text-gray-400 block">Sisa Stok Fisik</span>
-                                    <span class="font-mono text-lg font-black {{ $scannedItem->stock <= $scannedItem->min_stock ? 'text-rose-600 dark:text-rose-400' : 'text-emerald-600 dark:text-emerald-400' }}">
+                                    <span class="font-mono text-lg font-black {{ $scannedItem->stock <= $scannedItem->getEffectiveMinStock($totalActiveTonnage) ? 'text-rose-600 dark:text-rose-400' : 'text-emerald-600 dark:text-emerald-400' }}">
                                         {{ format_quantity($scannedItem->stock) }}
                                     </span>
                                     <span class="text-xs font-bold text-gray-500 uppercase">{{ $scannedItem->unit ?: 'Pcs' }}</span>
@@ -1683,4 +1715,196 @@
             </div>
         </div>
     @endif
+    <!-- ========================================================================= -->
+    <!-- MODAL RINCIAN HITUNGAN MINIMAL STOK PER PROJECT (AUTOMATIC CALCULATION)   -->
+    <!-- ========================================================================= -->
+    <div x-data="{
+        openBreakdownModal: false,
+        breakdown: {
+            item_id: null,
+            item_name: '',
+            code_item: '',
+            unit: '',
+            has_requirement: false,
+            requirement_per_ton: null,
+            total_active_tonnage: 0,
+            total_min_stock: 0,
+            is_fallback: true,
+            fallback_min_stock: 0,
+            projects: []
+        },
+        openBreakdown(data) {
+            this.breakdown = data;
+            this.openBreakdownModal = true;
+        },
+        closeBreakdown() {
+            this.openBreakdownModal = false;
+        }
+    }" 
+    x-on:show-min-stock-breakdown.window="openBreakdown($event.detail)"
+    @keydown.escape.window="closeBreakdown()">
+        <template x-teleport="body">
+            <div x-show="openBreakdownModal" 
+                x-cloak 
+                class="fixed inset-0 z-[999999] flex items-center justify-center p-3 sm:p-4 bg-gray-950/80 backdrop-blur-xs overflow-y-auto animate-fadeIn"
+                @click.self="closeBreakdown()">
+                
+                <div class="relative w-full max-w-2xl rounded-3xl bg-white p-5 sm:p-6 shadow-2xl border border-gray-200 dark:border-gray-800 dark:bg-gray-900 animate-scaleUp max-h-[90vh] flex flex-col">
+                    <!-- Modal Header -->
+                    <div class="flex items-start justify-between gap-3 pb-4 border-b border-gray-100 dark:border-gray-800 shrink-0">
+                        <div class="flex items-center gap-3">
+                            <div class="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-brand-50 text-brand-600 dark:bg-brand-950/60 dark:text-brand-400 border border-brand-200 dark:border-brand-800">
+                                <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z"/>
+                                </svg>
+                            </div>
+                            <div>
+                                <h3 class="text-base font-black text-gray-900 dark:text-white flex items-center gap-2">
+                                    <span>Rincian Minimal Stok Material</span>
+                                </h3>
+                                <p class="text-xs text-gray-500 dark:text-gray-400">
+                                    Perhitungan otomatis stok minimum berdasarkan tonase seluruh project aktif
+                                </p>
+                            </div>
+                        </div>
+                        <button type="button" @click="closeBreakdown()" class="p-1 rounded-xl text-gray-400 hover:text-gray-600 hover:bg-gray-100 dark:hover:text-gray-200 dark:hover:bg-gray-800 transition cursor-pointer">
+                            <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+                        </button>
+                    </div>
+
+                    <!-- Modal Body (Scrollable) -->
+                    <div class="overflow-y-auto space-y-4 py-4 pr-1">
+                        <!-- Material Profile Bar -->
+                        <div class="p-3.5 rounded-2xl bg-gray-50 dark:bg-gray-800/60 border border-gray-200 dark:border-gray-700 flex flex-wrap items-center justify-between gap-3">
+                            <div>
+                                <span class="font-mono text-xs font-bold text-brand-600 dark:text-brand-400 block" x-text="breakdown.code_item || '-'"></span>
+                                <h4 class="text-sm font-black text-gray-900 dark:text-white" x-text="breakdown.item_name"></h4>
+                            </div>
+                            <div class="text-right">
+                                <span class="text-[10px] text-gray-400 uppercase font-bold block">Status Perhitungan</span>
+                                <template x-if="breakdown.has_requirement">
+                                    <span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-extrabold bg-emerald-50 text-emerald-700 border border-emerald-200 dark:bg-emerald-950/60 dark:text-emerald-300 dark:border-emerald-800">
+                                        <svg class="w-3 h-3 text-emerald-600 dark:text-emerald-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/></svg>
+                                        Otomatis Berbasis Project
+                                    </span>
+                                </template>
+                                <template x-if="!breakdown.has_requirement">
+                                    <span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-bold bg-amber-50 text-amber-700 border border-amber-200 dark:bg-amber-950/60 dark:text-amber-300 dark:border-amber-800">
+                                        Manual (Cadangan / Fallback)
+                                    </span>
+                                </template>
+                            </div>
+                        </div>
+
+                        <!-- Calculation Formula Cards -->
+                        <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                            <div class="p-3 rounded-xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900/60">
+                                <span class="text-[10px] uppercase font-bold text-gray-400 block">Kebutuhan per Ton</span>
+                                <div class="mt-1 flex items-baseline gap-1">
+                                    <span class="font-mono text-lg font-black text-brand-600 dark:text-brand-400" x-text="breakdown.has_requirement ? breakdown.requirement_per_ton : '-'"></span>
+                                    <span class="text-xs text-gray-500 font-semibold" x-text="breakdown.has_requirement ? (breakdown.unit + ' / Ton') : 'Belum diisi'"></span>
+                                </div>
+                            </div>
+                            <div class="p-3 rounded-xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900/60">
+                                <span class="text-[10px] uppercase font-bold text-gray-400 block">Total Tonase Aktif</span>
+                                <div class="mt-1 flex items-baseline gap-1">
+                                    <span class="font-mono text-lg font-black text-gray-900 dark:text-white" x-text="breakdown.total_active_tonnage"></span>
+                                    <span class="text-xs text-gray-500 font-semibold">Ton</span>
+                                </div>
+                            </div>
+                            <div class="p-3 rounded-xl border border-brand-200 dark:border-brand-800 bg-brand-50/40 dark:bg-brand-950/30">
+                                <span class="text-[10px] uppercase font-bold text-brand-700 dark:text-brand-400 block">Minimal Stok Hasil</span>
+                                <div class="mt-1 flex items-baseline gap-1">
+                                    <span class="font-mono text-xl font-black text-brand-700 dark:text-brand-300" x-text="breakdown.total_min_stock"></span>
+                                    <span class="text-xs text-brand-600 font-bold uppercase" x-text="breakdown.unit"></span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Fallback Notice If Not Configured -->
+                        <template x-if="!breakdown.has_requirement">
+                            <div class="p-3 rounded-xl bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800 text-xs text-amber-800 dark:text-amber-200 space-y-1">
+                                <div class="font-bold flex items-center gap-1.5">
+                                    <svg class="w-4 h-4 text-amber-600" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
+                                    <span>Material ini belum diatur kebutuhan per ton-nya</span>
+                                </div>
+                                <p class="text-[11px] leading-relaxed text-amber-700 dark:text-amber-300">
+                                    Sistem saat ini menggunakan nilai stok minimum statis (manual) sebesar <strong class="font-mono font-bold" x-text="breakdown.fallback_min_stock + ' ' + breakdown.unit"></strong> sebagai cadangan. Untuk mengaktifkan hitungan otomatis, buka menu <strong>Edit</strong> barang ini dan isi field <strong>Kebutuhan per Ton</strong>.
+                                </p>
+                            </div>
+                        </template>
+
+                        <!-- Projects Table -->
+                        <div>
+                            <div class="flex items-center justify-between mb-2">
+                                <h5 class="text-xs font-bold uppercase tracking-wider text-gray-600 dark:text-gray-300">
+                                    Daftar Project Aktif & Kontribusi Kebutuhan
+                                </h5>
+                                <span class="text-[11px] text-gray-400 font-medium" x-text="breakdown.projects.length + ' Project Aktif'"></span>
+                            </div>
+                            <div class="overflow-hidden rounded-xl border border-gray-200 dark:border-gray-800">
+                                <table class="w-full text-left text-xs border-collapse">
+                                    <thead class="bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-200 font-bold uppercase">
+                                        <tr>
+                                            <th class="px-3 py-2 text-center w-10 border-r border-gray-200 dark:border-gray-700">NO</th>
+                                            <th class="px-3 py-2 border-r border-gray-200 dark:border-gray-700">NAMA PROJECT</th>
+                                            <th class="px-3 py-2 text-center w-24 border-r border-gray-200 dark:border-gray-700">STATUS</th>
+                                            <th class="px-3 py-2 text-right w-28 border-r border-gray-200 dark:border-gray-700">TONASE</th>
+                                            <th class="px-3 py-2 text-right w-36">KEBUTUHAN</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody class="divide-y divide-gray-100 dark:divide-gray-800">
+                                        <template x-for="(proj, idx) in breakdown.projects" :key="proj.id">
+                                            <tr class="hover:bg-gray-50/80 dark:hover:bg-gray-800/40">
+                                                <td class="px-3 py-2 text-center font-bold text-gray-400 border-r border-gray-100 dark:border-gray-800" x-text="idx + 1"></td>
+                                                <td class="px-3 py-2 border-r border-gray-100 dark:border-gray-800">
+                                                    <div class="font-bold text-gray-900 dark:text-white" x-text="proj.name"></div>
+                                                    <div class="flex items-center gap-1.5 text-[10px] text-gray-400">
+                                                        <span class="font-mono" x-text="proj.code || '-'"></span>
+                                                        <template x-if="proj.location">
+                                                            <span class="text-indigo-600 dark:text-indigo-400" x-text="'• ' + proj.location"></span>
+                                                        </template>
+                                                    </div>
+                                                </td>
+                                                <td class="px-3 py-2 text-center border-r border-gray-100 dark:border-gray-800">
+                                                    <span class="px-2 py-0.5 rounded text-[10px] font-bold bg-brand-50 text-brand-700 dark:bg-brand-950 dark:text-brand-300" x-text="proj.status"></span>
+                                                </td>
+                                                <td class="px-3 py-2 text-right font-mono font-bold text-gray-800 dark:text-gray-200 border-r border-gray-100 dark:border-gray-800" x-text="proj.tonnage + ' Ton'"></td>
+                                                <td class="px-3 py-2 text-right font-mono font-black text-brand-600 dark:text-brand-400">
+                                                    <span x-text="breakdown.has_requirement ? (proj.requirement_qty + ' ' + breakdown.unit) : '-'"></span>
+                                                </td>
+                                            </tr>
+                                        </template>
+                                        <template x-if="breakdown.projects.length === 0">
+                                            <tr>
+                                                <td colspan="5" class="px-3 py-6 text-center text-gray-400 italic">
+                                                    Tidak ada project aktif saat ini.
+                                                </td>
+                                            </tr>
+                                        </template>
+                                    </tbody>
+                                    <tfoot class="bg-gray-50 dark:bg-gray-800/80 font-bold border-t border-gray-200 dark:border-gray-700">
+                                        <tr>
+                                            <td colspan="3" class="px-3 py-2.5 text-right uppercase text-[11px] text-gray-600 dark:text-gray-300 border-r border-gray-200 dark:border-gray-700">
+                                                Total Akumulasi:
+                                            </td>
+                                            <td class="px-3 py-2.5 text-right font-mono text-gray-900 dark:text-white border-r border-gray-200 dark:border-gray-700" x-text="breakdown.total_active_tonnage + ' Ton'"></td>
+                                            <td class="px-3 py-2.5 text-right font-mono font-black text-brand-700 dark:text-brand-300" x-text="breakdown.total_min_stock + ' ' + breakdown.unit"></td>
+                                        </tr>
+                                    </tfoot>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Modal Footer -->
+                    <div class="pt-3 border-t border-gray-100 dark:border-gray-800 flex justify-end shrink-0">
+                        <button type="button" @click="closeBreakdown()" class="px-5 py-2 rounded-xl bg-gray-100 hover:bg-gray-200 dark:bg-gray-800 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300 text-xs font-bold transition cursor-pointer">
+                            Tutup
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </template>
+    </div>
 </div>

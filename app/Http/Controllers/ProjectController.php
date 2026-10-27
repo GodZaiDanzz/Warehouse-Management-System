@@ -49,6 +49,10 @@ class ProjectController extends Controller
 
     public function store(Request $request)
     {
+        if ($request->has('tonnage') && $request->input('tonnage') !== null) {
+            $request->merge(['tonnage' => str_replace(',', '.', (string)$request->input('tonnage'))]);
+        }
+
         $validated = $request->validate([
             'code' => ['nullable', 'string', 'max:100'],
             'po_number' => ['nullable', 'string', 'max:100'],
@@ -56,12 +60,16 @@ class ProjectController extends Controller
             'client' => ['nullable', 'string', 'max:255'],
             'location' => ['nullable', 'string', 'max:255'],
             'status' => ['nullable', 'string', 'max:50'],
+            'tonnage' => ['required', 'numeric', 'min:0'],
             'start_date' => ['nullable', 'date'],
             'end_date' => ['nullable', 'date'],
             'budget' => ['nullable', 'numeric', 'min:0'],
             'description' => ['nullable', 'string'],
         ], [
             'name.required' => 'Nama Project wajib diisi.',
+            'tonnage.required' => 'Tonase project wajib diisi (minimal 0 Ton).',
+            'tonnage.numeric' => 'Tonase project harus berupa angka yang valid.',
+            'tonnage.min' => 'Tonase project tidak boleh bernilai negatif.',
             'start_date.date' => 'Format Tanggal Mulai tidak valid.',
             'end_date.date' => 'Format Tanggal Selesai tidak valid.',
         ]);
@@ -161,6 +169,10 @@ class ProjectController extends Controller
 
     public function update(Request $request, Project $project)
     {
+        if ($request->has('tonnage') && $request->input('tonnage') !== null) {
+            $request->merge(['tonnage' => str_replace(',', '.', (string)$request->input('tonnage'))]);
+        }
+
         $validated = $request->validate([
             'code' => ['nullable', 'string', 'max:100'],
             'po_number' => ['nullable', 'string', 'max:100'],
@@ -168,12 +180,16 @@ class ProjectController extends Controller
             'client' => ['nullable', 'string', 'max:255'],
             'location' => ['nullable', 'string', 'max:255'],
             'status' => ['nullable', 'string', 'max:50'],
+            'tonnage' => ['required', 'numeric', 'min:0'],
             'start_date' => ['nullable', 'date'],
             'end_date' => ['nullable', 'date'],
             'budget' => ['nullable', 'numeric', 'min:0'],
             'description' => ['nullable', 'string'],
         ], [
             'name.required' => 'Nama Project wajib diisi.',
+            'tonnage.required' => 'Tonase project wajib diisi (minimal 0 Ton).',
+            'tonnage.numeric' => 'Tonase project harus berupa angka yang valid.',
+            'tonnage.min' => 'Tonase project tidak boleh bernilai negatif.',
             'start_date.date' => 'Format Tanggal Mulai tidak valid.',
             'end_date.date' => 'Format Tanggal Selesai tidak valid.',
         ]);

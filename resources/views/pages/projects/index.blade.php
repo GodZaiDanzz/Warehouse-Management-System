@@ -10,7 +10,7 @@
     openEditModal: false, 
     openCompleteModal: false,
     completeData: { id: '', name: '', end_date: '{{ date('Y-m-d') }}' },
-    editData: { id: '', code: '', po_number: '', client: '', name: '', location: '', status: 'Ongoing', start_date: '', end_date: '', description: '' }
+    editData: { id: '', code: '', po_number: '', client: '', name: '', location: '', status: 'Ongoing', tonnage: 0, start_date: '', end_date: '', description: '' }
 }" class="p-4 sm:p-6 space-y-6">
 
 
@@ -284,6 +284,10 @@
                                                 {{ $row->code }}
                                             </span>
                                         @endif
+                                        <span class="inline-flex items-center gap-1 font-mono text-[10px] font-bold text-emerald-700 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-950/60 px-2 py-0.5 rounded border border-emerald-200 dark:border-emerald-800 shadow-2xs" title="Tonase Project">
+                                            <svg class="w-2.5 h-2.5 text-emerald-600 dark:text-emerald-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 6l3 1m0 0l-3 9a5.002 5.002 0 006.001 0M6 7l3 9M6 7l6-2m6 2l3-1m-3 1l-3 9a5.002 5.002 0 006.001 0M18 7l3 9m-3-9l-6-2m0-2v2m0 16V5m0 16H9m3 0h3"/></svg>
+                                            <span>{{ format_quantity($row->tonnage ?? 0) }} Ton</span>
+                                        </span>
                                         @if($row->location)
                                             <span class="inline-flex items-center gap-1 text-[10px] font-bold text-indigo-700 dark:text-indigo-300 bg-indigo-50 dark:bg-indigo-950/60 px-2 py-0.5 rounded border border-indigo-200 dark:border-indigo-800 shadow-2xs" title="Tempat Fabrikasi">
                                                 <svg class="w-2.5 h-2.5 text-indigo-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/></svg>
@@ -419,6 +423,7 @@
                                         name: '{{ addslashes($row->name) }}',
                                         location: '{{ addslashes($row->location ?? '') }}',
                                         status: '{{ $row->status }}',
+                                        tonnage: '{{ (float)($row->tonnage ?? 0) }}',
                                         start_date: '{{ $row->start_date ? $row->start_date->format('Y-m-d') : '' }}',
                                         end_date: '{{ $row->end_date ? $row->end_date->format('Y-m-d') : '' }}',
                                         description: '{{ addslashes($row->description ?? '') }}'
@@ -548,15 +553,29 @@
                         </div>
                     </div>
 
-                    <!-- Status Project -->
-                    <div>
-                        <label class="block text-xs font-bold text-gray-700 dark:text-gray-300 mb-1">Status Project <span class="text-rose-500">*</span></label>
-                        <select name="status" class="w-full rounded-xl border border-gray-200 bg-gray-50 px-3.5 py-2 text-xs font-bold text-gray-800 outline-none focus:border-brand-500 focus:bg-white dark:border-gray-700 dark:bg-gray-800 dark:text-white cursor-pointer">
-                            <option value="Ongoing" selected>Ongoing (Berjalan)</option>
-                            <option value="Completed">Completed (Selesai)</option>
-                            <option value="Planning">Planning (Perencanaan)</option>
-                            <option value="On Hold">On Hold (Ditunda)</option>
-                        </select>
+                    <!-- Status Project & Tonase Project -->
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                        <div>
+                            <label class="block text-xs font-bold text-gray-700 dark:text-gray-300 mb-1">Status Project <span class="text-rose-500">*</span></label>
+                            <select name="status" class="w-full rounded-xl border border-gray-200 bg-gray-50 px-3.5 py-2 text-xs font-bold text-gray-800 outline-none focus:border-brand-500 focus:bg-white dark:border-gray-700 dark:bg-gray-800 dark:text-white cursor-pointer">
+                                <option value="Ongoing" selected>Ongoing (Berjalan)</option>
+                                <option value="Completed">Completed (Selesai)</option>
+                                <option value="Planning">Planning (Perencanaan)</option>
+                                <option value="On Hold">On Hold (Ditunda)</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold text-gray-700 dark:text-gray-300 mb-1">
+                                Tonase Project (Ton) <span class="text-rose-500">*</span>
+                            </label>
+                            <div class="relative">
+                                <input type="number" step="any" min="0" name="tonnage" value="0" required placeholder="0.00" class="w-full rounded-xl border border-gray-200 bg-gray-50 px-3.5 py-2 pl-9 pr-12 text-xs font-mono font-bold text-gray-800 outline-none focus:border-brand-500 focus:bg-white dark:border-gray-700 dark:bg-gray-800 dark:text-white">
+                                <span class="absolute right-3 top-2 text-xs font-bold text-gray-400">Ton</span>
+                                <div class="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3 text-gray-400">
+                                    <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 6l3 1m0 0l-3 9a5.002 5.002 0 006.001 0M6 7l3 9M6 7l6-2m6 2l3-1m-3 1l-3 9a5.002 5.002 0 006.001 0M18 7l3 9m-3-9l-6-2m0-2v2m0 16V5m0 16H9m3 0h3"/></svg>
+                                </div>
+                            </div>
+                        </div>
                     </div>
 
                     <!-- Tanggal Mulai & Tanggal Selesai (Interactive Flatpickr Calendar) -->
@@ -723,15 +742,29 @@
                         </div>
                     </div>
 
-                    <!-- Status Project -->
-                    <div>
-                        <label class="block text-xs font-bold text-gray-700 dark:text-gray-300 mb-1">Status Project <span class="text-rose-500">*</span></label>
-                        <select name="status" x-model="editData.status" class="w-full rounded-xl border border-gray-200 bg-gray-50 px-3.5 py-2 text-xs font-bold text-gray-800 outline-none focus:border-brand-500 focus:bg-white dark:border-gray-700 dark:bg-gray-800 dark:text-white cursor-pointer">
-                            <option value="Ongoing">Ongoing (Berjalan)</option>
-                            <option value="Completed">Completed (Selesai)</option>
-                            <option value="Planning">Planning (Perencanaan)</option>
-                            <option value="On Hold">On Hold (Ditunda)</option>
-                        </select>
+                    <!-- Status Project & Tonase Project -->
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                        <div>
+                            <label class="block text-xs font-bold text-gray-700 dark:text-gray-300 mb-1">Status Project <span class="text-rose-500">*</span></label>
+                            <select name="status" x-model="editData.status" class="w-full rounded-xl border border-gray-200 bg-gray-50 px-3.5 py-2 text-xs font-bold text-gray-800 outline-none focus:border-brand-500 focus:bg-white dark:border-gray-700 dark:bg-gray-800 dark:text-white cursor-pointer">
+                                <option value="Ongoing">Ongoing (Berjalan)</option>
+                                <option value="Completed">Completed (Selesai)</option>
+                                <option value="Planning">Planning (Perencanaan)</option>
+                                <option value="On Hold">On Hold (Ditunda)</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold text-gray-700 dark:text-gray-300 mb-1">
+                                Tonase Project (Ton) <span class="text-rose-500">*</span>
+                            </label>
+                            <div class="relative">
+                                <input type="number" step="any" min="0" name="tonnage" x-model.number="editData.tonnage" required placeholder="0.00" class="w-full rounded-xl border border-gray-200 bg-gray-50 px-3.5 py-2 pl-9 pr-12 text-xs font-mono font-bold text-gray-800 outline-none focus:border-brand-500 focus:bg-white dark:border-gray-700 dark:bg-gray-800 dark:text-white">
+                                <span class="absolute right-3 top-2 text-xs font-bold text-gray-400">Ton</span>
+                                <div class="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3 text-gray-400">
+                                    <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 6l3 1m0 0l-3 9a5.002 5.002 0 006.001 0M6 7l3 9M6 7l6-2m6 2l3-1m-3 1l-3 9a5.002 5.002 0 006.001 0M18 7l3 9m-3-9l-6-2m0-2v2m0 16V5m0 16H9m3 0h3"/></svg>
+                                </div>
+                            </div>
+                        </div>
                     </div>
 
                     <!-- Tanggal Mulai & Tanggal Selesai (Interactive Flatpickr Calendar) -->

@@ -8,6 +8,7 @@ use App\Models\Item;
 use App\Models\MaterialIn;
 use App\Models\MaterialOut;
 use App\Models\MaterialReject;
+use App\Models\Project;
 use App\Models\StockLog;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -34,9 +35,11 @@ class DashboardController extends Controller
         $storage1Count = Item::inStorage(Item::STORAGE_1)->count();
         $storage2Count = Item::inStorage(Item::STORAGE_2)->count();
 
-        // Pemisahan Kritis: Stok Habis (0) dan Stok Menipis (<= min_stock)
+        $totalActiveTonnage = Project::getTotalActiveTonnage();
+
+        // Pemisahan Kritis: Stok Habis (0) dan Stok Menipis (<= min_stock otomatis berbasis tonase project)
         $outOfStockCount = Item::where('stock', '<=', 0)->count();
-        $lowStockOnlyCount = Item::whereColumn('stock', '<=', 'min_stock')->where('stock', '>', 0)->count();
+        $lowStockOnlyCount = Item::whereRaw('stock <= COALESCE(requirement_per_ton * ?, min_stock)', [$totalActiveTonnage])->where('stock', '>', 0)->count();
         $lowStockCount = $outOfStockCount + $lowStockOnlyCount;
 
         $allItems = Item::select(['id', 'name', 'stock', 'unit', 'category_id', 'manufacturing_date', 'created_at'])->get();
@@ -51,7 +54,7 @@ class DashboardController extends Controller
             ->get();
 
         $criticalItems = Item::with(['category', 'unitRelation'])
-            ->whereColumn('stock', '<=', 'min_stock')
+            ->whereRaw('stock <= COALESCE(requirement_per_ton * ?, min_stock)', [$totalActiveTonnage])
             ->orderBy('stock', 'asc')
             ->take(6)
             ->get();
@@ -658,6 +661,7 @@ class DashboardController extends Controller
         return view('pages.dashboard.ecommerce', [
             'title' => 'Warehouse Management System',
             'totalItems' => $totalItems,
+            'totalActiveTonnage' => $totalActiveTonnage,
             'totalAssetValue' => $totalAssetValue,
             'pricedItemsCount' => $pricedItemsCount,
             'totalStock' => $totalStock,

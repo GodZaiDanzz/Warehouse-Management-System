@@ -6,7 +6,7 @@
         openCreateModal: false,
         openEditModal: false,
         openPrModal: false,
-        editItem: { id: null, code_item: '', name: '', category_id: '', unit_id: '', stock: 0, unit: 'PCS', min_stock: 0, unit_price: 0, storage: 'STORAGE 1', location: '', wholesale_unit: '', conversion_factor: 1, manufacturing_date: '', expiry_date: '' },
+        editItem: { id: null, code_item: '', name: '', category_id: '', unit_id: '', stock: 0, unit: 'PCS', min_stock: 0, requirement_per_ton: null, unit_price: 0, storage: 'STORAGE 1', location: '', wholesale_unit: '', conversion_factor: 1, manufacturing_date: '', expiry_date: '' },
         prData: {
             document_no: '095/FPBJ/MGI/MEI/IX/2026',
             required_date: '',
@@ -27,6 +27,7 @@
         editItem = Object.assign({}, detail, {
             storage: initialStorage,
             location: initialLoc,
+            requirement_per_ton: (detail && detail.requirement_per_ton !== null && detail.requirement_per_ton !== undefined && detail.requirement_per_ton !== '') ? parseFloat(detail.requirement_per_ton) : null,
             conversion_factor: (detail && parseFloat(detail.conversion_factor) > 0) ? parseFloat(detail.conversion_factor) : 1
         });
         openEditModal = true;
@@ -586,7 +587,7 @@
                                 <input type="text" name="name" :disabled="activeTab !== 'single'" placeholder="Gate Valve 3 Inch Class 150" class="w-full rounded-xl border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 px-3 py-2 text-sm text-gray-900 dark:text-white focus:border-brand-500 focus:ring-1 focus:ring-brand-500">
                             </div>
 
-                            <div class="grid grid-cols-3 gap-3">
+                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
                                 <div class="space-y-1">
                                     <label class="block text-xs font-bold text-gray-700 dark:text-gray-300">Stok Awal <span class="text-rose-500">*</span></label>
                                     <input type="number" name="stock" :disabled="activeTab !== 'single'" value="0" min="0" step="any" class="w-full rounded-xl border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 px-3 py-2 text-sm text-gray-900 dark:text-white focus:border-brand-500">
@@ -600,9 +601,24 @@
                                         @endforeach
                                     </select>
                                 </div>
+                            </div>
+
+                            <!-- Pengaturan Minimal Stok (Otomatis & Fallback) -->
+                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 p-3 bg-brand-50/40 dark:bg-brand-950/20 border border-brand-200 dark:border-brand-900/40 rounded-xl">
                                 <div class="space-y-1">
-                                    <label class="block text-xs font-bold text-gray-700 dark:text-gray-300">Stok Min (Reorder) <span class="text-rose-500">*</span></label>
-                                    <input type="number" name="min_stock" :disabled="activeTab !== 'single'" value="20" min="0" step="any" class="w-full rounded-xl border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 px-3 py-2 text-sm text-gray-900 dark:text-white focus:border-brand-500">
+                                    <label class="block text-xs font-bold text-gray-700 dark:text-gray-300">
+                                        Kebutuhan per Ton
+                                        <span class="text-xs font-normal text-gray-400">(Auto Min. Stok)</span>
+                                    </label>
+                                    <input type="number" name="requirement_per_ton" :disabled="activeTab !== 'single'" min="0" step="any" placeholder="Contoh: 2 (atau kosongkan)" class="w-full rounded-xl border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 px-3 py-2 text-sm text-gray-900 dark:text-white focus:border-brand-500 font-mono">
+                                    <p class="text-[10px] text-gray-500 dark:text-gray-400">Jika diisi, minimal stok otomatis dihitung dari tonase project aktif.</p>
+                                </div>
+                                <div class="space-y-1">
+                                    <label class="block text-xs font-bold text-gray-700 dark:text-gray-300">
+                                        Stok Min. Cadangan <span class="text-rose-500">*</span>
+                                    </label>
+                                    <input type="number" name="min_stock" :disabled="activeTab !== 'single'" value="20" min="0" step="any" required class="w-full rounded-xl border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 px-3 py-2 text-sm text-gray-900 dark:text-white focus:border-brand-500 font-mono">
+                                    <p class="text-[10px] text-gray-500 dark:text-gray-400">Fallback jika kebutuhan per ton belum diisi.</p>
                                 </div>
                             </div>
 
@@ -919,7 +935,7 @@
                             <input type="text" name="name" x-model="editItem.name" required placeholder="Nama barang..." class="w-full rounded-xl border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 px-3 py-2 text-sm text-gray-900 dark:text-white focus:border-brand-500">
                         </div>
 
-                        <div class="grid grid-cols-3 gap-3">
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
                             <div class="space-y-1">
                                 <label class="block text-xs font-bold text-gray-700 dark:text-gray-300">Jumlah Stok <span class="text-rose-500">*</span></label>
                                 <input type="number" name="stock" x-model.number="editItem.stock" required min="0" step="any" class="w-full rounded-xl border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 px-3 py-2 text-sm text-gray-900 dark:text-white focus:border-brand-500 font-bold">
@@ -933,9 +949,24 @@
                                     @endforeach
                                 </select>
                             </div>
+                        </div>
+
+                        <!-- Pengaturan Minimal Stok (Otomatis & Fallback) -->
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 p-3 bg-brand-50/40 dark:bg-brand-950/20 border border-brand-200 dark:border-brand-900/40 rounded-xl">
                             <div class="space-y-1">
-                                <label class="block text-xs font-bold text-gray-700 dark:text-gray-300">Stok Min (Reorder) <span class="text-rose-500">*</span></label>
-                                <input type="number" name="min_stock" x-model.number="editItem.min_stock" required min="0" step="any" class="w-full rounded-xl border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 px-3 py-2 text-sm text-gray-900 dark:text-white focus:border-brand-500 font-bold">
+                                <label class="block text-xs font-bold text-gray-700 dark:text-gray-300">
+                                    Kebutuhan per Ton
+                                    <span class="text-xs font-normal text-gray-400">(Auto Min. Stok)</span>
+                                </label>
+                                <input type="number" name="requirement_per_ton" x-model.number="editItem.requirement_per_ton" min="0" step="any" placeholder="Belum diisi (kosong)" class="w-full rounded-xl border border-brand-300 dark:border-brand-700 bg-white dark:bg-gray-800 px-3 py-2 text-sm font-bold text-brand-700 dark:text-brand-400 focus:border-brand-500 font-mono">
+                                <p class="text-[10px] text-gray-500 dark:text-gray-400">Jika diisi, minimal stok otomatis dihitung dari tonase project aktif.</p>
+                            </div>
+                            <div class="space-y-1">
+                                <label class="block text-xs font-bold text-gray-700 dark:text-gray-300">
+                                    Stok Min. Cadangan <span class="text-rose-500">*</span>
+                                </label>
+                                <input type="number" name="min_stock" x-model.number="editItem.min_stock" required min="0" step="any" class="w-full rounded-xl border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 px-3 py-2 text-sm text-gray-900 dark:text-white focus:border-brand-500 font-mono">
+                                <p class="text-[10px] text-gray-500 dark:text-gray-400">Fallback jika kebutuhan per ton belum diisi.</p>
                             </div>
                         </div>
 

@@ -101,12 +101,13 @@ class ItemStockExportService
             });
         }
 
+        $totalActiveTonnage = \App\Models\Project::getTotalActiveTonnage();
         if ($request->get('stock_status') === 'low') {
-            $query->whereColumn('stock', '<=', 'min_stock');
+            $query->whereRaw('stock <= COALESCE(requirement_per_ton * ?, min_stock)', [$totalActiveTonnage]);
         } elseif ($request->get('stock_status') === 'empty') {
             $query->where('stock', '<=', 0);
         } elseif ($request->get('stock_status') === 'safe') {
-            $query->whereColumn('stock', '>', 'min_stock');
+            $query->whereRaw('stock > COALESCE(requirement_per_ton * ?, min_stock)', [$totalActiveTonnage]);
         }
 
         $items = $query->orderBy('category_id', 'asc')
@@ -172,7 +173,7 @@ class ItemStockExportService
 
         foreach ($items as $index => $item) {
             $stk = (float) $item->stock;
-            $minStk = (float) ($item->min_stock ?? 0);
+            $minStk = (float) $item->getEffectiveMinStock($totalActiveTonnage);
             $totalStockAccumulation += $stk;
 
             // Determine status label & theme color

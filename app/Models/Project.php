@@ -20,6 +20,7 @@ class Project extends Model
         'start_date',
         'end_date',
         'budget',
+        'tonnage',
         'description',
         'created_by',
     ];
@@ -28,6 +29,7 @@ class Project extends Model
         'start_date' => 'date',
         'end_date' => 'date',
         'budget' => 'decimal:2',
+        'tonnage' => 'float',
     ];
 
     protected static function booted()
@@ -36,6 +38,55 @@ class Project extends Model
             if (empty($project->code)) {
                 $project->code = 'PRJ-' . date('Ymd') . '-' . strtoupper(substr(uniqid(), -4));
             }
+        });
+
+        static::saved(function () {
+            static::clearProjectCache();
+        });
+
+        static::deleted(function () {
+            static::clearProjectCache();
+        });
+    }
+
+    /**
+     * Clear cached project tonnage and listing.
+     */
+    public static function clearProjectCache(): void
+    {
+        \Illuminate\Support\Facades\Cache::forget('wms_total_active_tonnage');
+        \Illuminate\Support\Facades\Cache::forget('wms_active_projects_list');
+        \Illuminate\Support\Facades\Cache::forget('wms_header_notifications_data');
+    }
+
+    /**
+     * Scope query to active projects only (excludes Completed, Cancelled, Batal).
+     */
+    public function scopeActive($query)
+    {
+        return $query->whereNotIn('status', ['Completed', 'Cancelled', 'Batal']);
+    }
+
+    /**
+     * Get total tonnage from all active projects.
+     */
+    public static function getTotalActiveTonnage(): float
+    {
+        return (float) \Illuminate\Support\Facades\Cache::remember('wms_total_active_tonnage', 300, function () {
+            return (float) static::active()->sum('tonnage');
+        });
+    }
+
+    /**
+     * Get list of all active projects for stock requirement breakdowns.
+     */
+    public static function getActiveProjects()
+    {
+        return \Illuminate\Support\Facades\Cache::remember('wms_active_projects_list', 300, function () {
+            return static::active()
+                ->select(['id', 'code', 'name', 'status', 'tonnage', 'location'])
+                ->orderBy('name')
+                ->get();
         });
     }
 

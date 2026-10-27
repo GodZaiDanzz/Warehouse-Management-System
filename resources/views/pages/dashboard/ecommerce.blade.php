@@ -250,7 +250,7 @@
                         @forelse($criticalItems ?? [] as $cItem)
                             @php
                                 $stkVal = (float) $cItem->stock;
-                                $minVal = (float) $cItem->min_stock;
+                                $minVal = (float) $cItem->getEffectiveMinStock($totalActiveTonnage ?? null);
                                 $isOut = $stkVal <= 0;
                             @endphp
                             <tr class="hover:bg-gray-50/70 dark:hover:bg-gray-800/50 transition">
@@ -741,7 +741,7 @@
                     @forelse($fastMovingItems ?? [] as $index => $fm)
                         @php
                             $stk = (float) ($fm->item?->stock ?? 0);
-                            $minStk = (float) ($fm->item?->min_stock ?? 0);
+                            $minStk = (float) ($fm->item ? $fm->item->getEffectiveMinStock($totalActiveTonnage ?? null) : 0);
                             $isLow = $stk <= $minStk;
                             $rankColors = [
                                 0 => 'bg-amber-500 text-white',

@@ -19,6 +19,7 @@ class Item extends Model
         'unit',
         'unit_price',
         'min_stock',
+        'requirement_per_ton',
         'location',
         'manufacturing_date',
         'expiry_date',
@@ -32,6 +33,7 @@ class Item extends Model
         'stock' => 'float',
         'unit_price' => 'float',
         'min_stock' => 'float',
+        'requirement_per_ton' => 'float',
         'conversion_factor' => 'float',
     ];
 
@@ -352,11 +354,91 @@ class Item extends Model
     }
 
     /**
+     * Check if material has requirement per ton configured.
+     */
+    public function hasRequirementPerTon(): bool
+    {
+        return $this->requirement_per_ton !== null;
+    }
+
+    /**
+     * Calculate effective minimum stock.
+     * Uses automatic calculation (Total Active Project Tonnage x Requirement per Ton) if requirement_per_ton is set.
+     * Otherwise falls back to manual static min_stock.
+     */
+    public function getEffectiveMinStock(?float $totalActiveTonnage = null): float
+    {
+        if ($this->hasRequirementPerTon()) {
+            if ($totalActiveTonnage === null) {
+                $totalActiveTonnage = Project::getTotalActiveTonnage();
+            }
+            return (float) ($totalActiveTonnage * (float) $this->requirement_per_ton);
+        }
+
+        return (float) ($this->min_stock ?? 0);
+    }
+
+    /**
+     * Accessor for effective minimum stock.
+     */
+    public function getEffectiveMinStockAttribute(): float
+    {
+        return $this->getEffectiveMinStock();
+    }
+
+    /**
+     * Get item minimum stock breakdown per active project.
+     */
+    public function getMinStockProjectBreakdown($activeProjects = null): array
+    {
+        if ($activeProjects === null) {
+            $activeProjects = Project::getActiveProjects();
+        }
+
+        $reqPerTon = $this->requirement_per_ton !== null ? (float) $this->requirement_per_ton : null;
+        $isFallback = $reqPerTon === null;
+        $totalTonnage = 0.0;
+        $projectList = [];
+
+        foreach ($activeProjects as $project) {
+            $tonnage = (float) ($project->tonnage ?? 0);
+            $totalTonnage += $tonnage;
+            $requiredQty = $reqPerTon !== null ? ($tonnage * $reqPerTon) : 0;
+
+            $projectList[] = [
+                'id' => $project->id,
+                'name' => $project->name,
+                'code' => $project->code,
+                'location' => $project->location,
+                'status' => $project->status,
+                'tonnage' => $tonnage,
+                'requirement_qty' => $requiredQty,
+            ];
+        }
+
+        $effectiveMinStock = $isFallback ? (float) ($this->min_stock ?? 0) : ($totalTonnage * $reqPerTon);
+
+        return [
+            'item_id' => $this->id,
+            'item_name' => $this->name,
+            'code_item' => $this->code_item,
+            'unit' => $this->unit,
+            'has_requirement' => !$isFallback,
+            'requirement_per_ton' => $reqPerTon,
+            'total_active_tonnage' => $totalTonnage,
+            'total_min_stock' => $effectiveMinStock,
+            'is_fallback' => $isFallback,
+            'fallback_min_stock' => (float) ($this->min_stock ?? 0),
+            'projects' => $projectList,
+        ];
+    }
+
+    /**
      * Check if item stock is at or below minimum reorder point.
      */
-    public function isLowStock(): bool
+    public function isLowStock(?float $totalActiveTonnage = null): bool
     {
-        return $this->stock <= $this->min_stock;
+        return $this->stock <= $this->getEffectiveMinStock($totalActiveTonnage);
     }
 
     /**

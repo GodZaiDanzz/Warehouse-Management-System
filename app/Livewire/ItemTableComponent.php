@@ -422,7 +422,10 @@ class ItemTableComponent extends Component
             $this->scannedItem = Item::with('category')->find($this->scannedItemId);
         }
 
-        $query = Item::select(['id', 'code_item', 'name', 'category_id', 'unit_id', 'stock', 'unit', 'min_stock', 'unit_price', 'location', 'manufacturing_date', 'expiry_date', 'wholesale_unit', 'conversion_factor', 'created_at', 'updated_at'])
+        $totalActiveTonnage = Project::getTotalActiveTonnage();
+        $activeProjects = Project::getActiveProjects();
+
+        $query = Item::select(['id', 'code_item', 'name', 'category_id', 'unit_id', 'stock', 'unit', 'min_stock', 'requirement_per_ton', 'unit_price', 'location', 'manufacturing_date', 'expiry_date', 'wholesale_unit', 'conversion_factor', 'created_at', 'updated_at'])
             ->with(['category:id,name', 'unitRelation:id,name,symbol']);
 
         // Search Server-Side
@@ -464,13 +467,13 @@ class ItemTableComponent extends Component
             });
         }
 
-        // Filter Status Stok
+        // Filter Status Stok (Memperhitungkan Minimal Stok Otomatis Berbasis Tonase Project)
         if ($this->stock_status === 'low') {
-            $query->whereColumn('stock', '<=', 'min_stock');
+            $query->whereRaw('stock <= COALESCE(requirement_per_ton * ?, min_stock)', [$totalActiveTonnage]);
         } elseif ($this->stock_status === 'empty') {
             $query->where('stock', '<=', 0);
         } elseif ($this->stock_status === 'safe') {
-            $query->whereColumn('stock', '>', 'min_stock');
+            $query->whereRaw('stock > COALESCE(requirement_per_ton * ?, min_stock)', [$totalActiveTonnage]);
         }
 
         // Filter Lokasi Storage (STORAGE 1 vs STORAGE 2)
@@ -491,9 +494,9 @@ class ItemTableComponent extends Component
         // Mini Dashboard Metrics untuk PPIC & Warehouse (Katalog & Status Stok)
         $metrics = Item::selectRaw('
             COUNT(*) as total_items,
-            COUNT(CASE WHEN stock <= min_stock THEN 1 END) as critical_count,
+            COUNT(CASE WHEN stock <= COALESCE(requirement_per_ton * ?, min_stock) THEN 1 END) as critical_count,
             COUNT(CASE WHEN stock <= 0 THEN 1 END) as out_of_stock_count
-        ')->first();
+        ', [$totalActiveTonnage])->first();
 
         $totalItemsCount = (int) ($metrics->total_items ?? 0);
         $criticalTotalCount = (int) ($metrics->critical_count ?? 0);
@@ -566,6 +569,8 @@ class ItemTableComponent extends Component
             'categories' => $categories,
             'units' => $units,
             'projects' => $projects,
+            'totalActiveTonnage' => $totalActiveTonnage,
+            'activeProjects' => $activeProjects,
             'totalItemsCount' => $totalItemsCount,
             'safeStockCount' => $safeStockCount,
             'criticalTotalCount' => $criticalTotalCount,

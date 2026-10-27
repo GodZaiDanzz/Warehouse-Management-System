@@ -1,14 +1,15 @@
 {{-- Real WMS Notification Dropdown Component --}}
 @php
     $notificationData = \Illuminate\Support\Facades\Cache::remember('wms_header_notifications_data', 60, function () {
-        $criticalItems = \App\Models\Item::whereColumn('stock', '<=', 'min_stock')
+        $activeTonnage = \App\Models\Project::getTotalActiveTonnage();
+        $criticalItems = \App\Models\Item::whereRaw('stock <= COALESCE(requirement_per_ton * ?, min_stock)', [$activeTonnage])
             ->with('category:id,name')
-            ->select(['id', 'name', 'stock', 'unit', 'min_stock', 'category_id'])
+            ->select(['id', 'name', 'stock', 'unit', 'min_stock', 'requirement_per_ton', 'category_id'])
             ->orderBy('stock', 'asc')
             ->take(8)
             ->get();
 
-        $criticalCount = \App\Models\Item::whereColumn('stock', '<=', 'min_stock')->count();
+        $criticalCount = \App\Models\Item::whereRaw('stock <= COALESCE(requirement_per_ton * ?, min_stock)', [$activeTonnage])->count();
 
         $recentOuts = \App\Models\MaterialOut::with('item:id,name')
             ->select(['id', 'reference_number', 'date', 'item_id', 'quantity', 'unit', 'project'])
@@ -169,7 +170,7 @@
                                 </div>
                                 <div class="flex items-center justify-between text-[11px] text-gray-500 dark:text-gray-400 mt-1">
                                     <span>{{ $crit->category->name ?? 'Barang' }}</span>
-                                    <span>Sisa: <strong class="text-rose-600 dark:text-rose-400 font-mono font-black">{{ $crit->stock }} {{ $crit->unit }}</strong> (Min: {{ $crit->min_stock }})</span>
+                                    <span>Sisa: <strong class="text-rose-600 dark:text-rose-400 font-mono font-black">{{ format_quantity($crit->stock) }} {{ $crit->unit }}</strong> (Min: {{ format_quantity($crit->effective_min_stock) }})</span>
                                 </div>
                             </div>
                         </a>
