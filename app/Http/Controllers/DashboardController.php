@@ -5,7 +5,9 @@ namespace App\Http\Controllers;
 use App\Models\Category;
 use App\Models\CompanyProfile;
 use App\Models\Item;
+use App\Models\MaterialIn;
 use App\Models\MaterialOut;
+use App\Models\MaterialReject;
 use App\Models\StockLog;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -31,22 +33,89 @@ class DashboardController extends Controller
         $totalItems = Item::count();
         $storage1Count = Item::inStorage(Item::STORAGE_1)->count();
         $storage2Count = Item::inStorage(Item::STORAGE_2)->count();
-        $lowStockCount = Item::whereColumn('stock', '<=', 'min_stock')->count();
+
+        // Pemisahan Kritis: Stok Habis (0) dan Stok Menipis (<= min_stock)
+        $outOfStockCount = Item::where('stock', '<=', 0)->count();
+        $lowStockOnlyCount = Item::whereColumn('stock', '<=', 'min_stock')->where('stock', '>', 0)->count();
+        $lowStockCount = $outOfStockCount + $lowStockOnlyCount;
+
         $allItems = Item::select(['id', 'name', 'stock', 'unit', 'category_id', 'manufacturing_date', 'created_at'])->get();
         $totalCategories = Category::count();
         $canViewPrices = $user->canViewPrices();
         $totalAssetValue = $canViewPrices ? (float) Item::sum(DB::raw('COALESCE(stock, 0) * COALESCE(unit_price, 0)')) : 0;
         $pricedItemsCount = $canViewPrices ? (int) Item::where('unit_price', '>', 0)->count() : 0;
 
-        $recentLogs = StockLog::with(['item', 'user'])
+        $recentLogs = StockLog::with(['item.category', 'item.unitRelation', 'user'])
             ->latest()
-            ->take(6)
+            ->take(8)
             ->get();
 
-        $lowStockItems = Item::with('category')
+        $criticalItems = Item::with(['category', 'unitRelation'])
             ->whereColumn('stock', '<=', 'min_stock')
+            ->orderBy('stock', 'asc')
+            ->take(6)
+            ->get();
+        $lowStockItems = $criticalItems;
+
+        // =========================================================================
+        // Aktivitas Harian Gudang (Real-Time Daily Movement & Operational Pulse)
+        // =========================================================================
+        $todayStr = now()->format('Y-m-d');
+        $todayInCount = MaterialIn::whereDate('date', $todayStr)->count();
+        $todayInQty = (float) MaterialIn::whereDate('date', $todayStr)->sum('quantity');
+        $todayOutCount = MaterialOut::whereDate('date', $todayStr)->count();
+        $todayOutQty = (float) MaterialOut::whereDate('date', $todayStr)->sum('quantity');
+        $todayLogsCount = StockLog::whereDate('created_at', $todayStr)->count();
+
+        $latestInDate = MaterialIn::max('date') ?? $todayStr;
+        $latestOutDate = MaterialOut::max('date') ?? $todayStr;
+        $latestOpDate = max($latestInDate, $latestOutDate);
+        $recentDayInCount = MaterialIn::whereDate('date', $latestOpDate)->count();
+        $recentDayOutCount = MaterialOut::whereDate('date', $latestOpDate)->count();
+
+        $statMonth = (int) now()->month;
+        $statYear = (int) now()->year;
+        $thisMonthInCount = MaterialIn::whereMonth('date', $statMonth)->whereYear('date', $statYear)->count();
+        $thisMonthOutCount = MaterialOut::whereMonth('date', $statMonth)->whereYear('date', $statYear)->count();
+        if ($thisMonthInCount === 0 && $thisMonthOutCount === 0) {
+            $latestCarbonOp = Carbon::parse($latestOpDate);
+            $statMonth = (int) $latestCarbonOp->format('m');
+            $statYear = (int) $latestCarbonOp->format('Y');
+            $thisMonthInCount = MaterialIn::whereMonth('date', $statMonth)->whereYear('date', $statYear)->count();
+            $thisMonthOutCount = MaterialOut::whereMonth('date', $statMonth)->whereYear('date', $statYear)->count();
+            $monthLabel = $latestCarbonOp->translatedFormat('F Y');
+        } else {
+            $monthLabel = now()->translatedFormat('F Y');
+        }
+
+        // Antrean Incoming Inspection QC (Material Masuk menunggu pemeriksaan kualitas)
+        $pendingQcCount = MaterialIn::where(function ($q) {
+            $q->whereNull('qc_status')->orWhere('qc_status', 'pending_qc');
+        })->count();
+
+        $pendingQcItems = MaterialIn::with(['item.category', 'unitRelation'])
+            ->where(function ($q) {
+                $q->whereNull('qc_status')->orWhere('qc_status', 'pending_qc');
+            })
+            ->latest('date')
             ->take(5)
             ->get();
+
+        // Material Reject / Rusak (Menunggu Disposisi: retur vendor, klaim garansi, karantina)
+        $pendingRejectCount = MaterialReject::where('disposition_status', '!=', 'completed')->count();
+        $totalRejectCount = MaterialReject::count();
+        $pendingRejectList = MaterialReject::with(['item.category', 'unitRelation'])
+            ->where('disposition_status', '!=', 'completed')
+            ->latest('date')
+            ->take(5)
+            ->get();
+
+        if ($pendingRejectList->isEmpty()) {
+            $pendingRejectList = MaterialReject::with(['item.category', 'unitRelation'])
+                ->latest('date')
+                ->take(5)
+                ->get();
+        }
 
         // Fast-Moving Items: Top 4 barang paling sering dan banyak keluar bulan ini
         $startOfMonth = now()->startOfMonth();
@@ -89,9 +158,10 @@ class DashboardController extends Controller
             ->count();
 
         $fefoItems = (clone $paintItemQuery)
+            ->with(['category', 'unitRelation'])
             ->where('manufacturing_date', '<=', $warningDate->format('Y-m-d'))
             ->orderBy('manufacturing_date', 'asc')
-            ->take(5)
+            ->take(6)
             ->get();
 
         $categories = Category::withCount('items')->get();
@@ -595,9 +665,12 @@ class DashboardController extends Controller
             'totalDecimalStockBreakdown' => $totalDecimalStockBreakdown,
             'categoryStockDetails' => $categoryStockDetails,
             'lowStockCount' => $lowStockCount,
+            'outOfStockCount' => $outOfStockCount,
+            'lowStockOnlyCount' => $lowStockOnlyCount,
             'totalCategories' => $totalCategories,
             'recentLogs' => $recentLogs,
             'lowStockItems' => $lowStockItems,
+            'criticalItems' => $criticalItems,
             'fastMovingItems' => $fastMovingItems,
             'fefoExpiringCount' => $fefoExpiringCount,
             'fefoExpiredCount' => $fefoExpiredCount,
@@ -605,6 +678,24 @@ class DashboardController extends Controller
             'shelfLifeMonths' => $shelfLifeMonths,
             'alertDays' => $alertDays,
             'categories' => $categories,
+            // Warehouse Real-time Daily & Operational Pulse
+            'todayInCount' => $todayInCount,
+            'todayInQty' => $todayInQty,
+            'todayOutCount' => $todayOutCount,
+            'todayOutQty' => $todayOutQty,
+            'todayLogsCount' => $todayLogsCount,
+            'recentDayInCount' => $recentDayInCount,
+            'recentDayOutCount' => $recentDayOutCount,
+            'latestOpDate' => $latestOpDate,
+            'thisMonthInCount' => $thisMonthInCount,
+            'thisMonthOutCount' => $thisMonthOutCount,
+            'monthLabel' => $monthLabel,
+            // QC & Reject Status
+            'pendingQcCount' => $pendingQcCount,
+            'pendingQcItems' => $pendingQcItems,
+            'pendingRejectCount' => $pendingRejectCount,
+            'totalRejectCount' => $totalRejectCount,
+            'pendingRejectList' => $pendingRejectList,
             // Active Year & Latest Date
             'activeYear' => $activeYear,
             'latestDateStr' => $latestDateStr,

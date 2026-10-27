@@ -1144,7 +1144,7 @@ class MaterialInComponent extends Component
 
             return response()->stream(function () use ($records) {
                 $handle = fopen('php://output', 'w');
-                fputcsv($handle, ['No', 'Tanggal', 'Kode Barang', 'Nama Barang', 'Jumlah Masuk', 'Satuan', 'Status QC', 'Tgl Pembuatan (Cat)', 'Supplier / Vendor', 'Diterima Oleh', 'Catatan QC / Inspeksi']);
+                fputcsv($handle, ['No', 'Tanggal', 'Kode Barang', 'Nama Barang', 'Jumlah Masuk', 'Satuan', 'Status QC', 'Tgl Pembuatan (Cat)', 'Supplier / Vendor', 'Diterima Oleh', 'Catatan Penerimaan', 'Catatan QC / Inspeksi']);
 
                 $no = 1;
                 foreach ($records as $row) {
@@ -1164,7 +1164,8 @@ class MaterialInComponent extends Component
                         $row->manufacturing_date ? format_date($row->manufacturing_date) : '-',
                         $row->supplier,
                         $row->received_by,
-                        $isConsumable ? 'Bebas QC (Consumable langsung masuk stok)' : ($row->qc_notes ?: ($row->notes ?? '-')),
+                        $row->notes ?? '-',
+                        $isConsumable ? 'Bebas QC (Consumable langsung masuk stok)' : ($row->qc_notes ?: '-'),
                     ]);
                 }
                 fclose($handle);

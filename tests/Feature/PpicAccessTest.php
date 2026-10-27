@@ -108,6 +108,6 @@ class PpicAccessTest extends TestCase
         $response->assertSee('Warning Stok');
         $response->assertSee('Stok Habis');
         $response->assertSee('Total Kuantitas Fisik');
-        $response->assertSee('Kategori Cat & Coating', false);
+        $response->assertSee('Kategori Cat', false);
     }
 }

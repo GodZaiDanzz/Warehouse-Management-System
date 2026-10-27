@@ -53,7 +53,7 @@
             {{ $company->name ?? 'PT MUDALAYA ENERGY INDONESIA' }}
         </h1>
         @if($company->secondary_name)
-            <h2 class="text-base sm:text-lg font-bold tracking-tight text-gray-700 leading-tight mt-1">
+            <h2 class="text-xl sm:text-2xl font-black tracking-tight text-gray-900 leading-tight">
                 {{ $company->secondary_name }}
             </h2>
         @endif

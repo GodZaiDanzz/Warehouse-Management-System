@@ -353,6 +353,7 @@
                         <th class="px-4 py-3 text-center">Status QC</th>
                         <th class="px-4 py-3">SUPPLIER</th>
                         <th class="px-4 py-3">Penerima</th>
+                        <th class="px-4 py-3">Catatan</th>
                         <th class="px-4 py-3 text-center">Aksi</th>
                     </tr>
                 </thead>
@@ -428,6 +429,22 @@
                                     <span class="block text-[10px] text-gray-500 dark:text-gray-400">QC: {{ $row->qcUser->name }}</span>
                                 @endif
                             </td>
+                            <td class="px-4 py-3">
+                                @if(!empty(trim($row->notes ?? '')))
+                                    <div class="max-w-[200px]" title="{{ $row->notes }}">
+                                        <div class="flex items-start gap-1.5">
+                                            <svg class="w-3.5 h-3.5 text-gray-400 dark:text-gray-500 shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 8h10M7 12h4m1 8l-4-4H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-3l-4 4z"/>
+                                            </svg>
+                                            <span class="text-xs text-gray-700 dark:text-gray-300 font-medium line-clamp-2 leading-snug break-words">
+                                                {{ $row->notes }}
+                                            </span>
+                                        </div>
+                                    </div>
+                                @else
+                                    <span class="text-xs text-gray-300 dark:text-gray-600 font-mono">-</span>
+                                @endif
+                            </td>
                             <td class="px-4 py-3 text-center whitespace-nowrap">
                                 <div class="inline-flex items-center gap-1">
                                     <!-- Print Tanda Terima Fisik -->
@@ -462,7 +479,7 @@
                             $hasActiveFiltersIn = !empty($search) || !empty($selectedCategory) || !empty($selectedQcStatus) || !empty($selectedSupplier) || !empty($dateFrom) || !empty($dateTo);
                         @endphp
                         <tr>
-                            <td colspan="7" class="px-6 py-14 text-center">
+                            <td colspan="8" class="px-6 py-14 text-center">
                                 <div class="max-w-md mx-auto flex flex-col items-center justify-center text-center">
                                     <div class="flex h-12 w-12 items-center justify-center rounded-2xl bg-gray-100 text-gray-400 dark:bg-gray-800 dark:text-gray-500 mb-3">
                                         @if($hasActiveFiltersIn)
@@ -1647,6 +1664,12 @@
                             <div class="flex justify-between pt-1 border-t border-gray-200 dark:border-gray-700">
                                 <span class="text-purple-600 font-bold">Tanggal Pembuatan (Cat):</span>
                                 <span class="font-mono font-bold text-purple-700 dark:text-purple-300">{{ format_date($qcSelectedRecord->manufacturing_date) }}</span>
+                            </div>
+                        @endif
+                        @if(!empty(trim($qcSelectedRecord->notes ?? '')))
+                            <div class="flex items-start justify-between gap-2 pt-1 border-t border-gray-200 dark:border-gray-700">
+                                <span class="text-gray-500 shrink-0">Catatan Penerimaan / SJ:</span>
+                                <span class="font-medium text-gray-800 dark:text-gray-200 text-right">{{ $qcSelectedRecord->notes }}</span>
                             </div>
                         @endif
                     </div>

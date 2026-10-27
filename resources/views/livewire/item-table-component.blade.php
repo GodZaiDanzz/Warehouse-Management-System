@@ -216,7 +216,7 @@
             class="relative overflow-hidden rounded-2xl border p-4.5 transition cursor-pointer shadow-xs {{ $category_id == $catPaintingId ? 'border-brand-500 bg-brand-50/90 dark:bg-brand-950/40 ring-2 ring-brand-500/20' : 'border-gray-200 bg-white hover:border-brand-300 dark:border-gray-800 dark:bg-gray-900 dark:hover:border-brand-800' }}">
             <div class="flex items-center justify-between">
                 <div>
-                    <span class="text-xs font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400">Kategori Cat & Coating</span>
+                    <span class="text-xs font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400">Kategori Cat</span>
                     <h4 class="text-2xl font-black text-brand-600 dark:text-brand-400 mt-1">
                         {{ number_format($catPaintingCount) }} <span class="text-xs font-normal text-gray-500">Item</span>
                     </h4>
@@ -807,6 +807,10 @@
                                     @change="toggleSelectAllOnPage($event)">
                             </div>
                         </th>
+                        <th class="px-4 py-4 font-semibold cursor-pointer select-none whitespace-nowrap" wire:click="sortBy('code_item')">
+                            Kode Material
+                            @if($sortField === 'code_item') <span>{{ $sortDirection === 'asc' ? '↑' : '↓' }}</span> @endif
+                        </th>
                         <th class="px-5 py-4 font-semibold cursor-pointer select-none" wire:click="sortBy('name')">
                             Nama Barang
                             @if($sortField === 'name') <span>{{ $sortDirection === 'asc' ? '↑' : '↓' }}</span> @endif
@@ -866,17 +870,21 @@
                                     @change="toggleSelectItem($el, $event)" 
                                     :checked="!!selectedMap[{{ $item->id }}]">
                             </td>
+                            <td class="whitespace-nowrap px-4 py-4">
+                                @if(!empty($item->code_item))
+                                    <span class="inline-flex items-center gap-1.5 font-mono text-xs font-bold text-gray-800 dark:text-gray-200 bg-gray-100 dark:bg-gray-800 px-2.5 py-1 rounded-lg border border-gray-200 dark:border-gray-700 tracking-wider shadow-2xs">
+                                        <svg class="w-3.5 h-3.5 text-gray-400 dark:text-gray-500 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z"/>
+                                        </svg>
+                                        {{ $item->code_item }}
+                                    </span>
+                                @else
+                                    <span class="text-xs text-gray-400 dark:text-gray-500 font-mono">-</span>
+                                @endif
+                            </td>
                             <td class="px-5 py-4 font-semibold text-gray-900 dark:text-white">
                                 <div class="space-y-1">
                                     <div class="text-sm font-bold text-gray-900 dark:text-white">{{ $item->name }}</div>
-                                    @if(!empty($item->code_item))
-                                        <div class="flex items-center gap-1.5">
-                                            <span class="inline-flex items-center gap-1 font-mono text-[11px] font-extrabold text-gray-700 dark:text-gray-300 bg-gray-100 dark:bg-gray-800 px-2 py-0.5 rounded-md border border-gray-200 dark:border-gray-700 tracking-wider shadow-2xs">
-                                                <svg class="w-3 h-3 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z"/></svg>
-                                                {{ $item->code_item }}
-                                            </span>
-                                        </div>
-                                    @endif
                                     @if($item->isCat())
                                         <div class="text-[11px] text-gray-500 dark:text-gray-400 font-normal">
                                             Tgl Pembuatan: <span class="font-medium text-gray-700 dark:text-gray-300">{{ format_date($item->manufacturing_date, 'Belum diisi') }}</span>
@@ -1068,7 +1076,7 @@
                     @empty
                         <tr>
                             @php
-                                $totalCols = 7 + ($canViewPrices ? 1 : 0) + ($canManageWarehouse ? 1 : 0);
+                                $totalCols = 8 + ($canViewPrices ? 1 : 0) + ($canManageWarehouse ? 1 : 0);
                                 $hasActiveFilters = !empty($search) || !empty($category_id) || !empty($unit_id) || !empty($stock_status);
                             @endphp
                             <td colspan="{{ $totalCols }}" class="px-6 py-14 text-center">

@@ -2,99 +2,511 @@
 
 @section('content')
 <div class="p-4 sm:p-6 space-y-6 max-w-full overflow-hidden">
-    <!-- Header -->
-    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+    <!-- Header & Quick Operational Actions -->
+    <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4 border-b border-gray-200/80 dark:border-gray-800 pb-5">
         <div>
-            <h1 class="text-2xl font-bold text-gray-900 dark:text-white">Dashboard WMS</h1>
-            <p class="text-sm text-gray-500 dark:text-gray-400">Sistem Manajemen Stok Gudang PT Mudalaya Energy Indonesia</p>
+            <div class="flex items-center gap-2.5">
+                <h1 class="text-2xl font-bold text-gray-900 dark:text-white">Dashboard Operasional Gudang</h1>
+                <span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-bold bg-brand-50 text-brand-700 dark:bg-brand-950/60 dark:text-brand-300 border border-brand-200/60 dark:border-brand-800/60 font-mono">
+                    <span class="w-1.5 h-1.5 rounded-full bg-brand-500 animate-pulse"></span>
+                    WMS LIVE
+                </span>
+            </div>
+            <p class="text-sm text-gray-500 dark:text-gray-400 mt-0.5">
+                PT Mudalaya Energy Indonesia • Monitoring Stok Fisik, Arus Barang, dan Status Kritis
+            </p>
         </div>
-        <div>
-            <a href="{{ route('items.index') }}" class="inline-flex items-center gap-2 rounded-xl bg-brand-600 px-4 py-2.5 text-sm font-medium text-white shadow-sm hover:bg-brand-700 transition cursor-pointer">
-                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 10h16M4 14h16M4 18h16"/></svg>
-                Kelola Stok Barang
+
+        <!-- Operational Action Shortcuts -->
+        <div class="flex flex-wrap items-center gap-2">
+            <a href="{{ route('material-in.index') }}" class="inline-flex items-center gap-2 rounded-xl bg-brand-600 px-3.5 py-2.5 text-xs font-bold text-white shadow-xs hover:bg-brand-700 transition cursor-pointer">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 14l-7 7m0 0l-7-7m7 7V3"/></svg>
+                <span>Catat Barang Masuk</span>
+            </a>
+            <a href="{{ route('material-out.index') }}" class="inline-flex items-center gap-2 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 px-3.5 py-2.5 text-xs font-bold text-gray-700 dark:text-gray-200 shadow-xs hover:bg-gray-50 dark:hover:bg-gray-700/60 transition cursor-pointer">
+                <svg class="w-4 h-4 text-brand-600 dark:text-brand-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 10l7-7m0 0l7 7m-7-7v18"/></svg>
+                <span>Catat Pengeluaran</span>
+            </a>
+            <a href="{{ route('items.index', ['stock_filter' => 'low']) }}" class="inline-flex items-center gap-2 rounded-xl border border-rose-200 dark:border-rose-900/60 bg-rose-50/60 dark:bg-rose-950/30 px-3.5 py-2.5 text-xs font-bold text-rose-700 dark:text-rose-300 shadow-xs hover:bg-rose-100 dark:hover:bg-rose-900/40 transition cursor-pointer">
+                <svg class="w-4 h-4 text-rose-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
+                <span>Stok Kritis ({{ $lowStockCount ?? 0 }})</span>
+            </a>
+            <a href="{{ route('stock-opnames.index') }}" class="inline-flex items-center gap-2 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 px-3.5 py-2.5 text-xs font-bold text-gray-700 dark:text-gray-200 shadow-xs hover:bg-gray-50 dark:hover:bg-gray-700/60 transition cursor-pointer" title="Input Hasil Stock Opname Fisik">
+                <svg class="w-4 h-4 text-gray-500 dark:text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"/></svg>
+                <span>Stock Opname</span>
             </a>
         </div>
     </div>
 
-    <!-- Quick Access Banner to Laporan Consumable 31 Hari -->
-    <div class="rounded-2xl bg-brand-600 p-4 text-white shadow-md flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-        <div class="flex items-center gap-3">
-            <div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-white/20 backdrop-blur-md text-white">
-                <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 01-2 2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/></svg>
+    <!-- 1. Arus Operasional Harian & Real-Time (Today's Warehouse Pulse) -->
+    <div class="space-y-2.5">
+        <div class="flex items-center justify-between">
+            <div class="flex items-center gap-2">
+                <h2 class="text-xs font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400">Arus Operasional Gudang & Logistik</h2>
+                <span class="text-[11px] text-gray-400">Ref: {{ \Carbon\Carbon::parse($latestOpDate ?? now())->translatedFormat('d F Y') }}</span>
             </div>
-            <div>
-                <h3 class="text-sm font-bold">Grafik & Laporan Pemakaian Consumable (31 Hari)</h3>
-                <p class="text-xs text-brand-100">Lihat analisis akumulasi per item, filter rentang tanggal bulanan, dan tabel kesimpulan otomatis.</p>
-            </div>
+            <span class="text-[11px] font-mono text-gray-400 dark:text-gray-500">
+                Aktivitas Bulan {{ $monthLabel ?? now()->translatedFormat('F Y') }}
+            </span>
         </div>
-        <a href="{{ route('reports.consumable') }}" class="inline-flex items-center justify-center gap-2 rounded-xl bg-white px-4 py-2 text-xs font-extrabold text-brand-900 hover:bg-brand-50 transition shadow-xs whitespace-nowrap cursor-pointer">
-            <svg class="w-4 h-4 text-brand-600" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/></svg>
-            <span>Buka Laporan Consumable (31 Hari)</span>
-        </a>
-    </div>
 
-    @if(($lowStockCount ?? 0) > 0 || ($fefoExpiringCount ?? 0) > 0 || ($fefoExpiredCount ?? 0) > 0)
-        <!-- Actionable Alert Center (Re-Order & FEFO Cat Alerts) -->
-        <div class="rounded-2xl border border-rose-200 bg-rose-50/80 p-4 dark:border-rose-900/50 dark:bg-rose-950/40 shadow-xs flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-            <div class="flex items-start gap-3">
-                <div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-rose-600 text-white font-extrabold text-lg shadow-sm">
-                    <svg class="w-5 h-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"/></svg>
-                </div>
-                <div>
-                    <h3 class="text-sm font-black text-rose-900 dark:text-rose-200 uppercase tracking-wide">Peringatan Operasional Gudang (Butuh Tindakan)</h3>
-                    <div class="flex flex-wrap items-center gap-3 mt-1 text-xs">
-                        @if(($lowStockCount ?? 0) > 0)
-                            <span class="inline-flex items-center gap-1 font-bold text-rose-700 dark:text-rose-300">
-                                • <strong class="font-mono text-sm underline">{{ number_format($lowStockCount) }}</strong> Barang Menjelang/Bawah Minimum (Re-Order)
-                            </span>
-                        @endif
-                        @if(($fefoExpiringCount ?? 0) > 0)
-                            <span class="inline-flex items-center gap-1 font-bold text-amber-700 dark:text-amber-400">
-                                • <strong class="font-mono text-sm underline">{{ number_format($fefoExpiringCount) }}</strong> Batch Cat Menjelang Expired (≤ {{ $alertDays ?? 60 }} Hari Lagi)
-                            </span>
-                        @endif
-                        @if(($fefoExpiredCount ?? 0) > 0)
-                            <span class="inline-flex items-center gap-1 font-bold text-rose-800 dark:text-rose-400">
-                                • <strong class="font-mono text-sm underline">{{ number_format($fefoExpiredCount) }}</strong> Batch Cat Melewati {{ $shelfLifeMonths ?? 12 }} Bln (Expired!)
-                            </span>
-                        @endif
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            <!-- Pulse 1: Material Masuk (Inflow) -->
+            <div class="rounded-2xl border border-gray-200 bg-white p-4.5 dark:border-gray-800 dark:bg-gray-900 shadow-xs flex flex-col justify-between">
+                <div class="flex items-start justify-between gap-3">
+                    <div class="space-y-1">
+                        <span class="text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">Material Masuk</span>
+                        <div class="flex items-baseline gap-2">
+                            <h3 class="text-2xl font-black text-gray-900 dark:text-white font-mono">
+                                {{ $todayInCount > 0 ? $todayInCount : $recentDayInCount }}
+                            </h3>
+                            <span class="text-xs font-bold text-gray-500 dark:text-gray-400">Transaksi</span>
+                        </div>
+                    </div>
+                    <div class="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-emerald-50 text-emerald-600 dark:bg-emerald-950/40 dark:text-emerald-400">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 14l-7 7m0 0l-7-7m7 7V3"/></svg>
                     </div>
                 </div>
+                <div class="mt-3 pt-3 border-t border-gray-100 dark:border-gray-800/80 flex items-center justify-between text-xs">
+                    <span class="text-gray-500 dark:text-gray-400">
+                        {{ $todayInCount > 0 ? 'Hari ini' : 'Tanggal ' . \Carbon\Carbon::parse($latestOpDate)->format('d/m') }}:
+                        <strong class="text-gray-700 dark:text-gray-200">{{ format_quantity($todayInCount > 0 ? $todayInQty : $recentDayInCount) }} Unit</strong>
+                    </span>
+                    <a href="{{ route('material-in.index') }}" class="font-bold text-brand-600 dark:text-brand-400 hover:underline inline-flex items-center gap-0.5">
+                        Log Masuk &rarr;
+                    </a>
+                </div>
             </div>
-            <a href="{{ route('items.index') }}" class="inline-flex items-center justify-center gap-2 rounded-xl bg-rose-600 px-4 py-2 text-xs font-black text-white hover:bg-rose-700 transition shadow-sm whitespace-nowrap cursor-pointer">
-                <span>Periksa Detail Stok</span>
-            </a>
-        </div>
-    @endif
 
+            <!-- Pulse 2: Material Keluar (Outflow) -->
+            <div class="rounded-2xl border border-gray-200 bg-white p-4.5 dark:border-gray-800 dark:bg-gray-900 shadow-xs flex flex-col justify-between">
+                <div class="flex items-start justify-between gap-3">
+                    <div class="space-y-1">
+                        <span class="text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">Material Keluar</span>
+                        <div class="flex items-baseline gap-2">
+                            <h3 class="text-2xl font-black text-gray-900 dark:text-white font-mono">
+                                {{ $todayOutCount > 0 ? $todayOutCount : $recentDayOutCount }}
+                            </h3>
+                            <span class="text-xs font-bold text-gray-500 dark:text-gray-400">Transaksi</span>
+                        </div>
+                    </div>
+                    <div class="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-brand-50 text-brand-600 dark:bg-brand-950/40 dark:text-brand-400">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 10l7-7m0 0l7 7m-7-7v18"/></svg>
+                    </div>
+                </div>
+                <div class="mt-3 pt-3 border-t border-gray-100 dark:border-gray-800/80 flex items-center justify-between text-xs">
+                    <span class="text-gray-500 dark:text-gray-400">
+                        {{ $todayOutCount > 0 ? 'Hari ini' : 'Tanggal ' . \Carbon\Carbon::parse($latestOpDate)->format('d/m') }}:
+                        <strong class="text-gray-700 dark:text-gray-200">{{ format_quantity($todayOutCount > 0 ? $todayOutQty : $recentDayOutCount) }} Unit</strong>
+                    </span>
+                    <a href="{{ route('material-out.index') }}" class="font-bold text-brand-600 dark:text-brand-400 hover:underline inline-flex items-center gap-0.5">
+                        Log Keluar &rarr;
+                    </a>
+                </div>
+            </div>
+
+            <!-- Pulse 3: Antrean Incoming Inspection QC -->
+            <div class="rounded-2xl border border-gray-200 bg-white p-4.5 dark:border-gray-800 dark:bg-gray-900 shadow-xs flex flex-col justify-between">
+                <div class="flex items-start justify-between gap-3">
+                    <div class="space-y-1">
+                        <span class="text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">Antrean QC Masuk</span>
+                        <div class="flex items-baseline gap-2">
+                            <h3 class="text-2xl font-black font-mono {{ ($pendingQcCount ?? 0) > 0 ? 'text-amber-600 dark:text-amber-400' : 'text-gray-900 dark:text-white' }}">
+                                {{ number_format($pendingQcCount ?? 0) }}
+                            </h3>
+                            <span class="text-xs font-bold text-gray-500 dark:text-gray-400">Kedatangan</span>
+                        </div>
+                    </div>
+                    <div class="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl {{ ($pendingQcCount ?? 0) > 0 ? 'bg-amber-50 text-amber-600 dark:bg-amber-950/40 dark:text-amber-400' : 'bg-gray-100 text-gray-500 dark:bg-gray-800 dark:text-gray-400' }}">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                    </div>
+                </div>
+                <div class="mt-3 pt-3 border-t border-gray-100 dark:border-gray-800/80 flex items-center justify-between text-xs">
+                    <span class="text-gray-500 dark:text-gray-400">
+                        @if(($pendingQcCount ?? 0) > 0)
+                            <span class="text-amber-700 dark:text-amber-400 font-bold">Menunggu Inspeksi</span>
+                        @else
+                            <span class="text-emerald-700 dark:text-emerald-400 font-medium">Semua Clear</span>
+                        @endif
+                    </span>
+                    <a href="{{ route('material-in.index') }}" class="font-bold text-brand-600 dark:text-brand-400 hover:underline inline-flex items-center gap-0.5">
+                        Periksa &rarr;
+                    </a>
+                </div>
+            </div>
+
+            <!-- Pulse 4: Material Reject & Karantina Fisik -->
+            <div class="rounded-2xl border border-gray-200 bg-white p-4.5 dark:border-gray-800 dark:bg-gray-900 shadow-xs flex flex-col justify-between">
+                <div class="flex items-start justify-between gap-3">
+                    <div class="space-y-1">
+                        <span class="text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">Reject / Karantina</span>
+                        <div class="flex items-baseline gap-2">
+                            <h3 class="text-2xl font-black font-mono {{ ($pendingRejectCount ?? 0) > 0 ? 'text-rose-600 dark:text-rose-400' : 'text-gray-900 dark:text-white' }}">
+                                {{ number_format($pendingRejectCount ?? 0) }}
+                            </h3>
+                            <span class="text-xs font-bold text-gray-500 dark:text-gray-400">Item Defect</span>
+                        </div>
+                    </div>
+                    <div class="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl {{ ($pendingRejectCount ?? 0) > 0 ? 'bg-rose-50 text-rose-600 dark:bg-rose-950/40 dark:text-rose-400' : 'bg-gray-100 text-gray-500 dark:bg-gray-800 dark:text-gray-400' }}">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
+                    </div>
+                </div>
+                <div class="mt-3 pt-3 border-t border-gray-100 dark:border-gray-800/80 flex items-center justify-between text-xs">
+                    <span class="text-gray-500 dark:text-gray-400">
+                        @if(($pendingRejectCount ?? 0) > 0)
+                            <span class="text-rose-700 dark:text-rose-400 font-bold">Butuh Disposisi</span>
+                        @else
+                            <span class="text-emerald-700 dark:text-emerald-400 font-medium">Nihil Reject</span>
+                        @endif
+                    </span>
+                    <a href="{{ route('reports.reject-material') }}" class="font-bold text-brand-600 dark:text-brand-400 hover:underline inline-flex items-center gap-0.5">
+                        BAP Reject &rarr;
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 2. Pusat Peringatan & Status Darurat Gudang (Actionable Alert Center) -->
+    <div class="rounded-2xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-gray-900 shadow-sm overflow-hidden"
+         x-data="{ activeAlertTab: 'stock' }">
+        <!-- Alert Center Navigation Bar -->
+        <div class="p-4 sm:p-5 border-b border-gray-100 dark:border-gray-800 flex flex-col md:flex-row md:items-center md:justify-between gap-3 bg-gray-50/50 dark:bg-gray-800/30">
+            <div>
+                <div class="flex items-center gap-2">
+                    <span class="flex h-2.5 w-2.5 rounded-full bg-rose-500"></span>
+                    <h2 class="text-base font-bold text-gray-900 dark:text-white">Pusat Peringatan & Status Darurat Gudang</h2>
+                </div>
+                <p class="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
+                    Daftar prioritas penanganan stok fisik: re-order pengadaan, kontrol FEFO cat, dan karantina material reject.
+                </p>
+            </div>
+
+            <!-- Tab Buttons -->
+            <div class="flex items-center p-1 rounded-xl bg-gray-200/70 dark:bg-gray-800 text-xs font-bold gap-1">
+                <button type="button" @click="activeAlertTab = 'stock'"
+                        :class="activeAlertTab === 'stock' ? 'bg-white text-rose-700 shadow-xs dark:bg-gray-700 dark:text-rose-300' : 'text-gray-600 hover:text-gray-900 dark:text-gray-300'"
+                        class="px-3 py-1.5 rounded-lg transition cursor-pointer flex items-center gap-1.5">
+                    <span>Stok Kritis / Reorder</span>
+                    <span class="px-1.5 py-0.2 rounded-full text-[10px] font-mono bg-rose-100 text-rose-800 dark:bg-rose-950 dark:text-rose-300">
+                        {{ $lowStockCount ?? 0 }}
+                    </span>
+                </button>
+
+                <button type="button" @click="activeAlertTab = 'fefo'"
+                        :class="activeAlertTab === 'fefo' ? 'bg-white text-amber-700 shadow-xs dark:bg-gray-700 dark:text-amber-300' : 'text-gray-600 hover:text-gray-900 dark:text-gray-300'"
+                        class="px-3 py-1.5 rounded-lg transition cursor-pointer flex items-center gap-1.5">
+                    <span>FEFO Cat & Kimia</span>
+                    <span class="px-1.5 py-0.2 rounded-full text-[10px] font-mono bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300">
+                        {{ ($fefoExpiringCount ?? 0) + ($fefoExpiredCount ?? 0) }}
+                    </span>
+                </button>
+
+                <button type="button" @click="activeAlertTab = 'reject'"
+                        :class="activeAlertTab === 'reject' ? 'bg-white text-gray-800 shadow-xs dark:bg-gray-700 dark:text-gray-100' : 'text-gray-600 hover:text-gray-900 dark:text-gray-300'"
+                        class="px-3 py-1.5 rounded-lg transition cursor-pointer flex items-center gap-1.5">
+                    <span>Reject & Karantina</span>
+                    <span class="px-1.5 py-0.2 rounded-full text-[10px] font-mono bg-gray-200 text-gray-800 dark:bg-gray-800 dark:text-gray-300">
+                        {{ $pendingRejectCount ?? 0 }}
+                    </span>
+                </button>
+            </div>
+        </div>
+
+        <!-- Tab 1: Stok Kritis & Reorder Point -->
+        <div x-show="activeAlertTab === 'stock'" class="p-4 sm:p-5 space-y-4">
+            <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 text-xs">
+                <div class="flex items-center gap-3">
+                    <span class="inline-flex items-center gap-1.5 font-bold text-rose-700 dark:text-rose-400">
+                        <span class="w-2 h-2 rounded-full bg-rose-600"></span>
+                        Stok Habis (0): <strong class="font-mono text-sm">{{ number_format($outOfStockCount ?? 0) }}</strong> Item
+                    </span>
+                    <span class="text-gray-300 dark:text-gray-700">|</span>
+                    <span class="inline-flex items-center gap-1.5 font-bold text-amber-700 dark:text-amber-400">
+                        <span class="w-2 h-2 rounded-full bg-amber-500"></span>
+                        Menipis (&le; Min Stock): <strong class="font-mono text-sm">{{ number_format($lowStockOnlyCount ?? 0) }}</strong> Item
+                    </span>
+                </div>
+                <a href="{{ route('items.index', ['stock_filter' => 'low']) }}" class="font-bold text-brand-600 dark:text-brand-400 hover:underline inline-flex items-center gap-1">
+                    <span>Buka Semua Barang Kritis</span>
+                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+                </a>
+            </div>
+
+            <!-- Critical Stock Table -->
+            <div class="overflow-x-auto rounded-xl border border-gray-100 dark:border-gray-800">
+                <table class="w-full text-left text-xs text-gray-500 dark:text-gray-400">
+                    <thead class="theme-table-header text-[11px] uppercase text-white font-bold border-b border-gray-200 dark:border-gray-800">
+                        <tr>
+                            <th class="px-3.5 py-2.5">Kode Item</th>
+                            <th class="px-3.5 py-2.5">Nama Barang & Kategori</th>
+                            <th class="px-3.5 py-2.5">Lokasi Gudang</th>
+                            <th class="px-3.5 py-2.5 text-center">Sisa Stok / Min</th>
+                            <th class="px-3.5 py-2.5 text-center">Status</th>
+                            <th class="px-3.5 py-2.5 text-right">Tindakan</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-gray-100 dark:divide-gray-800 bg-white dark:bg-gray-900">
+                        @forelse($criticalItems ?? [] as $cItem)
+                            @php
+                                $stkVal = (float) $cItem->stock;
+                                $minVal = (float) $cItem->min_stock;
+                                $isOut = $stkVal <= 0;
+                            @endphp
+                            <tr class="hover:bg-gray-50/70 dark:hover:bg-gray-800/50 transition">
+                                <td class="px-3.5 py-2.5 font-mono font-bold text-gray-900 dark:text-white">
+                                    {{ $cItem->code_item ?? '-' }}
+                                </td>
+                                <td class="px-3.5 py-2.5">
+                                    <div class="font-bold text-gray-900 dark:text-white truncate max-w-[240px]">
+                                        {{ $cItem->name }}
+                                    </div>
+                                    <span class="text-[10px] text-gray-400">
+                                        {{ $cItem->category?->name ?? 'Uncategorized' }}
+                                    </span>
+                                </td>
+                                <td class="px-3.5 py-2.5 text-gray-700 dark:text-gray-300 font-medium">
+                                    <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-bold bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300">
+                                        {{ $cItem->display_location ?? $cItem->storage_location }}
+                                    </span>
+                                </td>
+                                <td class="px-3.5 py-2.5 text-center font-mono">
+                                    <span class="font-bold {{ $isOut ? 'text-rose-600 dark:text-rose-400' : 'text-amber-600 dark:text-amber-400' }}">
+                                        {{ format_quantity($stkVal) }}
+                                    </span>
+                                    <span class="text-gray-400">/ {{ format_quantity($minVal) }} {{ $cItem->unit }}</span>
+                                </td>
+                                <td class="px-3.5 py-2.5 text-center">
+                                    @if($isOut)
+                                        <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-black bg-rose-100 text-rose-800 dark:bg-rose-950/60 dark:text-rose-300">
+                                            HABIS (0)
+                                        </span>
+                                    @else
+                                        <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-100 text-amber-800 dark:bg-amber-950/60 dark:text-amber-300">
+                                            MENIPIS
+                                        </span>
+                                    @endif
+                                </td>
+                                <td class="px-3.5 py-2.5 text-right">
+                                    <a href="{{ route('items.index', ['search' => $cItem->code_item ?: $cItem->name]) }}" class="inline-flex items-center gap-1 font-bold text-brand-600 dark:text-brand-400 hover:underline">
+                                        <span>Proses FPBJ</span>
+                                        <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+                                    </a>
+                                </td>
+                            </tr>
+                        @empty
+                            <tr>
+                                <td colspan="6" class="px-4 py-8 text-center text-xs text-emerald-600 dark:text-emerald-400">
+                                    <div class="flex flex-col items-center justify-center gap-1.5">
+                                        <svg class="w-6 h-6 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+                                        <span class="font-bold">Seluruh stok barang dalam posisi aman</span>
+                                        <span class="text-gray-400 text-[11px]">Tidak ada material yang berada di bawah kuantitas minimum.</span>
+                                    </div>
+                                </td>
+                            </tr>
+                        @endforelse
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Tab 2: FEFO Cat & Chemical Alert -->
+        <div x-show="activeAlertTab === 'fefo'" x-cloak class="p-4 sm:p-5 space-y-4">
+            <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 text-xs">
+                <div class="flex items-center gap-3">
+                    <span class="inline-flex items-center gap-1.5 font-bold text-amber-700 dark:text-amber-400">
+                        <span class="w-2 h-2 rounded-full bg-amber-500"></span>
+                        Mendekati Batas (&le; {{ $alertDays ?? 60 }} Hari): <strong class="font-mono text-sm">{{ number_format($fefoExpiringCount ?? 0) }}</strong> Batch
+                    </span>
+                    <span class="text-gray-300 dark:text-gray-700">|</span>
+                    <span class="inline-flex items-center gap-1.5 font-bold text-rose-700 dark:text-rose-400">
+                        <span class="w-2 h-2 rounded-full bg-rose-600"></span>
+                        Melewati {{ $shelfLifeMonths ?? 12 }} Bulan (Expired): <strong class="font-mono text-sm">{{ number_format($fefoExpiredCount ?? 0) }}</strong> Batch
+                    </span>
+                </div>
+                <a href="{{ route('reports.cat-painting') }}" class="font-bold text-brand-600 dark:text-brand-400 hover:underline inline-flex items-center gap-1">
+                    <span>Laporan Lengkap Cat & Coating</span>
+                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+                </a>
+            </div>
+
+            <!-- FEFO Items Table -->
+            <div class="overflow-x-auto rounded-xl border border-gray-100 dark:border-gray-800">
+                <table class="w-full text-left text-xs text-gray-500 dark:text-gray-400">
+                    <thead class="theme-table-header text-[11px] uppercase text-white font-bold border-b border-gray-200 dark:border-gray-800">
+                        <tr>
+                            <th class="px-3.5 py-2.5">Nama Batch / Item</th>
+                            <th class="px-3.5 py-2.5 text-center">Tgl Manufaktur</th>
+                            <th class="px-3.5 py-2.5 text-center">Batas Expired</th>
+                            <th class="px-3.5 py-2.5 text-center">Sisa Stok</th>
+                            <th class="px-3.5 py-2.5 text-center">Status FEFO</th>
+                            <th class="px-3.5 py-2.5 text-right">Prioritas</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-gray-100 dark:divide-gray-800 bg-white dark:bg-gray-900">
+                        @forelse($fefoItems ?? [] as $fItem)
+                            @php
+                                $mfgDate = $fItem->manufacturing_date ? \Carbon\Carbon::parse($fItem->manufacturing_date) : null;
+                                $expDate = $fItem->effective_expiry_date;
+                                $isExp = $fItem->isExpired();
+                                $daysLeft = $fItem->days_until_expiry;
+                            @endphp
+                            <tr class="hover:bg-gray-50/70 dark:hover:bg-gray-800/50 transition">
+                                <td class="px-3.5 py-2.5">
+                                    <div class="font-bold text-gray-900 dark:text-white truncate max-w-[220px]">
+                                        {{ $fItem->name }}
+                                    </div>
+                                    <span class="text-[10px] font-mono text-gray-400">{{ $fItem->code_item ?? '-' }} &bull; {{ $fItem->storage_location }}</span>
+                                </td>
+                                <td class="px-3.5 py-2.5 text-center font-mono">
+                                    {{ $mfgDate ? $mfgDate->format('d/m/Y') : '-' }}
+                                </td>
+                                <td class="px-3.5 py-2.5 text-center font-mono">
+                                    {{ $expDate ? $expDate->format('d/m/Y') : '-' }}
+                                </td>
+                                <td class="px-3.5 py-2.5 text-center font-mono font-bold text-gray-900 dark:text-white">
+                                    {{ format_quantity($fItem->stock) }} {{ $fItem->unit }}
+                                </td>
+                                <td class="px-3.5 py-2.5 text-center">
+                                    @if($isExp)
+                                        <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-black bg-rose-100 text-rose-800 dark:bg-rose-950/60 dark:text-rose-300">
+                                            KADALUARSA
+                                        </span>
+                                    @else
+                                        <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-100 text-amber-800 dark:bg-amber-950/60 dark:text-amber-300">
+                                            {{ $daysLeft !== null ? $daysLeft . ' Hari Lagi' : 'Mendekati Exp' }}
+                                        </span>
+                                    @endif
+                                </td>
+                                <td class="px-3.5 py-2.5 text-right">
+                                    <span class="font-bold {{ $isExp ? 'text-rose-600' : 'text-amber-600' }}">
+                                        {{ $isExp ? 'Karantina / Buat BAP' : 'Gunakan Terlebih Dahulu' }}
+                                    </span>
+                                </td>
+                            </tr>
+                        @empty
+                            <tr>
+                                <td colspan="6" class="px-4 py-8 text-center text-xs text-emerald-600 dark:text-emerald-400">
+                                    <div class="flex flex-col items-center justify-center gap-1.5">
+                                        <svg class="w-6 h-6 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+                                        <span class="font-bold">Seluruh batch cat dan chemical dalam masa aman</span>
+                                        <span class="text-gray-400 text-[11px]">Tidak ada batch yang mendekati kadaluarsa atau melewati masa simpan.</span>
+                                    </div>
+                                </td>
+                            </tr>
+                        @endforelse
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Tab 3: Material Reject & Karantina Fisik -->
+        <div x-show="activeAlertTab === 'reject'" x-cloak class="p-4 sm:p-5 space-y-4">
+            <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 text-xs">
+                <div class="flex items-center gap-3">
+                    <span class="inline-flex items-center gap-1.5 font-bold text-rose-700 dark:text-rose-400">
+                        <span class="w-2 h-2 rounded-full bg-rose-600"></span>
+                        Menunggu Tindak Lanjut Disposisi: <strong class="font-mono text-sm">{{ number_format($pendingRejectCount ?? 0) }}</strong> Item
+                    </span>
+                    <span class="text-gray-300 dark:text-gray-700">|</span>
+                    <span class="text-gray-500">Total Riwayat Reject: <strong class="font-mono text-gray-700 dark:text-gray-300">{{ number_format($totalRejectCount ?? 0) }}</strong></span>
+                </div>
+                <a href="{{ route('reports.reject-material') }}" class="font-bold text-brand-600 dark:text-brand-400 hover:underline inline-flex items-center gap-1">
+                    <span>Kelola Dokumen BAP Reject</span>
+                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+                </a>
+            </div>
+
+            <!-- Rejects Table -->
+            <div class="overflow-x-auto rounded-xl border border-gray-100 dark:border-gray-800">
+                <table class="w-full text-left text-xs text-gray-500 dark:text-gray-400">
+                    <thead class="theme-table-header text-[11px] uppercase text-white font-bold border-b border-gray-200 dark:border-gray-800">
+                        <tr>
+                            <th class="px-3.5 py-2.5">No Referensi / Tgl</th>
+                            <th class="px-3.5 py-2.5">Nama Material Defect</th>
+                            <th class="px-3.5 py-2.5">Supplier / Vendor</th>
+                            <th class="px-3.5 py-2.5 text-center">Jumlah Cacat</th>
+                            <th class="px-3.5 py-2.5">Status Disposisi</th>
+                            <th class="px-3.5 py-2.5 text-right">Aksi</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-gray-100 dark:divide-gray-800 bg-white dark:bg-gray-900">
+                        @forelse($pendingRejectList ?? [] as $rItem)
+                            <tr class="hover:bg-gray-50/70 dark:hover:bg-gray-800/50 transition">
+                                <td class="px-3.5 py-2.5 font-mono text-gray-900 dark:text-white">
+                                    <div class="font-bold">{{ $rItem->reference_number ?? ('REJ-' . $rItem->id) }}</div>
+                                    <span class="text-[10px] text-gray-400">{{ $rItem->date ? \Carbon\Carbon::parse($rItem->date)->format('d/m/Y') : '-' }}</span>
+                                </td>
+                                <td class="px-3.5 py-2.5">
+                                    <div class="font-bold text-gray-900 dark:text-white truncate max-w-[220px]">
+                                        {{ $rItem->item?->name ?? 'Material #' . $rItem->item_id }}
+                                    </div>
+                                    <span class="text-[10px] text-rose-600 dark:text-rose-400 font-medium">
+                                        {{ $rItem->damage_type ?: 'Cacat Mutu / Fisik' }}
+                                    </span>
+                                </td>
+                                <td class="px-3.5 py-2.5 text-gray-700 dark:text-gray-300 font-medium">
+                                    {{ $rItem->supplier ?: '-' }}
+                                </td>
+                                <td class="px-3.5 py-2.5 text-center font-mono font-bold text-rose-600 dark:text-rose-400">
+                                    {{ format_quantity($rItem->quantity) }} {{ $rItem->unit }}
+                                </td>
+                                <td class="px-3.5 py-2.5">
+                                    <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold {{ $rItem->disposition_status === 'completed' ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950/60 dark:text-emerald-300' : 'bg-rose-100 text-rose-800 dark:bg-rose-950/60 dark:text-rose-300' }}">
+                                        {{ $rItem->status_label ?? $rItem->disposition_label }}
+                                    </span>
+                                </td>
+                                <td class="px-3.5 py-2.5 text-right">
+                                    <a href="{{ route('reports.reject-material') }}" class="font-bold text-brand-600 dark:text-brand-400 hover:underline">
+                                        Tindak Lanjut &rarr;
+                                    </a>
+                                </td>
+                            </tr>
+                        @empty
+                            <tr>
+                                <td colspan="6" class="px-4 py-8 text-center text-xs text-emerald-600 dark:text-emerald-400">
+                                    <div class="flex flex-col items-center justify-center gap-1.5">
+                                        <svg class="w-6 h-6 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+                                        <span class="font-bold">Nihil material defect / reject</span>
+                                        <span class="text-gray-400 text-[11px]">Seluruh incoming material lolos uji mutu dan tidak ada barang dalam karantina.</span>
+                                    </div>
+                                </td>
+                            </tr>
+                        @endforelse
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- 3. Key Inventory Metrics Grid (KPI Stok Fisik & Valuasi) -->
     @php
         $dashAuthUser = auth()->user();
         $canViewPrices = $dashAuthUser && $dashAuthUser->canViewPrices();
     @endphp
-    <!-- Metric Cards Grid -->
-    <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 {{ $canViewPrices ? 'lg:grid-cols-3 xl:grid-cols-5' : 'lg:grid-cols-2 xl:grid-cols-4' }} md:gap-6">
+    <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 {{ $canViewPrices ? 'lg:grid-cols-3 xl:grid-cols-5' : 'lg:grid-cols-2 xl:grid-cols-4' }} md:gap-5">
         <!-- Metric 1: Total Jenis Barang -->
-        <div class="rounded-2xl border border-gray-200 bg-white p-5 dark:border-gray-800 dark:bg-gray-900 shadow-sm min-w-0">
+        <div class="rounded-2xl border border-gray-200 bg-white p-5 dark:border-gray-800 dark:bg-gray-900 shadow-xs min-w-0 flex flex-col justify-between">
             <div class="flex items-center justify-between">
                 <div class="min-w-0">
-                    <span class="text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">Jenis Barang</span>
-                    <h3 class="mt-2 text-2xl font-bold text-gray-900 dark:text-white">{{ number_format($totalItems ?? 0) }}</h3>
+                    <span class="text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">Total Katalog Item</span>
+                    <h3 class="mt-2 text-2xl font-black text-gray-900 dark:text-white font-mono">{{ number_format($totalItems ?? 0) }}</h3>
                 </div>
                 <div class="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-brand-50 text-brand-600 dark:bg-brand-900/30 dark:text-brand-400">
                     <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/></svg>
                 </div>
             </div>
-            <p class="mt-4 text-xs text-gray-500 dark:text-gray-400 truncate">Total katalog item terdaftar di gudang</p>
+            <p class="mt-3 text-xs text-gray-500 dark:text-gray-400 truncate">Total sku material terdaftar di gudang</p>
         </div>
 
-        <!-- Metric 2: Total Unit Stok -->
-        <div class="rounded-2xl border border-gray-200 bg-white p-5 dark:border-gray-800 dark:bg-gray-900 shadow-sm min-w-0"
+        <!-- Metric 2: Total Unit Stok Fisik -->
+        <div class="rounded-2xl border border-gray-200 bg-white p-5 dark:border-gray-800 dark:bg-gray-900 shadow-xs min-w-0 flex flex-col justify-between"
              x-data="{ showCategoryBreakdown: false }">
             <div class="flex items-center justify-between">
                 <div class="min-w-0">
-                    <span class="text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400 truncate">Total Kuantitas Stok</span>
+                    <span class="text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400 truncate">Total Kuantitas Fisik</span>
                     <div class="flex items-baseline gap-1.5 mt-2">
-                        <h3 class="text-2xl font-bold text-brand-600 dark:text-brand-400 font-mono">{{ number_format($totalDiscreteStock ?? 0, 0, ',', '.') }}</h3>
+                        <h3 class="text-2xl font-black text-brand-600 dark:text-brand-400 font-mono">{{ number_format($totalDiscreteStock ?? 0, 0, ',', '.') }}</h3>
                         <span class="text-xs font-bold text-gray-500 dark:text-gray-400">Pcs/Unit</span>
                     </div>
                     @if(!empty($totalDecimalStockBreakdown))
@@ -127,37 +539,39 @@
             </div>
         </div>
 
-        <!-- Metric 3: Barang Stok Kritis -->
-        <div class="rounded-2xl border border-gray-200 bg-white p-5 dark:border-gray-800 dark:bg-gray-900 shadow-sm min-w-0">
+        <!-- Metric 3: Stok Kritis / Reorder Point -->
+        <div class="rounded-2xl border border-rose-200 dark:border-rose-900/60 bg-white dark:bg-gray-900 p-5 shadow-xs min-w-0 flex flex-col justify-between">
             <div class="flex items-center justify-between">
                 <div class="min-w-0">
-                    <span class="text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">Warning Stok</span>
-                    <h3 class="mt-2 text-2xl font-bold text-rose-600 dark:text-rose-400">{{ number_format($lowStockCount ?? 0) }}</h3>
+                    <span class="text-xs font-semibold uppercase tracking-wider text-rose-700 dark:text-rose-400">Peringatan Stok</span>
+                    <h3 class="mt-2 text-2xl font-black text-rose-600 dark:text-rose-400 font-mono">{{ number_format($lowStockCount ?? 0) }}</h3>
                 </div>
                 <div class="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-rose-50 text-rose-600 dark:bg-rose-900/30 dark:text-rose-400">
                     <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
                 </div>
             </div>
-            <p class="mt-4 text-xs text-gray-500 dark:text-gray-400 truncate">Memerlukan restock / pembelian segera</p>
+            <p class="mt-3 text-xs text-rose-600 dark:text-rose-400 font-medium truncate">
+                {{ $outOfStockCount ?? 0 }} barang kosong, {{ $lowStockOnlyCount ?? 0 }} menipis
+            </p>
         </div>
 
-        <!-- Metric 4: Total Kategori -->
-        <div class="rounded-2xl border border-gray-200 bg-white p-5 dark:border-gray-800 dark:bg-gray-900 shadow-sm min-w-0">
+        <!-- Metric 4: Klasifikasi Kategori -->
+        <div class="rounded-2xl border border-gray-200 bg-white p-5 dark:border-gray-800 dark:bg-gray-900 shadow-xs min-w-0 flex flex-col justify-between">
             <div class="flex items-center justify-between">
                 <div class="min-w-0">
                     <span class="text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">Kategori Material</span>
-                    <h3 class="mt-2 text-2xl font-bold text-gray-900 dark:text-white">{{ number_format($totalCategories ?? 0) }}</h3>
+                    <h3 class="mt-2 text-2xl font-black text-gray-900 dark:text-white font-mono">{{ number_format($totalCategories ?? 0) }}</h3>
                 </div>
                 <div class="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-brand-50 text-brand-600 dark:bg-brand-900/30 dark:text-brand-400">
                     <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/></svg>
                 </div>
             </div>
-            <p class="mt-4 text-xs text-gray-500 dark:text-gray-400 truncate">Klasifikasi sektor material EPC & Energi</p>
+            <p class="mt-3 text-xs text-gray-500 dark:text-gray-400 truncate">Sektor material EPC, fabrikasi & energi</p>
         </div>
 
-        <!-- Metric 5: Nilai Aset Persediaan (Valuasi Gudang - Khusus Web Admin & Finance) -->
+        <!-- Metric 5: Nilai Aset Persediaan (Khusus Admin/Finance) -->
         @if($canViewPrices)
-        <div class="rounded-2xl border border-gray-200 bg-white p-5 dark:border-gray-800 dark:bg-gray-900 shadow-sm min-w-0">
+        <div class="rounded-2xl border border-gray-200 bg-white p-5 dark:border-gray-800 dark:bg-gray-900 shadow-xs min-w-0 flex flex-col justify-between">
             <div class="flex items-center justify-between">
                 <div class="min-w-0 pr-1">
                     <span class="text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400 truncate block">Nilai Aset Persediaan</span>
@@ -165,20 +579,20 @@
                         Rp {{ number_format($totalAssetValue ?? 0, 0, ',', '.') }}
                     </h3>
                 </div>
-                <div class="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-emerald-50 text-emerald-600 dark:bg-emerald-950/40 dark:text-emerald-400">
+                <div class="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-emerald-50 text-emerald-600 dark:bg-emerald-950/40 dark:text-emerald-400">
                     <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                     </svg>
                 </div>
             </div>
-            <p class="mt-4 text-xs text-gray-500 dark:text-gray-400 truncate">
+            <p class="mt-3 text-xs text-gray-500 dark:text-gray-400 truncate">
                 {{ number_format($pricedItemsCount ?? 0) }} dari {{ number_format($totalItems ?? 0) }} item berharga beli
             </p>
         </div>
         @endif
     </div>
 
-    <!-- Warehouse Storage Overview (STORAGE 1 vs STORAGE 2) -->
+    <!-- 4. Warehouse Storage Capacity (STORAGE 1 vs STORAGE 2) -->
     <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <!-- Storage 1 Card -->
         <a href="{{ route('items.index', ['storage_filter' => 'STORAGE 1']) }}" 
@@ -187,13 +601,13 @@
                 <div class="flex items-center gap-2">
                     <span class="w-2.5 h-2.5 rounded-full bg-brand-500"></span>
                     <span class="text-xs font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400">Gudang Utama</span>
-                    <span class="px-2 py-0.5 rounded-md text-[10px] font-black bg-brand-100 text-brand-700 dark:bg-brand-950/60 dark:text-brand-300">STORAGE 1</span>
+                    <span class="px-2 py-0.5 rounded-md text-[10px] font-black bg-brand-100 text-brand-700 dark:bg-brand-950/60 dark:text-brand-300 font-mono">STORAGE 1</span>
                 </div>
                 <h4 class="text-2xl font-black text-gray-900 dark:text-white font-mono">
-                    {{ number_format($storage1Count ?? 0) }} <span class="text-xs font-normal text-gray-500">Item</span>
+                    {{ number_format($storage1Count ?? 0) }} <span class="text-xs font-normal text-gray-500">Item Terdaftar</span>
                 </h4>
                 <p class="text-[11px] text-gray-500 dark:text-gray-400">
-                    Consumable, Secondary Part, Gas, Cat, Thinner, dll.
+                    Consumable, Secondary Part, Gas Industri, Cat, Thinner, dan Fast Moving Tools.
                 </p>
             </div>
             <div class="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-brand-50 text-brand-600 dark:bg-brand-950/40 dark:text-brand-400 group-hover:scale-105 transition-transform">
@@ -208,13 +622,13 @@
                 <div class="flex items-center gap-2">
                     <span class="w-2.5 h-2.5 rounded-full bg-amber-500"></span>
                     <span class="text-xs font-bold uppercase tracking-wider text-amber-700 dark:text-amber-400">Gudang Bahan Baku</span>
-                    <span class="px-2 py-0.5 rounded-md text-[10px] font-black bg-amber-100 text-amber-800 dark:bg-amber-950/60 dark:text-amber-300">STORAGE 2</span>
+                    <span class="px-2 py-0.5 rounded-md text-[10px] font-black bg-amber-100 text-amber-800 dark:bg-amber-950/60 dark:text-amber-300 font-mono">STORAGE 2</span>
                 </div>
                 <h4 class="text-2xl font-black text-amber-600 dark:text-amber-400 font-mono">
-                    {{ number_format($storage2Count ?? 0) }} <span class="text-xs font-normal text-gray-500">Item</span>
+                    {{ number_format($storage2Count ?? 0) }} <span class="text-xs font-normal text-gray-500">Item Terdaftar</span>
                 </h4>
                 <p class="text-[11px] text-gray-500 dark:text-gray-400">
-                    Khusus penyimpanan Raw Material & Bahan Baku Pabrikasi.
+                    Khusus penyimpanan Raw Material, Plat Besi, Pipa, Beam, dan Bahan Fabrikasi.
                 </p>
             </div>
             <div class="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-amber-50 text-amber-600 dark:bg-amber-950/40 dark:text-amber-400 group-hover:scale-105 transition-transform">
@@ -223,7 +637,250 @@
         </a>
     </div>
 
-    <!-- CHARTS SECTION: LINE CHART & BAR CHARTS -->
+    <!-- 5. Main Operational Grid: Recent Movement Logs & Fast Moving Items -->
+    <div class="grid grid-cols-1 gap-6 xl:grid-cols-12 min-w-0">
+        <!-- Left: Recent Stock Movement Logs & Fast-Moving Items (xl:col-span-8) -->
+        <div class="xl:col-span-8 rounded-2xl border border-gray-200 bg-white p-5 sm:p-6 dark:border-gray-800 dark:bg-gray-900 shadow-sm space-y-5 min-w-0 overflow-hidden flex flex-col justify-between">
+            <div class="space-y-4">
+                <!-- Header -->
+                <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 border-b border-gray-100 dark:border-gray-800 pb-3">
+                    <div>
+                        <h3 class="text-base font-bold text-gray-900 dark:text-white flex items-center gap-2">
+                            <span>Riwayat Transaksi Mutasi Stok Terkini</span>
+                        </h3>
+                        <p class="text-xs text-gray-500 dark:text-gray-400">Log transaksi barang masuk dan keluar langsung dari lantai gudang</p>
+                    </div>
+                    <div class="flex items-center gap-3">
+                        <a href="{{ route('material-in.index') }}" class="text-xs font-bold text-emerald-600 hover:text-emerald-700 dark:text-emerald-400 hover:underline inline-flex items-center gap-1">
+                            <span>Semua Masuk</span>
+                        </a>
+                        <span class="text-gray-300 dark:text-gray-700">|</span>
+                        <a href="{{ route('material-out.index') }}" class="text-xs font-bold text-brand-600 hover:text-brand-700 dark:text-brand-400 hover:underline inline-flex items-center gap-1">
+                            <span>Semua Keluar &rarr;</span>
+                        </a>
+                    </div>
+                </div>
+
+                <!-- Table -->
+                <div class="overflow-x-auto rounded-xl border border-gray-100 dark:border-gray-800">
+                    <table class="w-full text-left text-xs text-gray-500 dark:text-gray-400">
+                        <thead class="theme-table-header text-[11px] uppercase text-white font-bold border-b border-gray-200 dark:border-gray-800">
+                            <tr>
+                                <th class="px-3.5 py-2.5">Arus</th>
+                                <th class="px-3.5 py-2.5">Nama Barang & Kode</th>
+                                <th class="px-3.5 py-2.5 text-center">Jumlah</th>
+                                <th class="px-3.5 py-2.5">Penerima / Penyedia</th>
+                                <th class="px-3.5 py-2.5">Waktu Transaksi</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-gray-100 dark:divide-gray-800 bg-white dark:bg-gray-900">
+                            @forelse($recentLogs ?? [] as $log)
+                                <tr class="hover:bg-gray-50/70 dark:hover:bg-gray-800/50 transition">
+                                    <td class="px-3.5 py-2.5">
+                                        @if($log->type == 'in')
+                                            <span class="inline-flex items-center gap-1 rounded-md bg-emerald-50 px-2 py-0.5 text-[11px] font-bold text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-400">
+                                                &darr; Masuk
+                                            </span>
+                                        @else
+                                            <span class="inline-flex items-center gap-1 rounded-md bg-gray-100 px-2 py-0.5 text-[11px] font-bold text-gray-700 dark:bg-gray-800 dark:text-gray-300">
+                                                &uarr; Keluar
+                                            </span>
+                                        @endif
+                                    </td>
+                                    <td class="px-3.5 py-2.5 font-medium text-gray-900 dark:text-white">
+                                        <div class="flex items-center gap-1.5">
+                                            <span class="truncate max-w-[220px] font-bold">{{ $log->item?->name ?? 'Barang #' . $log->item_id }}</span>
+                                            @if($log->item?->code_item)
+                                                <span class="text-[10px] font-mono text-gray-500 bg-gray-100 dark:bg-gray-800 px-1 py-0.2 rounded shrink-0">{{ $log->item->code_item }}</span>
+                                            @endif
+                                        </div>
+                                    </td>
+                                    <td class="px-3.5 py-2.5 text-center font-bold font-mono text-gray-900 dark:text-white">
+                                        {{ format_quantity($log->quantity) }} <span class="text-[11px] font-normal text-gray-500">{{ $log->item?->unit }}</span>
+                                    </td>
+                                    <td class="px-3.5 py-2.5 text-xs text-gray-700 dark:text-gray-300 font-medium">
+                                        {{ $log->recipient_or_provider ?: '-' }}
+                                    </td>
+                                    <td class="px-3.5 py-2.5 text-xs text-gray-400 whitespace-nowrap" title="{{ $log->created_at?->format('d M Y H:i:s') }}">
+                                        {{ $log->created_at?->diffForHumans() }}
+                                    </td>
+                                </tr>
+                            @empty
+                                <tr>
+                                    <td colspan="5" class="px-4 py-8 text-center text-xs text-gray-400">
+                                        Belum ada riwayat transaksi log barang.
+                                    </td>
+                                </tr>
+                            @endforelse
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Panel Barang Fast-Moving (Top Volume Pemakaian) -->
+            <div class="pt-4 border-t border-gray-100 dark:border-gray-800/80 space-y-3">
+                <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-1">
+                    <div>
+                        <div class="flex items-center gap-1.5">
+                            <h4 class="text-xs font-bold text-gray-900 dark:text-white uppercase tracking-wider">
+                                Barang Fast-Moving (Perputaran Tercepat)
+                            </h4>
+                            <span class="text-[10px] font-bold px-2 py-0.2 rounded-full bg-brand-50 text-brand-700 dark:bg-brand-950/60 dark:text-brand-300 font-mono">
+                                Top {{ count($fastMovingItems ?? []) }}
+                            </span>
+                        </div>
+                        <p class="text-[11px] text-gray-400">Item dengan frekuensi transaksi dan kuantitas keluar tertinggi di gudang</p>
+                    </div>
+                    <a href="{{ route('reports.material-out') }}" class="text-[11px] font-bold text-brand-600 hover:text-brand-700 dark:text-brand-400 hover:underline inline-flex items-center gap-1 shrink-0">
+                        <span>Laporan Pengeluaran Lengkap &rarr;</span>
+                    </a>
+                </div>
+
+                <!-- Grid 4 Fast-Moving Items -->
+                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2.5">
+                    @forelse($fastMovingItems ?? [] as $index => $fm)
+                        @php
+                            $stk = (float) ($fm->item?->stock ?? 0);
+                            $minStk = (float) ($fm->item?->min_stock ?? 0);
+                            $isLow = $stk <= $minStk;
+                            $rankColors = [
+                                0 => 'bg-amber-500 text-white',
+                                1 => 'bg-slate-500 text-white',
+                                2 => 'bg-brand-700 text-white',
+                                3 => 'bg-gray-400 text-white',
+                            ];
+                            $badgeColor = $rankColors[$index] ?? 'bg-gray-400 text-white';
+                        @endphp
+                        <div class="rounded-xl border border-gray-200/90 bg-gray-50/60 p-3 dark:border-gray-800 dark:bg-gray-800/40 hover:border-brand-300 dark:hover:border-brand-700 transition flex flex-col justify-between gap-2.5 shadow-2xs">
+                            <div class="space-y-1.5 min-w-0">
+                                <div class="flex items-center justify-between gap-1">
+                                    <span class="font-extrabold text-[9px] px-1.5 py-0.5 rounded font-mono {{ $badgeColor }}">
+                                        #{{ $index + 1 }}
+                                    </span>
+                                    <span class="text-[9px] font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider truncate max-w-[90px]">
+                                        {{ $fm->item?->category?->name ?? 'Material' }}
+                                    </span>
+                                </div>
+                                <div>
+                                    <div class="font-bold text-xs text-gray-900 dark:text-white truncate" title="{{ $fm->item?->name }}">
+                                        {{ $fm->item?->name ?? 'Barang #' . $fm->item_id }}
+                                    </div>
+                                    <div class="text-[10px] font-mono text-gray-400">
+                                        {{ $fm->item?->code_item ?? '-' }}
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="space-y-1.5 pt-1.5 border-t border-gray-200/60 dark:border-gray-700/60">
+                                <div class="flex items-center justify-between text-[11px]">
+                                    <span class="text-gray-500 dark:text-gray-400">Total Keluar:</span>
+                                    <span class="font-black text-brand-700 dark:text-brand-300 font-mono">
+                                        {{ format_quantity($fm->total_out_qty) }} {{ $fm->item?->unit }}
+                                    </span>
+                                </div>
+                                <div class="flex items-center justify-between text-[11px]">
+                                    <span class="text-gray-500 dark:text-gray-400">Frekuensi:</span>
+                                    <span class="font-bold text-gray-700 dark:text-gray-300">
+                                        {{ $fm->total_transactions }}x Transaksi
+                                    </span>
+                                </div>
+                                <div class="flex items-center justify-between text-[10px] pt-1 border-t border-dashed border-gray-200 dark:border-gray-700/50">
+                                    <span class="text-gray-400">Sisa Stok:</span>
+                                    @if($isLow)
+                                        <span class="font-bold text-rose-600 dark:text-rose-400 font-mono">
+                                            {{ format_quantity($stk) }} (Kritis)
+                                        </span>
+                                    @else
+                                        <span class="font-semibold text-emerald-600 dark:text-emerald-400 font-mono">
+                                            {{ format_quantity($stk) }} {{ $fm->item?->unit }}
+                                        </span>
+                                    @endif
+                                </div>
+                            </div>
+                        </div>
+                    @empty
+                        <div class="col-span-full py-4 text-center text-xs text-gray-400">
+                            Belum ada catatan barang keluar pada periode aktif.
+                        </div>
+                    @endforelse
+                </div>
+            </div>
+        </div>
+
+        <!-- Right: Category Distribution & Storage Info (xl:col-span-4) -->
+        <div class="xl:col-span-4 space-y-6 min-w-0">
+            <!-- Category Distribution -->
+            <div class="rounded-2xl border border-gray-200 bg-white p-5 sm:p-6 dark:border-gray-800 dark:bg-gray-900 shadow-sm space-y-4">
+                <div class="flex items-center justify-between border-b border-gray-100 dark:border-gray-800 pb-3">
+                    <h3 class="text-base font-bold text-gray-900 dark:text-white">Sebaran Kategori</h3>
+                    <a href="{{ route('categories.index') }}" class="text-xs font-bold text-brand-600 dark:text-brand-400 hover:underline">
+                        Kelola Kategori
+                    </a>
+                </div>
+                <div class="space-y-2.5 max-h-[380px] overflow-y-auto pr-1">
+                    @php
+                        $paintSubcategories = collect($categories ?? [])->filter(fn($c) => method_exists($c, 'isCatSubcategory') ? $c->isCatSubcategory() : str_starts_with(strtolower($c->name), 'cat -'));
+                    @endphp
+                    @foreach($categories ?? [] as $cat)
+                        @if(method_exists($cat, 'isCatSubcategory') ? $cat->isCatSubcategory() : str_starts_with(strtolower($cat->name), 'cat -'))
+                            @continue
+                        @endif
+
+                        @if(method_exists($cat, 'isCatUmbrella') ? $cat->isCatUmbrella() : strcasecmp(trim($cat->name), 'cat') === 0)
+                            <div class="rounded-xl border border-gray-200/80 bg-gray-50/70 p-2.5 dark:border-gray-800/80 dark:bg-gray-800/40 space-y-2">
+                                <div class="flex items-center justify-between">
+                                    <div class="flex items-center gap-1.5">
+                                        <span class="text-xs font-bold text-gray-900 dark:text-white">{{ $cat->name }}</span>
+                                        <span class="text-[10px] text-gray-400 dark:text-gray-500 font-normal">(Total Gabungan)</span>
+                                    </div>
+                                    <span class="inline-flex items-center rounded-full bg-brand-50 px-2.5 py-0.5 text-xs font-bold text-brand-700 dark:bg-brand-900/40 dark:text-brand-300 font-mono">
+                                        {{ $cat->items_count }} Item
+                                    </span>
+                                </div>
+                                @if($paintSubcategories->isNotEmpty())
+                                    <div class="pt-1 pl-3 border-l-2 border-brand-200 dark:border-brand-800/60 space-y-1.5 ml-1">
+                                        @foreach($paintSubcategories as $subCat)
+                                            <div class="flex items-center justify-between text-[11px] text-gray-600 dark:text-gray-400">
+                                                <span class="font-medium">{{ $subCat->name }}</span>
+                                                <span class="font-semibold text-gray-500 dark:text-gray-400 font-mono">{{ $subCat->items_count }} Item</span>
+                                            </div>
+                                        @endforeach
+                                    </div>
+                                @endif
+                            </div>
+                        @else
+                            <div class="flex items-center justify-between p-2.5 rounded-xl bg-gray-50 dark:bg-gray-800/50 hover:bg-gray-100/60 dark:hover:bg-gray-800 transition">
+                                <span class="text-xs font-medium text-gray-700 dark:text-gray-300">{{ $cat->name }}</span>
+                                <span class="inline-flex items-center rounded-full bg-brand-50 px-2.5 py-0.5 text-xs font-bold text-brand-700 dark:bg-brand-900/40 dark:text-brand-300 font-mono">
+                                    {{ $cat->items_count }} Item
+                                </span>
+                            </div>
+                        @endif
+                    @endforeach
+                </div>
+            </div>
+
+            <!-- Quick Access Card to Laporan Consumable & Secondary -->
+            <div class="rounded-2xl border border-brand-200 dark:border-brand-900/60 bg-brand-50/60 dark:bg-brand-950/30 p-5 space-y-3">
+                <div class="flex items-center gap-2.5">
+                    <div class="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-brand-600 text-white shadow-xs">
+                        <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/></svg>
+                    </div>
+                    <div>
+                        <h4 class="text-xs font-bold text-brand-950 dark:text-brand-200">Laporan Pemakaian 31 Hari</h4>
+                        <p class="text-[11px] text-brand-800 dark:text-brand-300">Analisis pengeluaran consumable & sparepart</p>
+                    </div>
+                </div>
+                <div class="flex items-center gap-2 pt-1">
+                    <a href="{{ route('reports.consumable') }}" class="w-full inline-flex items-center justify-center gap-1.5 rounded-xl bg-brand-600 px-3 py-2 text-xs font-bold text-white hover:bg-brand-700 transition shadow-xs">
+                        <span>Buka Laporan Consumable &rarr;</span>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 6. Charts Section: Mutasi Stok, Stok per Kategori, Top Pengeluaran, Aging -->
     <div class="w-full max-w-full min-w-0 overflow-hidden space-y-6">
         <div class="grid grid-cols-1 gap-6 xl:grid-cols-12">
             <!-- 1. Line Chart: Tren Mutasi Stok (Masuk vs Keluar) -->
@@ -232,7 +889,7 @@
                 <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 border-b border-gray-100 dark:border-gray-800 pb-3">
                     <div>
                         <h3 class="text-sm font-bold text-gray-900 dark:text-white">Grafik Tren Mutasi Stok Material</h3>
-                        <p class="text-xs text-gray-500 dark:text-gray-400">Pemisahan mutasi barang masuk vs keluar berdasarkan jenis satuan</p>
+                        <p class="text-xs text-gray-500 dark:text-gray-400">Pemisahan arus barang masuk vs keluar berdasarkan jenis satuan hitung</p>
                     </div>
                     <div class="flex flex-wrap items-center gap-2.5">
                         <!-- Unit Type Switcher -->
@@ -415,9 +1072,9 @@
         </div>
     </div>
 
-    <!-- 4. Section: Informasi Penggunaan Material per Project -->
-    <div class="rounded-2xl border border-gray-200 bg-white p-5 dark:border-gray-800 dark:bg-gray-900 shadow-sm space-y-5 content-visibility-auto">
-        <!-- Section Header with Highlights -->
+    <!-- 7. Section: Penggunaan Material per Project (Clean & Subordinate) -->
+    <div class="rounded-2xl border border-gray-200 bg-white p-5 dark:border-gray-800 dark:bg-gray-900 shadow-sm space-y-5">
+        <!-- Section Header -->
         <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4 border-b border-gray-100 dark:border-gray-800 pb-4">
             <div class="flex items-center gap-3">
                 <div class="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-brand-50 text-brand-600 dark:bg-brand-900/30 dark:text-brand-400">
@@ -425,7 +1082,7 @@
                 </div>
                 <div>
                     <div class="flex items-center gap-2">
-                        <h2 class="text-base sm:text-lg font-bold text-gray-900 dark:text-white">Penggunaan Material per Project</h2>
+                        <h2 class="text-base sm:text-lg font-bold text-gray-900 dark:text-white">Alokasi Material per Project</h2>
                         <span class="inline-flex items-center rounded-full bg-brand-100 px-2.5 py-0.5 text-xs font-bold text-brand-800 dark:bg-brand-950/60 dark:text-brand-300">
                             {{ $totalProjectCount }} Project Terdaftar
                         </span>
@@ -451,7 +1108,7 @@
                     <span class="text-xs font-black text-gray-900 dark:text-white font-mono block">{{ $topProjectRecord['total_qty_formatted'] ?? '0' }}</span>
                 </div>
                 <a href="{{ route('projects.index') }}" class="inline-flex items-center gap-1.5 rounded-xl bg-brand-50 px-3 py-2 text-xs font-bold text-brand-700 hover:bg-brand-100 dark:bg-brand-950/50 dark:text-brand-300 dark:hover:bg-brand-900/50 transition cursor-pointer">
-                    <span>Buka Ringkasan Project</span>
+                    <span>Buka Ringkasan Project &rarr;</span>
                 </a>
             </div>
         </div>
@@ -568,7 +1225,7 @@
                             <div class="flex items-center justify-between text-[10px] text-gray-400">
                                 <div class="flex items-center gap-2">
                                     <span x-text="p.total_trans + ' Transaksi'"></span>
-                                    <span>•</span>
+                                    <span>&bull;</span>
                                     <span x-text="p.total_items + ' Jenis Item'"></span>
                                 </div>
                                 <a :href="p.url" class="inline-flex items-center gap-1 font-bold text-brand-600 hover:text-brand-700 dark:text-brand-400 hover:underline">
@@ -588,244 +1245,8 @@
                 <div class="pt-2 border-t border-gray-100 dark:border-gray-800/80 flex items-center justify-between text-xs">
                     <span class="text-[11px] text-gray-500">Klik rincian untuk detail barang project.</span>
                     <a href="{{ route('projects.index') }}" class="font-bold text-brand-600 hover:text-brand-700 dark:text-brand-400 hover:underline inline-flex items-center gap-1">
-                        <span>Semua Project</span>
+                        <span>Semua Project &rarr;</span>
                     </a>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Main Grid: Recent Activity & Stock Distribution -->
-    <div class="grid grid-cols-1 gap-6 xl:grid-cols-12 min-w-0 content-visibility-auto">
-        <!-- Recent Stock Movement Logs & Fast-Moving Items Card -->
-        <div class="xl:col-span-8 rounded-2xl border border-gray-200 bg-white p-6 dark:border-gray-800 dark:bg-gray-900 shadow-sm space-y-5 min-w-0 overflow-hidden flex flex-col justify-between">
-            <div class="space-y-4">
-                <!-- Header -->
-                <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
-                    <div>
-                        <h3 class="text-base font-bold text-gray-900 dark:text-white flex items-center gap-2">
-                            <span>Riwayat Transaksi Stok Terbaru</span>
-                        </h3>
-                        <p class="text-xs text-gray-500 dark:text-gray-400">Log mutasi barang masuk & keluar gudang</p>
-                    </div>
-                    <div class="flex items-center gap-2">
-                        <a href="{{ route('material-out.index') }}" class="text-xs font-semibold text-brand-600 hover:text-brand-700 dark:text-brand-400 hover:underline inline-flex items-center gap-1">
-                            <span>Log Pengeluaran</span>
-                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
-                        </a>
-                    </div>
-                </div>
-
-                <!-- Table -->
-                <div class="overflow-x-auto rounded-xl border border-gray-100 dark:border-gray-800">
-                    <table class="w-full text-left text-sm text-gray-500 dark:text-gray-400">
-                        <thead class="theme-table-header text-xs uppercase text-white font-bold border-b border-gray-200 dark:border-gray-800">
-                            <tr>
-                                <th class="px-3.5 py-2.5">Tipe</th>
-                                <th class="px-3.5 py-2.5">Nama Barang</th>
-                                <th class="px-3.5 py-2.5 text-center">Jumlah</th>
-                                <th class="px-3.5 py-2.5">Penyedia / Penerima</th>
-                                <th class="px-3.5 py-2.5">Waktu</th>
-                            </tr>
-                        </thead>
-                        <tbody class="divide-y divide-gray-100 dark:divide-gray-800 bg-white dark:bg-gray-900">
-                            @forelse($recentLogs ?? [] as $log)
-                                <tr class="hover:bg-gray-50/70 dark:hover:bg-gray-800/50 transition">
-                                    <td class="px-3.5 py-2.5">
-                                        @if($log->type == 'in')
-                                            <span class="inline-flex items-center gap-1 rounded-md bg-brand-50 px-2 py-0.5 text-xs font-bold text-brand-700 dark:bg-brand-900/30 dark:text-brand-400">
-                                                ↓ Masuk
-                                            </span>
-                                        @else
-                                            <span class="inline-flex items-center gap-1 rounded-md bg-gray-100 px-2 py-0.5 text-xs font-bold text-gray-700 dark:bg-gray-800 dark:text-gray-300">
-                                                ↑ Keluar
-                                            </span>
-                                        @endif
-                                    </td>
-                                    <td class="px-3.5 py-2.5 font-medium text-gray-900 dark:text-white">
-                                        <div class="flex items-center gap-1.5">
-                                            <span class="truncate max-w-[200px]">{{ $log->item?->name ?? 'Barang #' . $log->item_id }}</span>
-                                            @if($log->item?->code_item)
-                                                <span class="text-[10px] font-mono text-gray-400 bg-gray-100 dark:bg-gray-800 px-1 py-0.2 rounded shrink-0">{{ $log->item->code_item }}</span>
-                                            @endif
-                                        </div>
-                                    </td>
-                                    <td class="px-3.5 py-2.5 text-center font-bold text-gray-900 dark:text-white">
-                                        {{ format_quantity($log->quantity) }} <span class="text-xs font-normal text-gray-500">{{ $log->item?->unit }}</span>
-                                    </td>
-                                    <td class="px-3.5 py-2.5 text-xs text-gray-700 dark:text-gray-300 font-medium">
-                                        {{ $log->recipient_or_provider ?: '-' }}
-                                    </td>
-                                    <td class="px-3.5 py-2.5 text-xs text-gray-400 whitespace-nowrap" title="{{ $log->created_at?->format('d M Y H:i:s') }}">
-                                        {{ $log->created_at?->isFuture() ? 'Hari ini, ' . $log->created_at->format('H:i') : $log->created_at?->diffForHumans() }}
-                                    </td>
-                                </tr>
-                            @empty
-                                <tr>
-                                    <td colspan="5" class="px-4 py-8 text-center text-xs text-gray-400">
-                                        Belum ada transaksi log barang.
-                                    </td>
-                                </tr>
-                            @endforelse
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-
-            <!-- Panel Barang Fast-Moving (Paling Sering Keluar Bulan Ini) -->
-            <div class="pt-4 border-t border-gray-100 dark:border-gray-800/80 space-y-3">
-                <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-1">
-                    <div>
-                        <div class="flex items-center gap-1.5">
-                            <h4 class="text-xs font-bold text-gray-900 dark:text-white uppercase tracking-wider">
-                                Barang Fast-Moving Bulan Ini
-                            </h4>
-                            <span class="text-[10px] font-bold px-2 py-0.2 rounded-full bg-brand-50 text-brand-700 dark:bg-brand-950/60 dark:text-brand-300 font-mono">
-                                Top {{ count($fastMovingItems ?? []) }}
-                            </span>
-                        </div>
-                        <p class="text-[11px] text-gray-400">Item dengan perputaran dan volume pemakaian tertinggi bulan {{ now()->translatedFormat('F Y') }}</p>
-                    </div>
-                    <a href="{{ route('reports.material-out') }}" class="text-[11px] font-bold text-brand-600 hover:text-brand-700 dark:text-brand-400 hover:underline inline-flex items-center gap-1 shrink-0">
-                        <span>Laporan Pengeluaran Lengkap</span>
-                        <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
-                    </a>
-                </div>
-
-                <!-- Grid 4 Fast-Moving Items -->
-                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2.5">
-                    @forelse($fastMovingItems ?? [] as $index => $fm)
-                        @php
-                            $stk = (float) ($fm->item?->stock ?? 0);
-                            $minStk = (float) ($fm->item?->min_stock ?? 0);
-                            $isLow = $stk <= $minStk;
-                            $rankColors = [
-                                0 => 'bg-amber-500 text-white',
-                                1 => 'bg-slate-500 text-white',
-                                2 => 'bg-orange-600 text-white',
-                                3 => 'bg-gray-400 text-white',
-                            ];
-                            $badgeColor = $rankColors[$index] ?? 'bg-gray-400 text-white';
-                        @endphp
-                        <div class="rounded-xl border border-gray-200/90 bg-gray-50/60 p-3 dark:border-gray-800 dark:bg-gray-800/40 hover:border-brand-300 dark:hover:border-brand-700 transition flex flex-col justify-between gap-2.5 shadow-2xs">
-                            <div class="space-y-1.5 min-w-0">
-                                <div class="flex items-center justify-between gap-1">
-                                    <span class="font-extrabold text-[9px] px-1.5 py-0.5 rounded font-mono {{ $badgeColor }}">
-                                        #{{ $index + 1 }}
-                                    </span>
-                                    <span class="text-[9px] font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider truncate max-w-[90px]">
-                                        {{ $fm->item?->category?->name ?? 'Item' }}
-                                    </span>
-                                </div>
-                                <div>
-                                    <div class="font-bold text-xs text-gray-900 dark:text-white truncate" title="{{ $fm->item?->name }}">
-                                        {{ $fm->item?->name ?? 'Barang #' . $fm->item_id }}
-                                    </div>
-                                    <div class="text-[10px] font-mono text-gray-400">
-                                        {{ $fm->item?->code_item ?? '-' }}
-                                    </div>
-                                </div>
-                            </div>
-
-                            <div class="space-y-1.5 pt-1.5 border-t border-gray-200/60 dark:border-gray-700/60">
-                                <div class="flex items-center justify-between text-[11px]">
-                                    <span class="text-gray-500 dark:text-gray-400">Total Keluar:</span>
-                                    <span class="font-extrabold text-brand-700 dark:text-brand-300">
-                                        {{ format_quantity($fm->total_out_qty) }} {{ $fm->item?->unit }}
-                                    </span>
-                                </div>
-                                <div class="flex items-center justify-between text-[11px]">
-                                    <span class="text-gray-500 dark:text-gray-400">Frekuensi:</span>
-                                    <span class="font-bold text-gray-700 dark:text-gray-300">
-                                        {{ $fm->total_transactions }}x Transaksi
-                                    </span>
-                                </div>
-                                <div class="flex items-center justify-between text-[10px] pt-1 border-t border-dashed border-gray-200 dark:border-gray-700/50">
-                                    <span class="text-gray-400">Sisa Stok:</span>
-                                    @if($isLow)
-                                        <span class="font-bold text-rose-600 dark:text-rose-400">
-                                            {{ format_quantity($stk) }} (Menipis)
-                                        </span>
-                                    @else
-                                        <span class="font-semibold text-emerald-600 dark:text-emerald-400">
-                                            {{ format_quantity($stk) }} {{ $fm->item?->unit }}
-                                        </span>
-                                    @endif
-                                </div>
-                            </div>
-                        </div>
-                    @empty
-                        <div class="col-span-full py-4 text-center text-xs text-gray-400">
-                            Belum ada data barang keluar bulan ini.
-                        </div>
-                    @endforelse
-                </div>
-            </div>
-        </div>
-
-        <!-- Material Category Distribution & Low Stock Alerts -->
-        <div class="xl:col-span-4 space-y-6 min-w-0">
-            <!-- Category Distribution -->
-            <div class="rounded-2xl border border-gray-200 bg-white p-6 dark:border-gray-800 dark:bg-gray-900 shadow-sm space-y-4">
-                <h3 class="text-base font-bold text-gray-900 dark:text-white">Sebaran Kategori</h3>
-                <div class="space-y-3">
-                    @php
-                        $paintSubcategories = collect($categories ?? [])->filter(fn($c) => method_exists($c, 'isCatSubcategory') ? $c->isCatSubcategory() : str_starts_with(strtolower($c->name), 'cat -'));
-                    @endphp
-                    @foreach($categories ?? [] as $cat)
-                        @if(method_exists($cat, 'isCatSubcategory') ? $cat->isCatSubcategory() : str_starts_with(strtolower($cat->name), 'cat -'))
-                            @continue
-                        @endif
-
-                        @if(method_exists($cat, 'isCatUmbrella') ? $cat->isCatUmbrella() : strcasecmp(trim($cat->name), 'cat') === 0)
-                            <div class="rounded-xl border border-gray-200/80 bg-gray-50/70 p-2.5 dark:border-gray-800/80 dark:bg-gray-800/40 space-y-2">
-                                <div class="flex items-center justify-between">
-                                    <div class="flex items-center gap-1.5">
-                                        <span class="text-xs font-bold text-gray-900 dark:text-white">{{ $cat->name }}</span>
-                                        <span class="text-[10px] text-gray-400 dark:text-gray-500 font-normal">(Total Gabungan)</span>
-                                    </div>
-                                    <span class="inline-flex items-center rounded-full bg-brand-50 px-2.5 py-0.5 text-xs font-bold text-brand-700 dark:bg-brand-900/40 dark:text-brand-300">
-                                        {{ $cat->items_count }} Item
-                                    </span>
-                                </div>
-                                @if($paintSubcategories->isNotEmpty())
-                                    <div class="pt-1 pl-3 border-l-2 border-brand-200 dark:border-brand-800/60 space-y-1.5 ml-1">
-                                        @foreach($paintSubcategories as $subCat)
-                                            <div class="flex items-center justify-between text-[11px] text-gray-600 dark:text-gray-400">
-                                                <span class="font-medium">{{ $subCat->name }}</span>
-                                                <span class="font-semibold text-gray-500 dark:text-gray-400">{{ $subCat->items_count }} Item</span>
-                                            </div>
-                                        @endforeach
-                                    </div>
-                                @endif
-                            </div>
-                        @else
-                            <div class="flex items-center justify-between p-2.5 rounded-xl bg-gray-50 dark:bg-gray-800/50">
-                                <span class="text-xs font-medium text-gray-700 dark:text-gray-300">{{ $cat->name }}</span>
-                                <span class="inline-flex items-center rounded-full bg-brand-50 px-2.5 py-0.5 text-xs font-bold text-brand-700 dark:bg-brand-900/40 dark:text-brand-300">
-                                    {{ $cat->items_count }} Item
-                                </span>
-                            </div>
-                        @endif
-                    @endforeach
-                </div>
-            </div>
-
-            <!-- Low Stock Items Warning Card -->
-            <div class="rounded-2xl border border-rose-200 bg-rose-50/40 p-6 dark:border-rose-900/30 dark:bg-rose-950/20 shadow-xs space-y-4">
-                <div class="flex items-center gap-2 text-rose-700 dark:text-rose-400">
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
-                    <h3 class="text-base font-bold">Warning Stok</h3>
-                </div>
-                <div class="space-y-2">
-                    @forelse($lowStockItems ?? [] as $item)
-                        <div class="flex items-center justify-between text-xs p-2 rounded-lg bg-white dark:bg-gray-900 border border-rose-200 dark:border-rose-900/50">
-                            <span class="font-medium text-gray-900 dark:text-white truncate max-w-[160px]">{{ $item->name }}</span>
-                            <span class="font-bold text-rose-700 dark:text-rose-400">{{ format_quantity($item->stock) }} / {{ format_quantity($item->min_stock) }} {{ $item->unit }}</span>
-                        </div>
-                    @empty
-                        <p class="text-xs text-brand-600 dark:text-brand-400">Seluruh stok barang dalam posisi aman.</p>
-                    @endforelse
                 </div>
             </div>
         </div>
@@ -1266,10 +1687,10 @@ document.addEventListener('DOMContentLoaded', async function () {
         }, 180);
     }
 
-    // 5. Horizontal/Vertical Bar Chart: Pemakaian Material per Project
+    // 5. Bar Chart: Pemakaian Material per Project
     const prjDiscreteTotals = @json($chartProjectDiscreteTotals ?? []);
     const prjDecimalTotals = @json($chartProjectDecimalTotals ?? []);
-    const prjFormattedTotals = @json($chartProjectFormattedTotals ?? []);
+    const prjFormattedTotals = @json($chartProjectFormatted ?? []);
     const prjFullNames = @json($chartProjectFullNames ?? []);
     let currentPrjMode = 'discrete';
 
@@ -1330,7 +1751,7 @@ document.addEventListener('DOMContentLoaded', async function () {
         },
         yaxis: {
             min: 0,
-            labels: {
+            labels: { 
                 style: { colors: textColor, fontSize: "11px" },
                 formatter: (val) => currentPrjMode === 'discrete' ? Math.round(val) : (Number.isInteger(val) ? val : val.toFixed(1))
             }
