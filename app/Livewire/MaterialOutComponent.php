@@ -76,6 +76,18 @@ class MaterialOutComponent extends Component
         'notes' => 'nullable|string|max:500',
     ];
 
+    protected $messages = [
+        'date.required' => 'Tanggal keluar wajib diisi.',
+        'date.date' => 'Format tanggal keluar tidak valid.',
+        'item_id.required' => 'Barang wajib dipilih.',
+        'item_id.exists' => 'Barang yang dipilih tidak valid.',
+        'quantity.required' => 'Jumlah material keluar wajib diisi.',
+        'quantity.numeric' => 'Jumlah harus berupa angka.',
+        'quantity.min' => 'Jumlah material keluar harus lebih dari 0.',
+        'project.required' => 'Nama Project / Keperluan wajib diisi.',
+        'pic.required' => 'PIC Penerima wajib diisi.',
+    ];
+
     public function mount()
     {
         $this->date = date('Y-m-d');
@@ -222,6 +234,7 @@ class MaterialOutComponent extends Component
                 if ($this->input_mode === 'wholesale' && is_numeric($parsedWholesale) && $this->conversion_factor > 1) {
                     $this->quantity = (float) $parsedWholesale * (float) $this->conversion_factor;
                 }
+                $this->validateSingleQuantity();
             } else {
                 $this->resetItemPreview();
             }
@@ -230,11 +243,52 @@ class MaterialOutComponent extends Component
         }
     }
 
+    public function updatedQuantity($val)
+    {
+        $this->validateSingleQuantity();
+    }
+
+    public function validateSingleQuantity(): bool
+    {
+        $this->resetErrorBag('quantity');
+
+        if ($this->quantity === null || $this->quantity === '') {
+            return true;
+        }
+
+        $qty = (float) str_replace(',', '.', (string)$this->quantity);
+        if ($qty <= 0) {
+            $this->addError('quantity', 'Jumlah material keluar harus lebih dari 0.');
+            return false;
+        }
+
+        if ($this->item_id) {
+            $item = Item::find($this->item_id);
+            if ($item) {
+                $availableStock = (float) $item->stock;
+                if ($this->isEditMode && $this->selectedId) {
+                    $existing = MaterialOut::find($this->selectedId);
+                    if ($existing && $existing->item_id == $item->id) {
+                        $availableStock += (float) $existing->quantity;
+                    }
+                }
+                if ($qty > $availableStock) {
+                    $unitName = $this->unit ?: ($item->unit ?: 'satuan');
+                    $this->addError('quantity', "Jumlah melebihi stok. Stok tersedia: " . format_quantity($availableStock) . " {$unitName}");
+                    return false;
+                }
+            }
+        }
+
+        return true;
+    }
+
     public function updatedWholesaleQty($val)
     {
         $val = str_replace(',', '.', (string)$val);
         if ($this->input_mode === 'wholesale' && is_numeric($val) && $this->conversion_factor > 1) {
             $this->quantity = (float) $val * (float) $this->conversion_factor;
+            $this->validateSingleQuantity();
         }
     }
 
@@ -244,6 +298,7 @@ class MaterialOutComponent extends Component
         $val = str_replace(',', '.', (string)$this->wholesale_qty);
         if ($mode === 'wholesale' && is_numeric($val) && $this->conversion_factor > 1) {
             $this->quantity = (float) $val * (float) $this->conversion_factor;
+            $this->validateSingleQuantity();
         }
     }
 
@@ -332,7 +387,43 @@ class MaterialOutComponent extends Component
                     $this->bulkRows[$index]['unit'] = $item->unit;
                 }
             }
+            $this->validateBulkRowQuantity($index);
+        } elseif (str_contains($key, 'quantity')) {
+            $parts = explode('.', $key);
+            $index = ($parts[0] === 'bulkRows' && isset($parts[1])) ? (int) $parts[1] : (int) $parts[0];
+            $this->validateBulkRowQuantity($index);
         }
+    }
+
+    public function validateBulkRowQuantity(int $index): bool
+    {
+        $this->resetErrorBag("bulkRows.{$index}.quantity");
+        if (!isset($this->bulkRows[$index])) return true;
+
+        $row = $this->bulkRows[$index];
+        $itemId = $row['item_id'] ?? null;
+        if (empty($itemId)) return true;
+
+        $rawQty = $row['quantity'] ?? null;
+        if ($rawQty === '' || $rawQty === null) {
+            return true;
+        }
+
+        $qty = (float) str_replace(',', '.', (string)$rawQty);
+        if ($qty <= 0) {
+            $this->addError("bulkRows.{$index}.quantity", "Jumlah harus lebih dari 0.");
+            return false;
+        }
+
+        $item = Item::find($itemId);
+        if ($item) {
+            if ($qty > $item->stock) {
+                $this->addError("bulkRows.{$index}.quantity", "Jumlah melebihi stok. Stok tersedia: " . format_quantity($item->stock) . " {$item->unit}");
+                return false;
+            }
+        }
+
+        return true;
     }
 
     public function applyCalculatedQuantity($quantity, $rowIndex = null, $unit = 'KG')
@@ -345,12 +436,14 @@ class MaterialOutComponent extends Component
                 if (!empty($unit)) {
                     $this->bulkRows[$idx]['unit'] = $unit;
                 }
+                $this->validateBulkRowQuantity($idx);
             }
         } else {
             $this->quantity = $qty;
             if (!empty($unit)) {
                 $this->unit = $unit;
             }
+            $this->validateSingleQuantity();
         }
     }
 
@@ -437,50 +530,60 @@ class MaterialOutComponent extends Component
                 }
             }
 
-            $validRows = array_filter($this->bulkRows, fn($r) => !empty($r['item_id']) && (float)($r['quantity'] ?? 0) > 0);
+            $hasItemRows = array_filter($this->bulkRows, fn($r) => !empty($r['item_id']));
 
-            if (empty($validRows)) {
-                session()->flash('error', 'Minimal pilih 1 barang dengan jumlah lebih dari 0.');
-                $this->dispatch('swal:error', title: 'Gagal!', message: 'Minimal pilih 1 barang dengan jumlah lebih dari 0.');
+            if (empty($hasItemRows)) {
+                $this->addError('bulkRows.0.quantity', 'Minimal pilih 1 barang dengan jumlah lebih dari 0.');
                 return;
             }
 
-            // Bug 1 Fix: Akumulasikan total quantity per item_id agar barang duplikat di baris berbeda tidak menembus batas stok
+            $hasValidationErrors = false;
+
+            // Check each row quantity and fields
             $requestedPerItem = [];
-            foreach ($validRows as $row) {
-                $itemId = $row['item_id'];
+            foreach ($this->bulkRows as $idx => $row) {
+                if (empty($row['item_id'])) continue;
+
                 $rowQty = (float) str_replace(',', '.', (string)($row['quantity'] ?? 0));
-                $requestedPerItem[$itemId] = ($requestedPerItem[$itemId] ?? 0) + $rowQty;
-            }
-
-            $stockErrors = [];
-            foreach ($requestedPerItem as $itemId => $totalQty) {
-                $item = Item::find($itemId);
-                if (!$item) continue;
-                if ($totalQty > $item->stock) {
-                    $stockErrors[] = "Total permintaan untuk {$item->name} ({$totalQty} {$item->unit}) melebihi stok yang tersedia ({$item->stock} {$item->unit}).";
+                if ($rowQty <= 0) {
+                    $this->addError("bulkRows.{$idx}.quantity", "Jumlah harus lebih dari 0.");
+                    $hasValidationErrors = true;
                 }
-            }
 
-            foreach ($validRows as $idx => $row) {
-                $rowNum = $idx + 1;
                 $rowProject = !empty($row['project']) ? trim($row['project']) : trim($this->project);
                 $rowPic = !empty($row['pic']) ? trim($row['pic']) : trim($this->pic);
 
                 if (empty($rowProject)) {
-                    $stockErrors[] = "Baris #{$rowNum}: Nama Project / Keperluan wajib diisi.";
+                    $this->addError("bulkRows.{$idx}.project", "Nama Project / Keperluan wajib diisi.");
+                    $hasValidationErrors = true;
                 }
                 if (empty($rowPic)) {
-                    $stockErrors[] = "Baris #{$rowNum}: PIC Penerima wajib diisi.";
+                    $this->addError("bulkRows.{$idx}.pic", "PIC Penerima wajib diisi.");
+                    $hasValidationErrors = true;
+                }
+
+                $itemId = $row['item_id'];
+                $requestedPerItem[$itemId][] = ['index' => $idx, 'qty' => $rowQty];
+            }
+
+            // Check stock per item (including duplicate items across rows)
+            foreach ($requestedPerItem as $itemId => $rowsForItem) {
+                $item = Item::find($itemId);
+                if (!$item) continue;
+                $totalRequested = array_sum(array_column($rowsForItem, 'qty'));
+                if ($totalRequested > $item->stock) {
+                    foreach ($rowsForItem as $r) {
+                        $this->addError("bulkRows.{$r['index']}.quantity", "Jumlah melebihi stok. Stok tersedia: " . format_quantity($item->stock) . " {$item->unit}");
+                    }
+                    $hasValidationErrors = true;
                 }
             }
 
-            if (!empty($stockErrors)) {
-                $errMsg = implode(' | ', $stockErrors);
-                session()->flash('error', $errMsg);
-                $this->dispatch('swal:error', title: 'Gagal!', message: $errMsg);
+            if ($hasValidationErrors) {
                 return;
             }
+
+            $validRows = array_filter($this->bulkRows, fn($r) => !empty($r['item_id']) && (float)($r['quantity'] ?? 0) > 0);
 
             try {
                 DB::transaction(function () use ($validRows) {
@@ -491,7 +594,7 @@ class MaterialOutComponent extends Component
                         $qty = (float) str_replace(',', '.', (string)$row['quantity']);
 
                         if ($qty > $item->stock) {
-                            throw new \Exception("Stok tidak mencukupi untuk {$item->name} saat pemrosesan (Sisa stok: {$item->stock} {$item->unit}, Diminta: {$qty}).");
+                            throw new \Exception("Jumlah melebihi stok. Stok tersedia: " . format_quantity($item->stock) . " {$item->unit}");
                         }
 
                         $unit = !empty($item->unit) ? $item->unit : (!empty($row['unit']) ? $row['unit'] : 'PCS');
@@ -543,8 +646,7 @@ class MaterialOutComponent extends Component
                     $this->dispatch('swal:success', title: 'Berhasil!', message: "Berhasil mencatat {$insertedCount} pengeluaran material!");
                 });
             } catch (\Exception $e) {
-                session()->flash('error', $e->getMessage());
-                $this->dispatch('swal:error', title: 'Gagal Transaksi!', message: $e->getMessage());
+                $this->addError('bulkRows.0.quantity', $e->getMessage());
                 return;
             }
 
@@ -568,16 +670,24 @@ class MaterialOutComponent extends Component
             $this->quantity = (float) $this->wholesale_qty * (float) $this->conversion_factor;
         }
 
+        $qty = (float) $this->quantity;
+        if ($qty <= 0) {
+            $this->addError('quantity', 'Jumlah material keluar harus lebih dari 0.');
+            return;
+        }
+
         if (!$this->isEditMode) {
-            if ($this->quantity > $item->stock) {
-                $this->addError('quantity', "Stok tidak mencukupi! Stok {$item->name} saat ini hanya {$item->stock} {$item->unit}.");
+            if ($qty > $item->stock) {
+                $unitName = $this->unit ?: ($item->unit ?: 'satuan');
+                $this->addError('quantity', "Jumlah melebihi stok. Stok tersedia: " . format_quantity($item->stock) . " {$unitName}");
                 return;
             }
         } else {
             $existing = MaterialOut::findOrFail($this->selectedId);
-            $availableStock = $item->stock + ($existing->item_id == $item->id ? $existing->quantity : 0);
-            if ($this->quantity > $availableStock) {
-                $this->addError('quantity', "Stok tidak mencukupi! Stok maksimal tersedia: {$availableStock} {$item->unit}.");
+            $availableStock = (float) $item->stock + ($existing->item_id == $item->id ? (float) $existing->quantity : 0);
+            if ($qty > $availableStock) {
+                $unitName = $this->unit ?: ($item->unit ?: 'satuan');
+                $this->addError('quantity', "Jumlah melebihi stok. Stok tersedia: " . format_quantity($availableStock) . " {$unitName}");
                 return;
             }
         }
@@ -604,7 +714,8 @@ class MaterialOutComponent extends Component
                     $item = Item::where('id', $this->item_id)->lockForUpdate()->firstOrFail();
 
                     if ($this->quantity > $item->stock) {
-                        throw new \Exception("Stok tidak mencukupi! Stok {$item->name} saat ini hanya {$item->stock} {$item->unit}.");
+                        $unitName = $this->unit ?: ($item->unit ?: 'satuan');
+                        throw new \Exception("Jumlah melebihi stok. Stok tersedia: " . format_quantity($item->stock) . " {$unitName}");
                     }
 
                     MaterialOut::create([
@@ -654,14 +765,16 @@ class MaterialOutComponent extends Component
 
                         $item = Item::where('id', $this->item_id)->lockForUpdate()->firstOrFail();
                         if ($this->quantity > $item->stock) {
-                            throw new \Exception("Stok tidak mencukupi! Stok {$item->name} saat ini hanya {$item->stock} {$item->unit}.");
+                            $unitName = $this->unit ?: ($item->unit ?: 'satuan');
+                            throw new \Exception("Jumlah melebihi stok. Stok tersedia: " . format_quantity($item->stock) . " {$unitName}");
                         }
                         $item->decrement('stock', $this->quantity);
                     } else {
                         $item = Item::where('id', $this->item_id)->lockForUpdate()->firstOrFail();
                         $diff = (float)$this->quantity - (float)$materialOut->quantity;
                         if ($diff > 0 && $diff > $item->stock) {
-                            throw new \Exception("Stok tidak mencukupi! Tambahan stok yang dibutuhkan: {$diff} {$item->unit}, tersedia: {$item->stock} {$item->unit}.");
+                            $unitName = $this->unit ?: ($item->unit ?: 'satuan');
+                            throw new \Exception("Jumlah melebihi stok. Stok tersedia: " . format_quantity($item->stock) . " {$unitName}");
                         }
                         $item->decrement('stock', $diff);
                     }
@@ -691,8 +804,7 @@ class MaterialOutComponent extends Component
                 }
             });
         } catch (\Exception $e) {
-            session()->flash('error', $e->getMessage());
-            $this->dispatch('swal:error', title: 'Gagal!', message: $e->getMessage());
+            $this->addError('quantity', $e->getMessage());
             return;
         }
 

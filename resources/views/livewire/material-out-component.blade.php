@@ -9,7 +9,7 @@
         <div x-init="if (typeof window.showSwalSuccess === 'function') window.showSwalSuccess(@json($swalTitle), @json($successMsg))" class="hidden"></div>
     @endif
 
-    @if (session()->has('error'))
+    @if (session()->has('error') && !$isModalOpen)
         <div x-init="if (typeof window.showSwalError === 'function') window.showSwalError('Gagal!', @json(session('error')))" class="hidden"></div>
     @endif
 
@@ -1874,13 +1874,16 @@
                                                     <div class="flex items-center gap-1.5"
                                                          x-data="{ currentUnit: '{{ $row['unit'] ?? 'PCS' }}' }"
                                                          @item-unit-updated-{{ $index }}.window="currentUnit = $event.detail.unit">
-                                                        <input type="number" min="0.001" step="any" wire:model="bulkRows.{{ $index }}.quantity" class="w-full rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 px-2 py-1.5 text-xs text-center font-bold text-gray-800 dark:text-white outline-none focus:border-brand-500">
+                                                        <input type="number" min="0.001" step="any" wire:model.live.debounce.300ms="bulkRows.{{ $index }}.quantity" class="w-full rounded-lg border @error('bulkRows.' . $index . '.quantity') border-rose-500 bg-rose-50/40 dark:bg-rose-950/20 text-rose-700 dark:text-rose-400 @else border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-800 dark:text-white @enderror px-2 py-1.5 text-xs text-center font-bold outline-none focus:border-brand-500">
                                                         <span class="text-[10px] font-extrabold text-gray-500 dark:text-gray-400 uppercase shrink-0 bg-gray-100 dark:bg-gray-800 px-1.5 py-1 rounded border border-gray-200 dark:border-gray-700 font-mono min-w-[34px] text-center"
                                                               :title="currentUnit"
                                                               x-text="typeof formatUnitCode === 'function' ? formatUnitCode(currentUnit) : currentUnit">
                                                             {{ unit_code($row['unit'] ?? 'PCS') }}
                                                         </span>
                                                     </div>
+                                                    @error('bulkRows.' . $index . '.quantity')
+                                                        <span class="text-[10px] text-rose-500 font-semibold mt-1 block leading-tight">{{ $message }}</span>
+                                                    @enderror
                                                 </td>
                                                 <td class="py-2 px-3">
                                                     <div class="relative" 
@@ -2259,7 +2262,7 @@
                                                 <label class="block text-[11px] font-bold text-gray-700 dark:text-gray-300 mb-1">
                                                     Jumlah {{ $wholesale_unit }} <span class="text-rose-500">*</span>
                                                 </label>
-                                                <input type="number" min="0.001" step="any" wire:model.live.debounce.150ms="wholesale_qty" placeholder="Misal: 1 {{ $wholesale_unit }}" class="w-full rounded-xl border border-gray-200 bg-white px-3 py-2 text-xs font-bold text-gray-800 outline-none focus:border-brand-500 dark:border-gray-700 dark:bg-gray-800 dark:text-white">
+                                                <input type="number" min="0.001" step="any" wire:model.live.debounce.150ms="wholesale_qty" placeholder="Misal: 1 {{ $wholesale_unit }}" class="w-full rounded-xl border @error('quantity') border-rose-500 bg-rose-50/40 dark:bg-rose-950/20 text-rose-700 dark:text-rose-400 @else border-gray-200 bg-white text-gray-800 dark:border-gray-700 dark:bg-gray-800 dark:text-white @enderror px-3 py-2 text-xs font-bold outline-none focus:border-brand-500">
                                             </div>
                                             <div class="text-right">
                                                 <span class="text-[10px] text-gray-500 dark:text-gray-400 block uppercase">Stok Terpotong (Pcs)</span>
@@ -2268,6 +2271,14 @@
                                                 </span>
                                             </div>
                                         </div>
+                                        @error('quantity')
+                                            <div class="flex items-center gap-1.5 text-[11px] text-rose-600 dark:text-rose-400 font-semibold mt-1.5">
+                                                <svg class="w-4 h-4 shrink-0 text-rose-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
+                                                </svg>
+                                                <span>{{ $message }}</span>
+                                            </div>
+                                        @enderror
                                     @endif
                                 </div>
                             @endif
@@ -2287,8 +2298,15 @@
                                                 <span>Kalkulator Stick (Kg)</span>
                                             </button>
                                         </div>
-                                        <input type="number" min="0.001" step="any" wire:model="quantity" class="w-full rounded-xl border border-gray-200 bg-white px-3.5 py-2 text-xs text-gray-800 outline-none focus:border-brand-500 dark:border-gray-700 dark:bg-gray-800 dark:text-white">
-                                        @error('quantity') <span class="text-[10px] text-rose-500 mt-1 block">{{ $message }}</span> @enderror
+                                        <input type="number" min="0.001" step="any" wire:model.live.debounce.250ms="quantity" class="w-full rounded-xl border @error('quantity') border-rose-500 bg-rose-50/40 dark:bg-rose-950/20 text-rose-700 dark:text-rose-400 @else border-gray-200 bg-white text-gray-800 dark:border-gray-700 dark:bg-gray-800 dark:text-white @enderror px-3.5 py-2 text-xs font-bold outline-none focus:border-brand-500">
+                                        @error('quantity')
+                                            <div class="flex items-center gap-1.5 text-[11px] text-rose-600 dark:text-rose-400 font-semibold mt-1.5">
+                                                <svg class="w-4 h-4 shrink-0 text-rose-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
+                                                </svg>
+                                                <span>{{ $message }}</span>
+                                            </div>
+                                        @enderror
                                     </div>
 
                                     <div>
@@ -2328,8 +2346,16 @@
                         <button type="button" wire:click="closeModal" class="rounded-xl border border-gray-200 bg-white px-4 py-2 text-xs font-semibold text-gray-700 hover:bg-gray-50 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-300 transition cursor-pointer">
                             Batal
                         </button>
-                        <button type="submit" class="btn-save-theme rounded-xl bg-brand-600 px-5 py-2 text-xs font-bold text-white hover:bg-brand-700 focus:outline-none shadow-xs transition cursor-pointer">
-                            {{ $isEditMode ? 'Simpan Perubahan' : 'Simpan Pengeluaran Material' }}
+                        <button type="submit" 
+                                wire:loading.attr="disabled"
+                                wire:target="save"
+                                class="btn-save-theme inline-flex items-center gap-2 rounded-xl bg-brand-600 px-5 py-2 text-xs font-bold text-white hover:bg-brand-700 focus:outline-none shadow-xs transition cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed">
+                            <svg wire:loading wire:target="save" class="animate-spin -ml-1 mr-1.5 h-4 w-4 text-white" fill="none" viewBox="0 0 24 24">
+                                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"></path>
+                            </svg>
+                            <span wire:loading.remove wire:target="save">{{ $isEditMode ? 'Simpan Perubahan' : 'Simpan Pengeluaran Material' }}</span>
+                            <span wire:loading wire:target="save">Menyimpan...</span>
                         </button>
                     </div>
                 </form>

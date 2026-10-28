@@ -66,6 +66,9 @@
         [x-cloak] {
             display: none !important;
         }
+        .swal2-container {
+            z-index: 99999999 !important;
+        }
         .theme-table-header,
         table thead,
         table thead tr,
