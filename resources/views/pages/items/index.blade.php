@@ -6,7 +6,7 @@
         openCreateModal: false,
         openEditModal: false,
         openPrModal: false,
-        editItem: { id: null, code_item: '', name: '', category_id: '', unit_id: '', stock: 0, unit: 'PCS', min_stock: 0, requirement_per_ton: null, unit_price: 0, storage: 'STORAGE 1', location: '', wholesale_unit: '', conversion_factor: 1, manufacturing_date: '', expiry_date: '' },
+        editItem: { id: null, code_item: '', name: '', brand: '', category_id: '', unit_id: '', stock: 0, unit: 'PCS', min_stock: 0, requirement_per_ton: null, unit_price: 0, storage: 'STORAGE 1', location: '', wholesale_unit: '', conversion_factor: 1, manufacturing_date: '', expiry_date: '' },
         prData: {
             document_no: '095/FPBJ/MGI/MEI/IX/2026',
             required_date: '',
@@ -261,17 +261,18 @@
                         }
                     },
                     rows: [
-                        { code_item: '', category_id: '', name: '', stock: 0, unit: 'PCS', min_stock: 5, unit_price: 0 },
-                        { code_item: '', category_id: '', name: '', stock: 0, unit: 'PCS', min_stock: 5, unit_price: 0 },
-                        { code_item: '', category_id: '', name: '', stock: 0, unit: 'PCS', min_stock: 5, unit_price: 0 },
-                        { code_item: '', category_id: '', name: '', stock: 0, unit: 'PCS', min_stock: 5, unit_price: 0 },
-                        { code_item: '', category_id: '', name: '', stock: 0, unit: 'PCS', min_stock: 5, unit_price: 0 },
+                        { code_item: '', category_id: '', name: '', brand: '', stock: 0, unit: 'PCS', min_stock: 5, unit_price: 0 },
+                        { code_item: '', category_id: '', name: '', brand: '', stock: 0, unit: 'PCS', min_stock: 5, unit_price: 0 },
+                        { code_item: '', category_id: '', name: '', brand: '', stock: 0, unit: 'PCS', min_stock: 5, unit_price: 0 },
+                        { code_item: '', category_id: '', name: '', brand: '', stock: 0, unit: 'PCS', min_stock: 5, unit_price: 0 },
+                        { code_item: '', category_id: '', name: '', brand: '', stock: 0, unit: 'PCS', min_stock: 5, unit_price: 0 },
                     ],
                     addRow() {
                         this.rows.push({ 
                             code_item: '',
                             category_id: this.bulkCategory || '', 
                             name: '', 
+                            brand: '',
                             stock: 0, 
                             unit: this.bulkUnit || 'PCS', 
                             min_stock: this.bulkMinStock || 5,
@@ -289,6 +290,7 @@
                                 code_item: '',
                                 category_id: this.bulkCategory || '', 
                                 name: '', 
+                                brand: '',
                                 stock: 0, 
                                 unit: this.bulkUnit || 'PCS', 
                                 min_stock: this.bulkMinStock || 5,
@@ -305,13 +307,13 @@
                         if (this.rows.length > 1) {
                             this.rows.splice(index, 1);
                         } else {
-                            this.rows[0] = { code_item: '', category_id: '', name: '', stock: 0, unit: this.bulkUnit || 'PCS', min_stock: 5, unit_price: 0 };
+                            this.rows[0] = { code_item: '', category_id: '', name: '', brand: '', stock: 0, unit: this.bulkUnit || 'PCS', min_stock: 5, unit_price: 0 };
                         }
                     },
                     clearEmptyRows() {
                         const filled = this.rows.filter(r => r.name && r.name.trim() !== '');
                         this.rows = filled.length > 0 ? filled : [
-                            { code_item: '', category_id: '', name: '', stock: 0, unit: this.bulkUnit || 'PCS', min_stock: 5, unit_price: 0 }
+                            { code_item: '', category_id: '', name: '', brand: '', stock: 0, unit: this.bulkUnit || 'PCS', min_stock: 5, unit_price: 0 }
                         ];
                     },
                     applyCategoryToAll() {
@@ -428,6 +430,7 @@
                                             <th class="px-3 py-3 w-10 text-center">#</th>
                                             <th class="px-3 py-3 w-24 text-center">Kode</th>
                                             <th class="px-3 py-3 w-44">Kategori <span class="text-rose-300">*</span></th>
+                                            <th class="px-3 py-3 w-32">Brand</th>
                                             <th class="px-3 py-3 w-72 max-w-sm">Nama Barang Lengkap <span class="text-rose-300">*</span></th>
                                             <th class="px-3 py-3 w-20 text-center">Stok Awal</th>
                                             <th class="px-3 py-3 w-32 min-w-[120px] text-center">Satuan</th>
@@ -461,6 +464,14 @@
                                                             <option value="{{ $cat->id }}">{{ $cat->name }}</option>
                                                         @endforeach
                                                     </select>
+                                                </td>
+                                                <td class="px-2 py-2 w-32">
+                                                    <input type="text" 
+                                                        :name="'items[' + index + '][brand]'" 
+                                                        x-model="row.brand" 
+                                                        :disabled="activeTab !== 'bulk'"
+                                                        placeholder="Brand..." 
+                                                        class="w-full rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 px-2 py-1.5 text-xs text-gray-900 dark:text-white outline-none focus:border-brand-500">
                                                 </td>
                                                 <td class="px-2 py-2 w-72 max-w-sm">
                                                     <input type="text" 
@@ -585,6 +596,13 @@
                             <div class="space-y-1">
                                 <label class="block text-xs font-bold text-gray-700 dark:text-gray-300">Nama Barang <span class="text-rose-500">*</span></label>
                                 <input type="text" name="name" :disabled="activeTab !== 'single'" placeholder="Gate Valve 3 Inch Class 150" class="w-full rounded-xl border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 px-3 py-2 text-sm text-gray-900 dark:text-white focus:border-brand-500 focus:ring-1 focus:ring-brand-500">
+                            </div>
+
+                            <div class="space-y-1">
+                                <label class="block text-xs font-bold text-gray-700 dark:text-gray-300">
+                                    Brand / Merk Cat <span class="text-xs font-normal text-gray-400">(Khusus Cat, contoh: Novalux, International, Jotun)</span>
+                                </label>
+                                <input type="text" name="brand" :disabled="activeTab !== 'single'" placeholder="Contoh: Novalux, International, Jotun..." class="w-full rounded-xl border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 px-3 py-2 text-sm text-gray-900 dark:text-white focus:border-brand-500">
                             </div>
 
                             <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
@@ -933,6 +951,13 @@
                         <div class="space-y-1">
                             <label class="block text-xs font-bold text-gray-700 dark:text-gray-300">Nama Barang <span class="text-rose-500">*</span></label>
                             <input type="text" name="name" x-model="editItem.name" required placeholder="Nama barang..." class="w-full rounded-xl border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 px-3 py-2 text-sm text-gray-900 dark:text-white focus:border-brand-500">
+                        </div>
+
+                        <div class="space-y-1">
+                            <label class="block text-xs font-bold text-gray-700 dark:text-gray-300">
+                                Brand / Merk Cat <span class="text-xs font-normal text-gray-400">(Khusus Cat, contoh: Novalux, International, Jotun)</span>
+                            </label>
+                            <input type="text" name="brand" x-model="editItem.brand" placeholder="Contoh: Novalux, International, Jotun..." class="w-full rounded-xl border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 px-3 py-2 text-sm text-gray-900 dark:text-white focus:border-brand-500">
                         </div>
 
                         <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">

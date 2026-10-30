@@ -589,7 +589,7 @@ class StockOpnameComponent extends Component
     public function render()
     {
         $categories = Category::select('id', 'name')->orderBy('name')->get();
-        $allItems = Item::select(['id', 'name', 'code_item'])->orderBy('name')->get();
+        $allItems = Item::select(['id', 'name', 'code_item', 'brand'])->orderBy('name')->get();
         $units = \App\Models\Unit::select(['id', 'name', 'symbol'])->where('is_active', true)->orderBy('name')->get();
 
         if ($this->activeTab === 'daily') {
@@ -601,7 +601,8 @@ class StockOpnameComponent extends Component
                 $s = $this->search;
                 $dailyQuery->whereHas('item', function ($q) use ($s) {
                     $q->where('name', 'like', "%{$s}%")
-                        ->orWhere('code_item', 'like', "%{$s}%");
+                        ->orWhere('code_item', 'like', "%{$s}%")
+                        ->orWhere('brand', 'like', "%{$s}%");
                 });
             }
 

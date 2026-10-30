@@ -1603,7 +1603,7 @@ class MaterialInComponent extends Component
         $perPage = CompanyProfile::getDefaultPerPage();
         $units = \App\Models\Unit::where('is_active', true)->orderBy('name')->get();
 
-        $items = Item::select(['id', 'name', 'code_item', 'category_id', 'stock', 'unit'])
+        $items = Item::select(['id', 'name', 'code_item', 'category_id', 'brand', 'stock', 'unit'])
             ->with('category:id,name')
             ->orderBy('name')
             ->get();
@@ -1612,6 +1612,7 @@ class MaterialInComponent extends Component
             'id' => (string) $it->id,
             'name' => $it->name,
             'code' => $it->code_item ?? '',
+            'brand' => $it->brand ?? '',
             'category' => $it->category?->name ?? 'Consumable',
             'stock' => (float) $it->stock,
             'unit' => $it->unit ?? 'PCS',

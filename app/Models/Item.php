@@ -15,6 +15,7 @@ class Item extends Model
         'unit_id',
         'code_item',
         'name',
+        'brand',
         'stock',
         'unit',
         'unit_price',

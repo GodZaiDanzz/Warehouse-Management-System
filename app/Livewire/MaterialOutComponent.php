@@ -940,7 +940,7 @@ class MaterialOutComponent extends Component
         $units = \App\Models\Unit::select(['id', 'name', 'symbol'])->where('is_active', true)->orderBy('name')->get();
         
         // Scope items list if activeModule is set
-        $itemsQuery = Item::select(['id', 'name', 'code_item', 'category_id', 'stock', 'unit'])
+        $itemsQuery = Item::select(['id', 'name', 'code_item', 'category_id', 'brand', 'stock', 'unit'])
             ->with('category:id,name')
             ->orderBy('name', 'asc');
         if (!empty($this->activeModule) && $this->activeModule !== 'all') {
@@ -960,7 +960,7 @@ class MaterialOutComponent extends Component
         $items = $itemsQuery->get();
         $allItems = ($this->activeModule === 'all' || empty($this->activeModule)) 
             ? $items 
-            : Item::select(['id', 'name', 'code_item', 'category_id', 'stock', 'unit'])->orderBy('name', 'asc')->get();
+            : Item::select(['id', 'name', 'code_item', 'category_id', 'brand', 'stock', 'unit'])->orderBy('name', 'asc')->get();
 
         $allRegisteredProjects = \App\Models\Project::select(['id', 'name', 'code', 'location', 'status', 'client'])->orderBy('name', 'asc')->get();
         $registeredProjectNames = $allRegisteredProjects->pluck('name')->toArray();

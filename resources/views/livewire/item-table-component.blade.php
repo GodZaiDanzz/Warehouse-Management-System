@@ -589,6 +589,7 @@
                         'id' => $item->id,
                         'code_item' => $item->code_item ?? '',
                         'name' => $item->name,
+                        'brand' => $item->brand ?? '',
                         'category_id' => (string)($item->category_id ?? ''),
                         'unit_id' => (string)($item->unit_id ?? ''),
                         'stock' => (float)$item->stock,
@@ -633,6 +634,11 @@
 
                         <!-- Category & Storage Pills -->
                         <div class="shrink-0 flex flex-col items-end gap-1">
+                            @if(!empty($item->brand))
+                                <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-indigo-50 text-indigo-700 border border-indigo-200/80 dark:bg-indigo-950/50 dark:text-indigo-300 dark:border-indigo-800">
+                                    {{ $item->brand }}
+                                </span>
+                            @endif
                             <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-gray-100 text-gray-700 border border-gray-200 dark:bg-gray-800 dark:text-gray-300 dark:border-gray-700">
                                 {{ $item->category->name ?? '-' }}
                             </span>
@@ -814,7 +820,7 @@
             <table class="w-full text-left text-sm text-gray-500 dark:text-gray-400">
                 <thead class="theme-table-header text-xs uppercase text-white font-bold border-b border-gray-200 dark:border-gray-800">
                     <tr>
-                        <th class="px-3 py-4 text-center w-10">
+                        <th class="px-3 py-3.5 text-center w-10">
                             <div class="flex items-center justify-center">
                                 <input type="checkbox" 
                                     id="select-all-items-cb"
@@ -823,33 +829,36 @@
                                     @change="toggleSelectAllOnPage($event)">
                             </div>
                         </th>
-                        <th class="px-4 py-4 font-semibold cursor-pointer select-none whitespace-nowrap" wire:click="sortBy('code_item')">
+                        <th class="px-3 py-3.5 font-semibold cursor-pointer select-none whitespace-nowrap" wire:click="sortBy('code_item')">
                             Kode Material
                             @if($sortField === 'code_item') <span>{{ $sortDirection === 'asc' ? '↑' : '↓' }}</span> @endif
                         </th>
-                        <th class="px-5 py-4 font-semibold cursor-pointer select-none" wire:click="sortBy('name')">
+                        <th class="px-3.5 py-3.5 font-semibold cursor-pointer select-none" wire:click="sortBy('name')">
                             Nama Barang
                             @if($sortField === 'name') <span>{{ $sortDirection === 'asc' ? '↑' : '↓' }}</span> @endif
                         </th>
-                        <th class="px-4 py-4 font-semibold text-center">Kategori</th>
-                        <th class="px-5 py-4 font-semibold cursor-pointer select-none text-center" wire:click="sortBy('stock')">
+                        <th class="px-3 py-3.5 font-semibold cursor-pointer select-none text-center whitespace-nowrap" wire:click="sortBy('brand')">
+                            Brand
+                            @if($sortField === 'brand') <span>{{ $sortDirection === 'asc' ? '↑' : '↓' }}</span> @endif
+                        </th>
+                        <th class="px-3 py-3.5 font-semibold text-center whitespace-nowrap">Kategori</th>
+                        <th class="px-3 py-3.5 font-semibold cursor-pointer select-none text-center whitespace-nowrap" wire:click="sortBy('stock')">
                             Stok Fisik
                             @if($sortField === 'stock') <span>{{ $sortDirection === 'asc' ? '↑' : '↓' }}</span> @endif
                         </th>
-                        <th class="px-4 py-4 font-semibold text-center">Min. Stok</th>
+                        <th class="px-3 py-3.5 font-semibold text-center whitespace-nowrap">Min. Stok</th>
                         @if($canViewPrices)
-                        <th class="px-5 py-4 font-semibold text-right cursor-pointer select-none" wire:click="sortBy('unit_price')">
+                        <th class="px-3.5 py-3.5 font-semibold text-right cursor-pointer select-none whitespace-nowrap" wire:click="sortBy('unit_price')">
                             Nilai Aset &amp; Harga
                             @if($sortField === 'unit_price') <span>{{ $sortDirection === 'asc' ? '↑' : '↓' }}</span> @endif
                         </th>
                         @endif
-                        <th class="px-4 py-4 font-semibold text-center select-none cursor-pointer" wire:click="sortBy('updated_at')">
-                            Last Update
+                        <th class="px-3.5 py-3.5 font-semibold text-center select-none cursor-pointer whitespace-nowrap" wire:click="sortBy('updated_at')">
+                            Status &amp; Update
                             @if($sortField === 'updated_at') <span>{{ $sortDirection === 'asc' ? '↑' : '↓' }}</span> @endif
                         </th>
-                        <th class="px-4 py-4 font-semibold text-center">Status</th>
                         @if($canManageWarehouse)
-                            <th class="px-4 py-4 font-semibold text-center">Aksi</th>
+                            <th class="px-3 py-3.5 font-semibold text-center whitespace-nowrap">Aksi</th>
                         @endif
                     </tr>
                 </thead>
@@ -865,6 +874,7 @@
                                 'id' => $item->id,
                                 'code_item' => $item->code_item ?? '',
                                 'name' => $item->name,
+                                'brand' => $item->brand ?? '',
                                 'category_id' => (string)($item->category_id ?? ''),
                                 'unit_id' => (string)($item->unit_id ?? ''),
                                 'stock' => (float)$item->stock,
@@ -882,14 +892,14 @@
                             ], JSON_UNESCAPED_UNICODE);
                         @endphp
                         <tr wire:key="item-row-{{ $item->id }}" class="hover:bg-gray-50/60 dark:hover:bg-gray-800/50 transition {{ $isLow || $isExpired ? 'bg-rose-50/30 dark:bg-rose-950/20' : ($isExpiringSoon ? 'bg-amber-50/30 dark:bg-amber-950/20' : '') }}">
-                            <td class="px-3 py-4 text-center">
+                            <td class="px-3 py-3 text-center">
                                 <input type="checkbox" 
                                     class="item-checkbox rounded border-gray-300 text-brand-600 focus:ring-brand-500 w-4 h-4 cursor-pointer" 
                                     data-item="{{ $itemJson }}"
                                     @change="toggleSelectItem($el, $event)" 
                                     :checked="!!selectedMap[{{ $item->id }}]">
                             </td>
-                            <td class="whitespace-nowrap px-4 py-4">
+                            <td class="whitespace-nowrap px-3 py-3">
                                 @if(!empty($item->code_item))
                                     <span class="inline-flex items-center gap-1.5 font-mono text-xs font-bold text-gray-800 dark:text-gray-200 bg-gray-100 dark:bg-gray-800 px-2.5 py-1 rounded-lg border border-gray-200 dark:border-gray-700 tracking-wider shadow-2xs">
                                         <svg class="w-3.5 h-3.5 text-gray-400 dark:text-gray-500 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -901,9 +911,9 @@
                                     <span class="text-xs text-gray-400 dark:text-gray-500 font-mono">-</span>
                                 @endif
                             </td>
-                            <td class="px-5 py-4 font-semibold text-gray-900 dark:text-white">
+                            <td class="px-3.5 py-3 font-semibold text-gray-900 dark:text-white">
                                 <div class="space-y-1">
-                                    <div class="text-sm font-bold text-gray-900 dark:text-white">{{ $item->name }}</div>
+                                    <div class="text-sm font-bold text-gray-900 dark:text-white leading-snug">{{ $item->name }}</div>
                                     @if($item->isCat())
                                         <div class="text-[11px] text-gray-500 dark:text-gray-400 font-normal">
                                             Tgl Pembuatan: <span class="font-medium text-gray-700 dark:text-gray-300">{{ format_date($item->manufacturing_date, 'Belum diisi') }}</span>
@@ -916,8 +926,17 @@
                                     @endif
                                 </div>
                             </td>
-                            <td class="whitespace-nowrap px-4 py-4 text-center">
-                                <div class="flex flex-col items-center gap-1.5">
+                            <td class="whitespace-nowrap px-3 py-3 text-center">
+                                @if(!empty($item->brand))
+                                    <span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-bold bg-indigo-50 text-indigo-700 border border-indigo-200/80 dark:bg-indigo-950/50 dark:text-indigo-300 dark:border-indigo-800">
+                                        {{ $item->brand }}
+                                    </span>
+                                @else
+                                    <span class="text-xs text-gray-400 dark:text-gray-500 font-mono">-</span>
+                                @endif
+                            </td>
+                            <td class="whitespace-nowrap px-3 py-3 text-center">
+                                <div class="flex flex-col items-center gap-1">
                                     <span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-bold bg-gray-100 text-gray-800 border border-gray-200 dark:bg-gray-800 dark:text-gray-200 dark:border-gray-700">
                                         {{ $item->category->name ?? '-' }}
                                     </span>
@@ -939,10 +958,11 @@
                                     @endif
                                 </div>
                             </td>
-                            <td class="whitespace-nowrap px-4 py-3.5 font-bold text-gray-900 dark:text-white text-center">
+                            <!-- Kolom Terpisah: Stok Fisik -->
+                            <td class="whitespace-nowrap px-3 py-3 font-bold text-gray-900 dark:text-white text-center">
                                 <div class="space-y-1 flex flex-col items-center justify-center">
                                     <span class="text-xs font-mono font-bold {{ $isLow ? 'text-rose-600 dark:text-rose-400' : 'text-gray-800 dark:text-gray-200' }}">
-                                        {{ format_quantity($item->stock) }}
+                                        {{ format_quantity($item->stock) }} <span class="text-[10px] font-bold text-gray-500 uppercase">{{ $item->unit ?: 'Pcs' }}</span>
                                     </span>
 
                                     @php
@@ -962,7 +982,7 @@
                                     @endphp
 
                                     <!-- Stock Level Indicator Bar -->
-                                    <div class="w-20 bg-gray-200 dark:bg-gray-700 h-1.5 rounded-full overflow-hidden" title="Stok Saat Ini: {{ format_quantity($item->stock) }} | Batas Minimum: {{ format_quantity($effectiveMin) }} {{ $item->unit }}">
+                                    <div class="w-16 bg-gray-200 dark:bg-gray-700 h-1.5 rounded-full overflow-hidden" title="Stok Saat Ini: {{ format_quantity($item->stock) }} | Batas Minimum: {{ format_quantity($effectiveMin) }} {{ $item->unit ?: 'Pcs' }}">
                                         <div class="{{ $barColor }} h-1.5 rounded-full transition-all duration-500" style="width: {{ $stockPct }}%;"></div>
                                     </div>
 
@@ -973,16 +993,17 @@
                                         <div class="text-[10px] text-gray-500 font-normal">
                                             ≈ {{ floor($item->stock / $item->conversion_factor) }} {{ $item->wholesale_unit }}
                                             @if($remStockDesktop > 0.0001)
-                                                + {{ format_quantity($remStockDesktop) }} {{ $item->unit }}
+                                                + {{ format_quantity($remStockDesktop) }} {{ $item->unit ?: 'Pcs' }}
                                             @endif
                                         </div>
                                     @endif
                                 </div>
                             </td>
-                            <td class="whitespace-nowrap px-4 py-3.5 font-bold text-gray-900 dark:text-white text-center">
+                            <!-- Kolom Terpisah: Min. Stok -->
+                            <td class="whitespace-nowrap px-3 py-3 font-bold text-gray-900 dark:text-white text-center">
                                 <div class="space-y-1 flex flex-col items-center justify-center">
                                     <span class="text-xs font-mono font-bold {{ $isLow ? 'text-rose-600 dark:text-rose-400' : 'text-gray-800 dark:text-gray-200' }}">
-                                        {{ format_quantity($effectiveMin) }} {{ $item->unit }}
+                                        {{ format_quantity($effectiveMin) }} <span class="text-[10px] font-bold text-gray-500 uppercase">{{ $item->unit ?: 'Pcs' }}</span>
                                     </span>
                                     @if($item->hasRequirementPerTon())
                                         <button type="button" 
@@ -1000,7 +1021,7 @@
                                 </div>
                             </td>
                             @if($canViewPrices)
-                            <td class="whitespace-nowrap px-5 py-3.5 text-right font-mono text-xs">
+                            <td class="whitespace-nowrap px-3.5 py-3 text-right font-mono text-xs">
                                 @php
                                     $unitPrice = (float) $item->unit_price;
                                     $totalAsset = (float) $item->stock * $unitPrice;
@@ -1023,7 +1044,7 @@
                                             </span>
                                             @if($item->hasWholesaleConversion())
                                                 <div class="text-[10px] text-brand-600 dark:text-brand-400 font-medium tracking-tight">
-                                                    ≈ Rp {{ number_format($item->wholesale_price, 0, ',', '.') }} / {{ $item->wholesale_unit }} ({{ format_quantity($item->conversion_factor) }} {{ $item->unit }})
+                                                    ≈ Rp {{ number_format($item->wholesale_price, 0, ',', '.') }} / {{ $item->wholesale_unit }} ({{ format_quantity($item->conversion_factor) }} {{ $item->unit ?: 'Pcs' }})
                                                 </div>
                                             @endif
                                         @else
@@ -1033,48 +1054,44 @@
                                 </div>
                             </td>
                             @endif
-                            <td class="whitespace-nowrap px-4 py-4 text-center">
-                                @if($item->updated_at)
-                                    <div class="inline-flex flex-col items-center justify-center px-2.5 py-1 rounded-lg bg-gray-100 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 shadow-2xs">
-                                        <span class="text-xs font-mono font-bold text-gray-900 dark:text-white leading-tight">
-                                            {{ \Carbon\Carbon::parse($item->updated_at)->format(system_time_format()) }}
+                            <td class="whitespace-nowrap px-3.5 py-3 text-center">
+                                <div class="flex flex-col items-center justify-center gap-1.5">
+                                    @if($isExpired)
+                                        <span class="inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-extrabold bg-rose-100 text-rose-800 border border-rose-300 dark:bg-rose-950 dark:text-rose-300" title="Kadaluarsa: {{ format_date($item->expiry_date) }}">
+                                            <svg class="w-3.5 h-3.5 text-rose-600 dark:text-rose-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg><span>Expired! ({{ format_date($item->expiry_date) }})</span>
                                         </span>
-                                        <span class="text-[11px] font-sans font-medium text-gray-500 dark:text-gray-400 leading-tight">
-                                            ({{ format_date($item->updated_at) }})
+                                    @elseif($isExpiringSoon)
+                                        <span class="inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-extrabold bg-amber-100 text-amber-800 border border-amber-300 dark:bg-amber-950 dark:text-amber-300" title="Sisa {{ $item->days_until_expiry }} hari">
+                                            <svg class="w-3.5 h-3.5 text-amber-600 dark:text-amber-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg><span>Near Expiry ({{ $item->days_until_expiry }} Hari)</span>
                                         </span>
-                                    </div>
-                                @else
-                                    <span class="text-gray-400 text-xs font-mono">-</span>
-                                @endif
-                            </td>
-                            <td class="whitespace-nowrap px-4 py-4 text-center">
-                                @if($isExpired)
-                                    <span class="inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-extrabold bg-rose-100 text-rose-800 border border-rose-300 dark:bg-rose-950 dark:text-rose-300" title="Kadaluarsa: {{ format_date($item->expiry_date) }}">
-                                        <svg class="w-3.5 h-3.5 text-rose-600 dark:text-rose-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg><span>Expired! ({{ format_date($item->expiry_date) }})</span>
-                                    </span>
-                                @elseif($isExpiringSoon)
-                                    <span class="inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-extrabold bg-amber-100 text-amber-800 border border-amber-300 dark:bg-amber-950 dark:text-amber-300" title="Sisa {{ $item->days_until_expiry }} hari">
-                                        <svg class="w-3.5 h-3.5 text-amber-600 dark:text-amber-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg><span>Near Expiry ({{ $item->days_until_expiry }} Hari)</span>
-                                    </span>
-                                @elseif($isLow)
-                                    <button type="button" 
-                                        data-item="{{ $itemJson }}"
-                                        @click="reorderItem($el)" 
-                                        class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-extrabold bg-rose-600 text-white hover:bg-rose-700 border border-rose-600 shadow-xs transition cursor-pointer"
-                                        title="Klik untuk membuat Formulir Permintaan Pengadaan Barang & Jasa (FPBJ)">
-                                        <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
-                                        <span>Re-Order!</span>
-                                    </button>
-                                @else
-                                    <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold bg-emerald-50 text-emerald-800 border border-emerald-200 dark:bg-emerald-950/60 dark:text-emerald-300 dark:border-emerald-800">
-                                        <svg class="w-3.5 h-3.5 text-emerald-600" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/></svg>
-                                        <span>Stok Aman</span>
-                                    </span>
-                                @endif
+                                    @elseif($isLow)
+                                        <button type="button" 
+                                            data-item="{{ $itemJson }}"
+                                            @click="reorderItem($el)" 
+                                            class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-extrabold bg-rose-600 text-white hover:bg-rose-700 border border-rose-600 shadow-xs transition cursor-pointer"
+                                            title="Klik untuk membuat Formulir Permintaan Pengadaan Barang & Jasa (FPBJ)">
+                                            <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
+                                            <span>Re-Order!</span>
+                                        </button>
+                                    @else
+                                        <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold bg-emerald-50 text-emerald-800 border border-emerald-200 dark:bg-emerald-950/60 dark:text-emerald-300 dark:border-emerald-800">
+                                            <svg class="w-3.5 h-3.5 text-emerald-600" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/></svg>
+                                            <span>Stok Aman</span>
+                                        </span>
+                                    @endif
+
+                                    @if($item->updated_at)
+                                        <div class="inline-flex items-center gap-1 text-[10.5px] text-gray-500 dark:text-gray-400 font-medium" title="Terakhir diperbarui: {{ \Carbon\Carbon::parse($item->updated_at)->format('d M Y H:i:s') }}">
+                                            <svg class="w-3 h-3 text-gray-400 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                                            <span class="font-mono font-bold text-gray-700 dark:text-gray-300">{{ \Carbon\Carbon::parse($item->updated_at)->format(system_time_format()) }}</span>
+                                            <span class="text-gray-400 dark:text-gray-500">({{ format_date($item->updated_at) }})</span>
+                                        </div>
+                                    @endif
+                                </div>
                             </td>
                             @if($canManageWarehouse)
-                                <td class="whitespace-nowrap px-4 py-4 text-center">
-                                    <div class="flex items-center justify-center gap-2">
+                                <td class="whitespace-nowrap px-3 py-3 text-center">
+                                    <div class="flex items-center justify-center gap-1.5">
                                         <!-- Edit Button (Pencil Icon) -->
                                         <button type="button" 
                                             data-item="{{ $itemJson }}"

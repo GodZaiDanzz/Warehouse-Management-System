@@ -65,6 +65,7 @@ class ItemController extends Controller
                         'row_num' => $idx + 1,
                         'code_item' => !empty($row['code_item']) ? trim($row['code_item']) : null,
                         'name' => $name,
+                        'brand' => !empty($row['brand']) ? trim($row['brand']) : null,
                         'category_id' => !empty($row['category_id']) ? (int) $row['category_id'] : null,
                         'location' => trim($row['location'] ?? ''),
                         'stock' => ($stockStr !== null && is_numeric($stockStr)) ? max(0, (float) $stockStr) : 0,
@@ -131,6 +132,7 @@ class ItemController extends Controller
                     $item = Item::create([
                         'code_item' => $data['code_item'],
                         'name' => $data['name'],
+                        'brand' => $data['brand'],
                         'category_id' => $data['category_id'],
                         'unit_id' => $unitObj?->id,
                         'location' => $data['location'] ?: null,
@@ -193,6 +195,7 @@ class ItemController extends Controller
         $rules = [
             'code_item' => 'nullable|string|max:100',
             'name' => 'required|string|max:255',
+            'brand' => 'nullable|string|max:100',
             'category_id' => 'required|exists:categories,id',
             'stock' => 'required|numeric|min:0',
             'unit_price' => 'nullable|numeric|min:0',
@@ -331,6 +334,7 @@ class ItemController extends Controller
         $rules = [
             'code_item' => 'nullable|string|max:100',
             'name' => 'required|string|max:255',
+            'brand' => 'nullable|string|max:100',
             'category_id' => 'required|exists:categories,id',
             'stock' => 'required|numeric|min:0',
             'unit_price' => 'nullable|numeric|min:0',

@@ -63,6 +63,12 @@ class ItemImport implements ToCollection, WithHeadingRow, SkipsEmptyRows
                     ?? $cleanedRow['nama'] 
                     ?? null;
 
+                $brand = $cleanedRow['brand'] 
+                    ?? $cleanedRow['merk'] 
+                    ?? $cleanedRow['brand_merk'] 
+                    ?? null;
+                $brandClean = !empty($brand) ? trim((string)$brand) : null;
+
                 if (empty($name)) {
                     continue;
                 }
@@ -144,6 +150,7 @@ class ItemImport implements ToCollection, WithHeadingRow, SkipsEmptyRows
                 if ($item) {
                     $item->stock += $importedStock;
                     if ($categoryId) $item->category_id = $categoryId;
+                    if ($brandClean) $item->brand = $brandClean;
                     if (!empty($unit)) $item->unit = (string) $unit;
                     if ($minStockVal > 0) $item->min_stock = $minStockVal;
                     if ($unitPriceVal !== null) $item->unit_price = $unitPriceVal;
@@ -153,6 +160,7 @@ class ItemImport implements ToCollection, WithHeadingRow, SkipsEmptyRows
                         'code_item' => $codeItemStr,
                         'category_id' => $categoryId,
                         'name' => $nameClean,
+                        'brand' => $brandClean,
                         'stock' => $importedStock,
                         'unit' => (string) $unit,
                         'unit_price' => $unitPriceVal ?? 0,

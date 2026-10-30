@@ -33,7 +33,8 @@ class Category extends Model
      */
     public function isCatSubcategory(): bool
     {
-        return str_starts_with(strtolower(trim($this->name)), 'cat -');
+        $name = strtolower(trim($this->name));
+        return (str_starts_with($name, 'cat -') || str_starts_with($name, 'cat ')) && $name !== 'cat';
     }
 
     /**
@@ -45,6 +46,7 @@ class Category extends Model
     {
         return static::where('name', 'Cat')
             ->orWhere('name', 'like', 'Cat - %')
+            ->orWhere('name', 'like', 'Cat %')
             ->pluck('id')
             ->toArray();
     }

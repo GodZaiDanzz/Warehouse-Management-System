@@ -425,7 +425,7 @@ class ItemTableComponent extends Component
         $totalActiveTonnage = Project::getTotalActiveTonnage();
         $activeProjects = Project::getActiveProjects();
 
-        $query = Item::select(['id', 'code_item', 'name', 'category_id', 'unit_id', 'stock', 'unit', 'min_stock', 'requirement_per_ton', 'unit_price', 'location', 'manufacturing_date', 'expiry_date', 'wholesale_unit', 'conversion_factor', 'created_at', 'updated_at'])
+        $query = Item::select(['id', 'code_item', 'name', 'brand', 'category_id', 'unit_id', 'stock', 'unit', 'min_stock', 'requirement_per_ton', 'unit_price', 'location', 'manufacturing_date', 'expiry_date', 'wholesale_unit', 'conversion_factor', 'created_at', 'updated_at'])
             ->with(['category:id,name', 'unitRelation:id,name,symbol']);
 
         // Search Server-Side
@@ -436,9 +436,13 @@ class ItemTableComponent extends Component
                 $query->where(function ($q) use ($words, $search) {
                     $q->where(function ($sub) use ($words) {
                         foreach ($words as $word) {
-                            $sub->where('name', 'like', "%{$word}%");
+                            $sub->where(function ($inner) use ($word) {
+                                $inner->where('name', 'like', "%{$word}%")
+                                      ->orWhere('brand', 'like', "%{$word}%");
+                            });
                         }
-                    })->orWhere('code_item', 'like', "%{$search}%");
+                    })->orWhere('code_item', 'like', "%{$search}%")
+                      ->orWhere('brand', 'like', "%{$search}%");
                 });
             }
         }

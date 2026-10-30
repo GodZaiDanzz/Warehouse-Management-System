@@ -40,6 +40,7 @@ class ItemExport implements FromCollection, WithHeadings, WithMapping, ShouldAut
         return [
             'ID',
             'Kode Barang',
+            'Brand / Merk',
             'Kategori',
             'Nama Barang',
             'Jumlah Stok',
@@ -61,6 +62,7 @@ class ItemExport implements FromCollection, WithHeadings, WithMapping, ShouldAut
         return [
             $item->id,
             $item->code_item ?? '-',
+            $item->brand ?? '-',
             $item->category?->name ?? 'Uncategorized',
             $item->name,
             $item->stock,
