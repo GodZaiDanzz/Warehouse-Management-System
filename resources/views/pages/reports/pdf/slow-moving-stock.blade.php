@@ -175,6 +175,7 @@
         <thead>
             <tr>
                 <th style="width: 25px;">No</th>
+                <th style="width: 70px;">Kode Material</th>
                 <th>Nama Barang & Spesifikasi</th>
                 <th style="width: 80px;">Kategori</th>
                 <th style="width: 50px;">Stok</th>
@@ -191,6 +192,7 @@
             @forelse ($records as $index => $item)
                 <tr>
                     <td class="text-center">{{ $index + 1 }}</td>
+                    <td class="text-center font-mono" style="font-size: 8px;">{{ $item->code_item ?? '-' }}</td>
                     <td>
                         <span class="font-bold">{{ $item->name }}</span>
                         @if($item->expiry_date)

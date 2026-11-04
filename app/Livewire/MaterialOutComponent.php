@@ -66,6 +66,10 @@ class MaterialOutComponent extends Component
     public $selectedItemUnit = null;
     public $isCatItem = false;
     public $catManufacturingDate = null;
+    public $isOffCutItem = false;
+    public $offCutDimension = null;
+    public $offCutParentName = null;
+    public $offCutHeatNumber = null;
 
     protected $rules = [
         'date' => 'required|date',
@@ -220,7 +224,7 @@ class MaterialOutComponent extends Component
     public function updatedItemId($value)
     {
         if ($value) {
-            $item = Item::with('category')->find($value);
+            $item = Item::with(['category', 'parentItem'])->find($value);
             if ($item) {
                 $this->selectedItemStock = $item->stock;
                 $this->selectedItemUnit = $item->unit;
@@ -229,6 +233,10 @@ class MaterialOutComponent extends Component
                 $this->conversion_factor = $item->conversion_factor ?: 1;
                 $this->isCatItem = $item->isCat();
                 $this->catManufacturingDate = $item->manufacturing_date ? format_date($item->manufacturing_date) : null;
+                $this->isOffCutItem = (bool) $item->is_offcut;
+                $this->offCutDimension = $item->dimension;
+                $this->offCutParentName = $item->parentItem?->name;
+                $this->offCutHeatNumber = $item->heat_number;
 
                 $parsedWholesale = str_replace(',', '.', (string)$this->wholesale_qty);
                 if ($this->input_mode === 'wholesale' && is_numeric($parsedWholesale) && $this->conversion_factor > 1) {
@@ -310,6 +318,10 @@ class MaterialOutComponent extends Component
         $this->conversion_factor = 1;
         $this->isCatItem = false;
         $this->catManufacturingDate = null;
+        $this->isOffCutItem = false;
+        $this->offCutDimension = null;
+        $this->offCutParentName = null;
+        $this->offCutHeatNumber = null;
     }
 
     public function openCreateModal()
@@ -466,7 +478,7 @@ class MaterialOutComponent extends Component
         $this->pic = $record->pic;
         $this->notes = $record->notes;
 
-        $item = Item::with('category')->find($record->item_id);
+        $item = Item::with(['category', 'parentItem'])->find($record->item_id);
         if ($item) {
             $this->selectedItemStock = $item->stock;
             $this->selectedItemUnit = $item->unit;
@@ -474,6 +486,10 @@ class MaterialOutComponent extends Component
             $this->conversion_factor = $item->conversion_factor ?: 1;
             $this->isCatItem = $item->isCat();
             $this->catManufacturingDate = $item->manufacturing_date ? format_date($item->manufacturing_date) : null;
+            $this->isOffCutItem = (bool) $item->is_offcut;
+            $this->offCutDimension = $item->dimension;
+            $this->offCutParentName = $item->parentItem?->name;
+            $this->offCutHeatNumber = $item->heat_number;
         }
 
         $this->isEditMode = true;
@@ -870,7 +886,7 @@ class MaterialOutComponent extends Component
 
     private function getFilteredQuery()
     {
-        $query = MaterialOut::with(['item.category']);
+        $query = MaterialOut::with(['item.category', 'item.parentItem']);
 
         // Module / Category filter
         if (!empty($this->activeModule) && $this->activeModule !== 'all') {
@@ -940,8 +956,8 @@ class MaterialOutComponent extends Component
         $units = \App\Models\Unit::select(['id', 'name', 'symbol'])->where('is_active', true)->orderBy('name')->get();
         
         // Scope items list if activeModule is set
-        $itemsQuery = Item::select(['id', 'name', 'code_item', 'category_id', 'brand', 'stock', 'unit'])
-            ->with('category:id,name')
+        $itemsQuery = Item::select(['id', 'name', 'code_item', 'category_id', 'brand', 'stock', 'unit', 'is_offcut', 'dimension', 'parent_item_id', 'origin_project', 'heat_number'])
+            ->with(['category:id,name', 'parentItem:id,name'])
             ->orderBy('name', 'asc');
         if (!empty($this->activeModule) && $this->activeModule !== 'all') {
             $mod = $this->activeModule;
@@ -960,7 +976,7 @@ class MaterialOutComponent extends Component
         $items = $itemsQuery->get();
         $allItems = ($this->activeModule === 'all' || empty($this->activeModule)) 
             ? $items 
-            : Item::select(['id', 'name', 'code_item', 'category_id', 'brand', 'stock', 'unit'])->orderBy('name', 'asc')->get();
+            : Item::select(['id', 'name', 'code_item', 'category_id', 'brand', 'stock', 'unit', 'is_offcut', 'dimension', 'parent_item_id', 'origin_project', 'heat_number'])->with(['category:id,name', 'parentItem:id,name'])->orderBy('name', 'asc')->get();
 
         $allRegisteredProjects = \App\Models\Project::select(['id', 'name', 'code', 'location', 'status', 'client'])->orderBy('name', 'asc')->get();
         $registeredProjectNames = $allRegisteredProjects->pluck('name')->toArray();
@@ -1057,6 +1073,11 @@ class MaterialOutComponent extends Component
             'category' => $it->category?->name ?? 'Consumable',
             'stock' => (float) $it->stock,
             'unit' => $it->unit ?? 'PCS',
+            'is_offcut' => (bool) $it->is_offcut,
+            'dimension' => $it->dimension ?? '',
+            'origin_project' => $it->origin_project ?? '',
+            'heat_number' => $it->heat_number ?? '',
+            'parent_name' => $it->parentItem?->name ?? '',
         ])->values()->toArray();
 
         $picsFromOut = MaterialOut::select('pic')

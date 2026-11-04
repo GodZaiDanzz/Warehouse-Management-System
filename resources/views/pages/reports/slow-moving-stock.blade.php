@@ -187,6 +187,7 @@
                 <thead class="theme-table-header text-[11px] uppercase tracking-wider text-white font-bold border-b border-gray-200 dark:border-gray-800">
                     <tr>
                         <th class="py-3 px-4 text-center w-12">No</th>
+                        <th class="py-3 px-4 w-32">Kode Material</th>
                         <th class="py-3 px-4">Barang & Kategori</th>
                         <th class="py-3 px-4 text-right">Stok Fisik</th>
                         <th class="py-3 px-4 text-center">Aktivitas Terakhir</th>
@@ -201,6 +202,12 @@
                         <tr class="hover:bg-gray-50/80 dark:hover:bg-gray-800/40 transition">
                             <td class="py-3 px-4 text-center font-mono text-gray-400">
                                 {{ ($items->firstItem() ?? 1) + $idx }}
+                            </td>
+                            <!-- KODE MATERIAL -->
+                            <td class="py-3 px-4 whitespace-nowrap">
+                                <span class="px-2 py-0.5 rounded-md font-mono text-xs font-bold bg-gray-100 dark:bg-gray-800 text-gray-800 dark:text-gray-200 border border-gray-200 dark:border-gray-700">
+                                    {{ $item->code_item ?? '-' }}
+                                </span>
                             </td>
                             <td class="py-3 px-4">
                                 <div class="font-bold text-gray-900 dark:text-white text-xs">

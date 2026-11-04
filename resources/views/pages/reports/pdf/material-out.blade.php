@@ -112,7 +112,8 @@
             <tr>
                 <th style="width: 25px;">No</th>
                 <th style="width: 65px;">Tanggal</th>
-                <th style="width: 170px;">Nama Barang / Material</th>
+                <th style="width: 75px;">Kode Material</th>
+                <th style="width: 155px;">Nama Barang / Material</th>
                 <th style="width: 90px;">Kategori</th>
                 <th style="width: 70px;">Jumlah Keluar</th>
                 <th style="width: 140px;">Project / Peruntukan</th>
@@ -125,6 +126,7 @@
                 <tr>
                     <td class="text-center font-bold">{{ $index + 1 }}</td>
                     <td class="text-center">{{ format_date($row->date) }}</td>
+                    <td class="text-center font-mono" style="font-size: 8px;">{{ $row->item->code_item ?? '-' }}</td>
                     <td class="font-bold">
                         {{ $row->item->name ?? '-' }}
                         @if($row->item && $row->item->isCat())

@@ -373,7 +373,8 @@
                     <tr>
                         <th class="px-4 py-3">No</th>
                         <th class="px-4 py-3">Tipe</th>
-                        <th class="px-4 py-3">Kode & Nama Barang</th>
+                        <th class="px-4 py-3">Kode Material</th>
+                        <th class="px-4 py-3">Nama Barang</th>
                         <th class="px-4 py-3">Kategori</th>
                         <th class="px-4 py-3 text-center">Jumlah</th>
                         <th class="px-4 py-3">Penyedia / Penerima</th>
@@ -387,6 +388,12 @@
                             <td class="px-4 py-3 text-xs font-bold">{{ $logs->firstItem() ? $logs->firstItem() + $index : $index + 1 }}</td>
                             <td class="px-4 py-3 whitespace-nowrap text-xs font-bold {{ $log->type == 'in' ? 'text-emerald-600' : 'text-rose-600' }}">
                                 {{ $log->type == 'in' ? 'BARANG MASUK' : 'BARANG KELUAR' }}
+                            </td>
+                            <!-- KODE MATERIAL -->
+                            <td class="px-4 py-3 whitespace-nowrap">
+                                <span class="px-2 py-0.5 rounded-md font-mono text-xs font-bold bg-gray-100 dark:bg-gray-800 text-gray-800 dark:text-gray-200 border border-gray-200 dark:border-gray-700">
+                                    {{ $log->item?->code_item ?? '-' }}
+                                </span>
                             </td>
                             <td class="px-4 py-3">
                                 <div class="font-bold text-gray-900 dark:text-white">{{ $log->item?->name }}</div>

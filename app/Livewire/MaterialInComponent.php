@@ -3,6 +3,7 @@
 namespace App\Livewire;
 
 use App\Models\ActivityLog;
+use App\Models\Category;
 use App\Models\CompanyProfile;
 use App\Models\Item;
 use App\Models\MaterialIn;
@@ -72,6 +73,18 @@ class MaterialInComponent extends Component
     public $selectedItemUnit = null;
     public $isCatItem = false;
     public bool $isConsumableItem = false;
+
+    // Off-Cut (Sisa Potongan Raw Material) Return Modal States
+    public bool $isOffCutModalOpen = false;
+    public $offCutParentItemId = '';
+    public $offCutDimension = '';
+    public $offCutQuantity = 1;
+    public $offCutUnit = 'Pcs';
+    public $offCutOriginProjectId = '';
+    public $offCutOriginProjectName = '';
+    public $offCutHeatNumber = '';
+    public $offCutLocation = 'STORAGE 2 (Area Sisa / Off-Cut)';
+    public $offCutNotes = '';
 
     // QC Inspection Modal
     public bool $isQcModalOpen = false;
@@ -432,6 +445,171 @@ class MaterialInComponent extends Component
     {
         $this->isModalOpen = false;
         $this->resetForm();
+    }
+
+    public function openOffCutModal()
+    {
+        if (auth()->user() && auth()->user()->isPpic()) {
+            session()->flash('error', 'Akses Ditolak: Akun PPIC hanya memiliki hak akses melihat riwayat.');
+            return;
+        }
+
+        $this->resetOffCutForm();
+        $this->date = date('Y-m-d');
+        $this->isOffCutModalOpen = true;
+    }
+
+    public function closeOffCutModal()
+    {
+        $this->isOffCutModalOpen = false;
+        $this->resetOffCutForm();
+    }
+
+    public function resetOffCutForm()
+    {
+        $this->offCutParentItemId = '';
+        $this->offCutDimension = '';
+        $this->offCutQuantity = 1;
+        $this->offCutUnit = 'Pcs';
+        $this->offCutOriginProjectId = '';
+        $this->offCutOriginProjectName = '';
+        $this->offCutHeatNumber = '';
+        $this->offCutLocation = 'STORAGE 2 (Area Sisa / Off-Cut)';
+        $this->offCutNotes = '';
+        $this->resetErrorBag();
+    }
+
+    public function updatedOffCutParentItemId($val)
+    {
+        if ($val) {
+            $parent = Item::find($val);
+            if ($parent) {
+                $this->offCutUnit = $parent->unit ?: 'Pcs';
+            }
+        }
+    }
+
+    public function submitOffCutReturn()
+    {
+        if (auth()->user() && auth()->user()->isPpic()) {
+            session()->flash('error', 'Akses Ditolak: Akun PPIC tidak memiliki izin input retur sisa.');
+            return;
+        }
+
+        $this->validate([
+            'offCutParentItemId' => 'required|exists:items,id',
+            'offCutDimension' => 'required|string|max:255',
+            'offCutQuantity' => 'required|numeric|min:0.01',
+            'offCutUnit' => 'required|string|max:50',
+            'offCutOriginProjectName' => 'nullable|string|max:255',
+            'offCutHeatNumber' => 'nullable|string|max:100',
+            'offCutLocation' => 'nullable|string|max:255',
+            'offCutNotes' => 'nullable|string',
+        ], [
+            'offCutParentItemId.required' => 'Pilih material asal yang dipotong.',
+            'offCutDimension.required' => 'Masukkan dimensi/ukuran sisa (misal: Panjang 2.4 m atau 1200 x 800 mm).',
+            'offCutQuantity.required' => 'Jumlah sisa wajib diisi.',
+            'offCutQuantity.min' => 'Jumlah sisa minimal 0.01.',
+            'offCutUnit.required' => 'Satuan sisa wajib diisi.',
+        ]);
+
+        DB::transaction(function () {
+            $parent = Item::with('category')->findOrFail($this->offCutParentItemId);
+            $offCutCategory = Category::firstOrCreate(
+                ['name' => 'Raw Material - Off Cut'],
+                ['description' => 'Sisa potongan raw material layak pakai dari proses fabrikasi/cutting']
+            );
+
+            $cleanDim = trim($this->offCutDimension);
+            $originPrj = trim($this->offCutOriginProjectName ?? '');
+            $heatNo = trim($this->offCutHeatNumber ?? '');
+            $loc = !empty($this->offCutLocation) ? trim($this->offCutLocation) : 'STORAGE 2 (Area Sisa / Off-Cut)';
+
+            // Cek apakah item off-cut dengan spesifikasi identik sudah ada di database
+            $existing = Item::where('parent_item_id', $parent->id)
+                ->where('dimension', $cleanDim)
+                ->when(!empty($heatNo), fn($q) => $q->where('heat_number', $heatNo))
+                ->first();
+
+            if ($existing) {
+                $offCutItem = $existing;
+                $offCutItem->increment('stock', (float) $this->offCutQuantity);
+                if (!empty($originPrj) && empty($offCutItem->origin_project)) {
+                    $offCutItem->update(['origin_project' => $originPrj]);
+                }
+            } else {
+                $offCutName = "{$parent->name} (Off-Cut: {$cleanDim})";
+                $codeItem = Item::generateUniqueCodeItem($offCutCategory->id);
+
+                $offCutItem = Item::create([
+                    'category_id' => $offCutCategory->id,
+                    'unit_id' => $parent->unit_id,
+                    'code_item' => $codeItem,
+                    'name' => $offCutName,
+                    'brand' => $parent->brand,
+                    'is_offcut' => true,
+                    'parent_item_id' => $parent->id,
+                    'dimension' => $cleanDim,
+                    'origin_project' => $originPrj ?: null,
+                    'heat_number' => $heatNo ?: null,
+                    'stock' => (float) $this->offCutQuantity,
+                    'unit' => !empty($this->offCutUnit) ? $this->offCutUnit : $parent->unit,
+                    'min_stock' => 0,
+                    'location' => $loc,
+                    'unit_price' => $parent->unit_price ?? 0,
+                ]);
+            }
+
+            $refNo = 'IN-OFF-' . date('Ymd') . '-' . strtoupper(substr(uniqid(), -4));
+            $supplierLabel = !empty($originPrj) ? "Retur Workshop ({$originPrj})" : 'Retur Sisa Produksi Workshop';
+            $logNotes = "Retur sisa potongan dari {$parent->name} (Dimensi: {$cleanDim})" . ($originPrj ? " ex-Project: {$originPrj}" : '');
+            if (!empty($this->offCutNotes)) {
+                $logNotes .= " - Catatan: " . trim($this->offCutNotes);
+            }
+
+            MaterialIn::create([
+                'reference_number' => $refNo,
+                'date' => $this->date ?: now()->toDateString(),
+                'item_id' => $offCutItem->id,
+                'unit_id' => $offCutItem->unit_id,
+                'quantity' => (float) $this->offCutQuantity,
+                'unit' => $offCutItem->unit,
+                'is_offcut' => true,
+                'parent_item_id' => $parent->id,
+                'dimension' => $cleanDim,
+                'origin_project' => $originPrj ?: null,
+                'heat_number' => $heatNo ?: null,
+                'supplier' => $supplierLabel,
+                'received_by' => auth()->user()?->name ?? 'Petugas Gudang',
+                'notes' => $logNotes,
+                'qc_status' => 'approved',
+                'qc_by' => auth()->id() ?? 1,
+                'qc_at' => now(),
+                'qc_notes' => 'Sisa material layak pakai telah diperiksa fisik di bengkel/Storage 2',
+                'user_id' => auth()->id() ?? 1,
+            ]);
+
+            StockLog::create([
+                'reference_number' => $refNo,
+                'item_id' => $offCutItem->id,
+                'type' => 'in',
+                'quantity' => (float) $this->offCutQuantity,
+                'recipient_or_provider' => $supplierLabel,
+                'notes' => $logNotes,
+                'user_id' => auth()->id() ?? 1,
+            ]);
+
+            ActivityLog::record(
+                'Retur Sisa Potongan Raw Material',
+                "Mencatat penerimaan sisa potongan {$this->offCutQuantity} {$offCutItem->unit} {$offCutItem->name} ke Storage 2.",
+                'Material Masuk'
+            );
+
+            session()->flash('success', "Berhasil mencatat retur sisa potongan {$offCutItem->name} (+{$this->offCutQuantity} {$offCutItem->unit}) ke Storage 2!");
+            $this->dispatch('swal:success', title: 'Berhasil!', message: "Sisa potongan {$offCutItem->name} berhasil dicatat dan masuk ke inventaris Storage 2!");
+        });
+
+        $this->closeOffCutModal();
     }
 
     private function resetForm()
@@ -1705,6 +1883,12 @@ class MaterialInComponent extends Component
         $picSuggestionsList = array_values(array_unique(array_filter(array_merge($picsFromOut, $userNames))));
         sort($picSuggestionsList, SORT_NATURAL | SORT_FLAG_CASE);
 
+        $rawMaterialParents = Item::inStorage(Item::STORAGE_2)
+            ->where('is_offcut', false)
+            ->whereDoesntHave('category', fn($q) => $q->where('name', 'like', '%off%'))
+            ->orderBy('name')
+            ->get(['id', 'name', 'code_item', 'stock', 'unit', 'location']);
+
         return view('livewire.material-in-component', [
             'records' => $records,
             'units' => $units,
@@ -1716,6 +1900,7 @@ class MaterialInComponent extends Component
             'picSuggestions' => $picSuggestionsList,
             'picSuggestionsList' => $picSuggestionsList,
             'totalTransactionsPeriod' => $totalTransactionsPeriod,
+            'rawMaterialParents' => $rawMaterialParents,
             'totalApprovedPeriod' => $totalApprovedPeriod,
             'totalPendingQcPeriod' => $totalPendingQcPeriod,
             'totalRejectedPeriod' => $totalRejectedPeriod,

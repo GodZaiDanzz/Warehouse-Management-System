@@ -140,6 +140,7 @@
                 <th style="width: 60px;">TGL TERIMA</th>
                 <th style="width: 70px;">NO PO</th>
                 <th style="width: 110px;">SUPPLIER / VENDOR</th>
+                <th style="width: 75px;">KODE MATERIAL</th>
                 <th>NAMA MATERIAL / BARANG</th>
                 <th style="width: 70px;">KATEGORI</th>
                 <th style="width: 55px;">QTY FISIK</th>
@@ -162,6 +163,7 @@
                     <td class="text-center">{{ format_date($row->date) }}</td>
                     <td class="text-center" style="font-family: monospace;">{{ $row->po_number ?? '-' }}</td>
                     <td>{{ $row->supplier }}</td>
+                    <td class="text-center font-mono" style="font-size: 8px;">{{ $row->item->code_item ?? '-' }}</td>
                     @php
                         $isConsumable = $row->item && $row->item->isConsumable();
                     @endphp

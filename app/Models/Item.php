@@ -16,6 +16,11 @@ class Item extends Model
         'code_item',
         'name',
         'brand',
+        'is_offcut',
+        'parent_item_id',
+        'dimension',
+        'origin_project',
+        'heat_number',
         'stock',
         'unit',
         'unit_price',
@@ -29,6 +34,7 @@ class Item extends Model
     ];
 
     protected $casts = [
+        'is_offcut' => 'boolean',
         'manufacturing_date' => 'date',
         'expiry_date' => 'date',
         'stock' => 'float',
@@ -140,6 +146,12 @@ class Item extends Model
                     $prefix = 'SEC';
                 } elseif (str_contains($catLower, 'cat') || str_contains($catLower, 'paint') || str_contains($catLower, 'thinner')) {
                     $prefix = 'CAT';
+                } elseif (str_contains($catLower, 'off cut') || str_contains($catLower, 'offcut') || str_contains($catLower, 'sisa')) {
+                    $prefix = 'OFF';
+                } elseif (str_contains($catLower, 'raw')) {
+                    $prefix = 'RAW';
+                } elseif (str_contains($catLower, 'gas')) {
+                    $prefix = 'GAS';
                 } else {
                     $clean = strtoupper(preg_replace('/[^A-Za-z0-9]/', '', $category->name));
                     $prefix = strlen($clean) >= 3 ? substr($clean, 0, 3) : 'MAT';
@@ -258,16 +270,35 @@ class Item extends Model
     public const STORAGE_2 = 'STORAGE 2';
 
     /**
-     * Check if item is in Raw Material category.
+     * Check if item is in Raw Material category (including off-cut).
      */
     public function isRawMaterial(): bool
     {
         if (!$this->relationLoaded('category')) {
             $this->load('category');
         }
-        return ($this->category && str_contains(strtolower($this->category->name), 'raw'))
+        return ($this->category && (str_contains(strtolower($this->category->name), 'raw') || str_contains(strtolower($this->category->name), 'off cut')))
             || str_starts_with(strtoupper($this->code_item ?? ''), 'RAW')
-            || str_contains(strtolower($this->name), 'raw material');
+            || str_starts_with(strtoupper($this->code_item ?? ''), 'OFF-')
+            || str_contains(strtolower($this->name), 'raw material')
+            || (bool) $this->is_offcut;
+    }
+
+    /**
+     * Check if item is an Off-Cut (Sisa Potongan).
+     */
+    public function isOffCut(): bool
+    {
+        if ((bool) $this->is_offcut) {
+            return true;
+        }
+        if (!$this->relationLoaded('category')) {
+            $this->load('category');
+        }
+        return ($this->category && (str_contains(strtolower($this->category->name), 'off cut') || str_contains(strtolower($this->category->name), 'offcut') || str_contains(strtolower($this->category->name), 'sisa')))
+            || str_starts_with(strtoupper($this->code_item ?? ''), 'OFF-')
+            || str_contains(strtolower($this->name), 'off-cut')
+            || str_contains(strtolower($this->name), 'offcut');
     }
 
     /**
@@ -288,6 +319,14 @@ class Item extends Model
         }
 
         return $this->isRawMaterial() ? self::STORAGE_2 : self::STORAGE_1;
+    }
+
+    /**
+     * Alias attribute for storage name ('STORAGE 1' or 'STORAGE 2').
+     */
+    public function getStorageAttribute(): string
+    {
+        return $this->storage_location;
     }
 
     /**
@@ -486,6 +525,22 @@ class Item extends Model
     public function dailyStockOpnames()
     {
         return $this->hasMany(DailyStockOpname::class);
+    }
+
+    /**
+     * Relationship to parent virgin raw material (if this item is an off-cut).
+     */
+    public function parentItem()
+    {
+        return $this->belongsTo(Item::class, 'parent_item_id');
+    }
+
+    /**
+     * Relationship to child off-cut pieces created from this item.
+     */
+    public function childOffcuts()
+    {
+        return $this->hasMany(Item::class, 'parent_item_id');
     }
 
     /**

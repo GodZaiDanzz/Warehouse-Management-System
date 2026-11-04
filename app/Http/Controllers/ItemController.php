@@ -196,6 +196,11 @@ class ItemController extends Controller
             'code_item' => 'nullable|string|max:100',
             'name' => 'required|string|max:255',
             'brand' => 'nullable|string|max:100',
+            'is_offcut' => 'nullable|boolean',
+            'parent_item_id' => 'nullable|exists:items,id',
+            'dimension' => 'nullable|string|max:255',
+            'origin_project' => 'nullable|string|max:255',
+            'heat_number' => 'nullable|string|max:100',
             'category_id' => 'required|exists:categories,id',
             'stock' => 'required|numeric|min:0',
             'unit_price' => 'nullable|numeric|min:0',
@@ -241,6 +246,13 @@ class ItemController extends Controller
 
         $storageInput = trim($request->input('storage', ''));
         $locationDetail = trim($request->input('location', ''));
+
+        if (($selectedCat && $selectedCat->isOffCut()) || $request->boolean('is_offcut')) {
+            $validated['is_offcut'] = true;
+            if (empty($storageInput)) {
+                $storageInput = 'STORAGE 2';
+            }
+        }
 
         if (!empty($storageInput)) {
             $storageName = strtoupper($storageInput) === 'STORAGE 2' ? 'STORAGE 2' : 'STORAGE 1';
@@ -335,6 +347,11 @@ class ItemController extends Controller
             'code_item' => 'nullable|string|max:100',
             'name' => 'required|string|max:255',
             'brand' => 'nullable|string|max:100',
+            'is_offcut' => 'nullable|boolean',
+            'parent_item_id' => 'nullable|exists:items,id',
+            'dimension' => 'nullable|string|max:255',
+            'origin_project' => 'nullable|string|max:255',
+            'heat_number' => 'nullable|string|max:100',
             'category_id' => 'required|exists:categories,id',
             'stock' => 'required|numeric|min:0',
             'unit_price' => 'nullable|numeric|min:0',
@@ -379,6 +396,13 @@ class ItemController extends Controller
 
         $storageInput = trim($request->input('storage', ''));
         $locationDetail = trim($request->input('location', ''));
+
+        if (($selectedCat && $selectedCat->isOffCut()) || $request->boolean('is_offcut')) {
+            $validated['is_offcut'] = true;
+            if (empty($storageInput)) {
+                $storageInput = 'STORAGE 2';
+            }
+        }
 
         if (!empty($storageInput)) {
             $storageName = strtoupper($storageInput) === 'STORAGE 2' ? 'STORAGE 2' : 'STORAGE 1';

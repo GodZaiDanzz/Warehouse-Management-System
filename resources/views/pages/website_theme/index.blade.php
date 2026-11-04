@@ -588,6 +588,7 @@
                             <thead>
                                 <tr class="font-bold text-white transition-colors duration-200" :style="'background-color: ' + tableColor + ' !important; --theme-table-header-bg: ' + tableColor">
                                     <th class="px-3 py-3" :style="'background-color: ' + tableColor + ' !important; color: #ffffff !important;'">NO</th>
+                                    <th class="px-3 py-3" :style="'background-color: ' + tableColor + ' !important; color: #ffffff !important;'">KODE MATERIAL</th>
                                     <th class="px-3 py-3" :style="'background-color: ' + tableColor + ' !important; color: #ffffff !important;'">NAMA BARANG</th>
                                     <th class="px-3 py-3" :style="'background-color: ' + tableColor + ' !important; color: #ffffff !important;'">KATEGORI</th>
                                     <th class="px-3 py-3" :style="'background-color: ' + tableColor + ' !important; color: #ffffff !important;'">TGL MASUK</th>
@@ -597,6 +598,7 @@
                             <tbody class="divide-y divide-gray-100 dark:divide-gray-800 bg-white dark:bg-gray-900 font-medium text-[11px]">
                                 <tr>
                                     <td class="px-3 py-2.5 text-gray-500">1</td>
+                                    <td class="px-3 py-2.5 whitespace-nowrap"><span class="px-1.5 py-0.5 rounded font-mono font-bold text-[10px] bg-gray-100 dark:bg-gray-800 text-gray-800 dark:text-gray-200 border border-gray-200 dark:border-gray-700">CSM-001</span></td>
                                     <td class="px-3 py-2.5 font-bold text-gray-900 dark:text-white">BATU GERINDA CUTTING 14 INCH</td>
                                     <td class="px-3 py-2.5 text-gray-500">CONSUMABLE</td>
                                     <td class="px-3 py-2.5 font-mono text-gray-600 dark:text-gray-300" x-text="getFormattedDatePreview()"></td>
@@ -604,6 +606,7 @@
                                 </tr>
                                 <tr>
                                     <td class="px-3 py-2.5 text-gray-500">2</td>
+                                    <td class="px-3 py-2.5 whitespace-nowrap"><span class="px-1.5 py-0.5 rounded font-mono font-bold text-[10px] bg-gray-100 dark:bg-gray-800 text-gray-800 dark:text-gray-200 border border-gray-200 dark:border-gray-700">CAT-001</span></td>
                                     <td class="px-3 py-2.5 font-bold text-gray-900 dark:text-white">CAT EPOXY PRIMER GREY 20L</td>
                                     <td class="px-3 py-2.5 text-gray-500">PAINTING</td>
                                     <td class="px-3 py-2.5 font-mono text-gray-600 dark:text-gray-300" x-text="getFormattedDatePreview()"></td>

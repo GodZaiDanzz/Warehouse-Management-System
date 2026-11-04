@@ -292,6 +292,7 @@
                             <tr class="border-b border-gray-200 text-white font-extrabold uppercase print:bg-gray-200 print:text-black">
                                 <th scope="col" class="px-4 py-2.5 text-center w-12 border-r border-white/10">NO</th>
                                 <th scope="col" class="px-4 py-2.5 min-w-[100px] border-r border-white/10">TANGGAL</th>
+                                <th scope="col" class="px-4 py-2.5 min-w-[120px] border-r border-white/10">KODE MATERIAL</th>
                                 <th scope="col" class="px-4 py-2.5 min-w-[200px] border-r border-white/10">NAMA BARANG</th>
                                 <th scope="col" class="px-4 py-2.5 text-center w-24 border-r border-white/10">JUMLAH</th>
                                 <th scope="col" class="px-4 py-2.5 text-center w-24 border-r border-white/10">SATUAN</th>
@@ -312,6 +313,12 @@
                                     <!-- TANGGAL -->
                                     <td class="px-4 py-2 font-medium text-gray-800 dark:text-gray-200 whitespace-nowrap border-r border-gray-100 dark:border-gray-800">
                                         {{ format_date($row->date) }}
+                                    </td>
+                                    <!-- KODE MATERIAL -->
+                                    <td class="px-4 py-2 whitespace-nowrap border-r border-gray-100 dark:border-gray-800 font-mono text-xs">
+                                        <span class="px-2 py-0.5 rounded bg-gray-100 dark:bg-gray-800 font-bold text-gray-800 dark:text-gray-200 border border-gray-200 dark:border-gray-700">
+                                            {{ $row->item->code_item ?? '-' }}
+                                        </span>
                                     </td>
                                     <!-- NAMA BARANG -->
                                     <td class="px-4 py-2 font-bold text-gray-900 dark:text-white uppercase border-r border-gray-100 dark:border-gray-800">

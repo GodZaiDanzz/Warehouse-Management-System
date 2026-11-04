@@ -296,7 +296,8 @@
                         <th class="px-3 py-3.5 text-center w-12">No</th>
                         <th class="px-3 py-3.5">Tgl & No. BAP</th>
                         <th class="px-3 py-3.5">Supplier / Vendor</th>
-                        <th class="px-3 py-3.5">Deskripsi Material</th>
+                        <th class="px-3 py-3.5 w-28">Kode Material</th>
+                        <th class="px-3 py-3.5">Nama Barang</th>
                         <th class="px-3 py-3.5 text-center">Kuantitas</th>
                         <th class="px-3 py-3.5">Jenis Kerusakan</th>
                         <th class="px-3 py-3.5">Status Disposisi</th>
@@ -322,13 +323,14 @@
                                     <div class="text-[10px] text-gray-500 font-normal mt-0.5">PO: {{ $row->po_number ?? $row->materialIn->po_number }}</div>
                                 @endif
                             </td>
+                            <td class="px-3 py-3 font-mono font-bold text-gray-800 dark:text-gray-200">
+                                <span class="px-2 py-0.5 rounded-md text-xs font-mono font-bold bg-gray-100 dark:bg-gray-800 text-gray-800 dark:text-gray-200 border border-gray-200 dark:border-gray-700">
+                                    {{ $row->item->code_item ?? '-' }}
+                                </span>
+                            </td>
                             <td class="px-3 py-3">
                                 <div class="font-bold text-gray-900 dark:text-white">{{ $row->item->name ?? '-' }}</div>
                                 <div class="mt-0.5 flex items-center gap-1.5 text-[10px] text-gray-500">
-                                    @if($row->item && $row->item->code_item)
-                                        <span class="font-mono">{{ $row->item->code_item }}</span>
-                                        <span>•</span>
-                                    @endif
                                     <span>{{ $row->item->category->name ?? 'Consumable' }}</span>
                                 </div>
                             </td>
@@ -379,7 +381,7 @@
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="9" class="px-6 py-14 text-center">
+                            <td colspan="10" class="px-6 py-14 text-center">
                                 <div class="max-w-md mx-auto flex flex-col items-center justify-center text-center">
                                     <div class="flex h-12 w-12 items-center justify-center rounded-2xl bg-gray-100 text-gray-400 dark:bg-gray-800 dark:text-gray-500 mb-3">
                                         <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>

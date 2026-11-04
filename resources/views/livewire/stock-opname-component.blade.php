@@ -291,6 +291,7 @@
                     <thead class="theme-table-header text-xs uppercase text-white font-bold border-b border-gray-200 dark:border-gray-800">
                         <tr>
                             <th class="px-4 py-3 text-center w-12">No</th>
+                            <th class="px-4 py-3">Kode Material</th>
                             <th class="px-4 py-3">Barang & Kategori</th>
                             <th class="px-4 py-3 text-center w-28">Stok Awal</th>
                             <th class="px-4 py-3 text-center w-36">Stok Akhir Fisik</th>
@@ -318,6 +319,13 @@
                                 <!-- No -->
                                 <td class="px-4 py-3 text-center font-mono text-gray-500">
                                     {{ (method_exists($dailyOpnames, 'firstItem') ? ($dailyOpnames->firstItem() ?? 1) : 1) + $index }}
+                                </td>
+
+                                <!-- Kode Material -->
+                                <td class="px-4 py-3 whitespace-nowrap">
+                                    <span class="inline-flex items-center px-2 py-0.5 rounded-md text-xs font-mono font-bold bg-gray-100 dark:bg-gray-800 text-gray-800 dark:text-gray-200 border border-gray-200 dark:border-gray-700">
+                                        {{ $item->code_item ?? '-' }}
+                                    </span>
                                 </td>
 
                                 <!-- Nama Barang & Info -->
@@ -677,7 +685,8 @@
                         <tr>
                             <th class="px-4 py-3 text-center w-28">Tanggal</th>
                             <th class="px-4 py-3 text-center w-24">Shift</th>
-                            <th class="px-4 py-3">Kode & Nama Barang</th>
+                            <th class="px-4 py-3">Kode Material</th>
+                            <th class="px-4 py-3">Nama Barang</th>
                             <th class="px-4 py-3 text-center w-24">Satuan</th>
                             <th class="px-4 py-3 text-right w-28">Stok Awal</th>
                             <th class="px-4 py-3 text-right w-28">Stok Akhir</th>
@@ -697,6 +706,12 @@
                                 </td>
                                 <td class="px-4 py-3 text-center whitespace-nowrap">
                                     {{ $row->shift ?? 'Shift 1' }}
+                                </td>
+                                <!-- Kode Material -->
+                                <td class="px-4 py-3 whitespace-nowrap">
+                                    <span class="inline-flex items-center px-2 py-0.5 rounded-md text-xs font-mono font-bold bg-gray-100 dark:bg-gray-800 text-gray-800 dark:text-gray-200 border border-gray-200 dark:border-gray-700">
+                                        {{ $row->item->code_item ?? '-' }}
+                                    </span>
                                 </td>
                                 <td class="px-4 py-3">
                                     <div class="font-bold text-gray-900 dark:text-white">
@@ -824,6 +839,7 @@
                         <thead class="sticky top-0 z-20 theme-table-header text-xs uppercase text-white font-bold border-b border-gray-200 dark:border-gray-800">
                             <tr>
                                 <th class="pl-6 pr-3 py-2.5 w-12 text-center">No</th>
+                                <th class="px-3 py-2.5">Kode Material</th>
                                 <th class="px-3 py-2.5">Nama Barang</th>
                                 <th class="px-3 py-2.5 text-right w-24">Stok Awal</th>
                                 <th class="px-3 py-2.5 text-right w-24">Mutasi Sistem</th>
@@ -834,6 +850,11 @@
                             @forelse ($dailyOpnames as $idx => $op)
                                 <tr class="hover:bg-gray-50 dark:hover:bg-gray-800/50 transition">
                                     <td class="pl-6 pr-3 py-2 text-center font-mono text-gray-400">{{ $idx + 1 }}</td>
+                                    <td class="px-3 py-2 whitespace-nowrap">
+                                        <span class="inline-flex items-center px-1.5 py-0.5 rounded text-[11px] font-mono font-bold bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300">
+                                            {{ $op->item->code_item ?? '-' }}
+                                        </span>
+                                    </td>
                                     <td class="px-3 py-2">
                                         <div class="font-semibold text-gray-900 dark:text-white">{{ $op->item->name }}</div>
                                         <div class="text-[10px] text-gray-400 font-mono">{{ $op->item->category->name ?? 'General' }} • {{ $op->item->unit }}</div>

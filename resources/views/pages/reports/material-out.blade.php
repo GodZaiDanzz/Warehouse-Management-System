@@ -200,6 +200,7 @@
                     <tr>
                         <th class="px-4 py-3.5 text-center w-12">No</th>
                         <th class="px-4 py-3.5">Tanggal & Waktu</th>
+                        <th class="px-4 py-3.5">Kode Material</th>
                         <th class="px-4 py-3.5">Nama Barang</th>
                         <th class="px-4 py-3.5 text-center">Kategori</th>
                         <th class="px-4 py-3.5 text-center">Jumlah Keluar</th>
@@ -217,6 +218,12 @@
                             <td class="px-4 py-3.5 font-mono text-gray-700 dark:text-gray-300">
                                 {{ format_date($log->date) }}
                                 <span class="text-[10px] text-gray-400 block">{{ \Carbon\Carbon::parse($log->created_at)->format(system_time_format()) }} WIB</span>
+                            </td>
+                            <!-- KODE MATERIAL -->
+                            <td class="px-4 py-3.5 whitespace-nowrap">
+                                <span class="px-2 py-0.5 rounded-md font-mono text-xs font-bold bg-gray-100 dark:bg-gray-800 text-gray-800 dark:text-gray-200 border border-gray-200 dark:border-gray-700">
+                                    {{ $log->item->code_item ?? '-' }}
+                                </span>
                             </td>
                             <td class="px-4 py-3.5">
                                 <div class="font-bold text-gray-900 dark:text-white">{{ $log->item->name ?? '-' }}</div>

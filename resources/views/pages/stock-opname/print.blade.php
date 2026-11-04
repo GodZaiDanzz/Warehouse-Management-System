@@ -117,6 +117,7 @@
         <thead>
             <tr>
                 <th style="width: 30px;">NO</th>
+                <th style="width: 75px;">KODE MATERIAL</th>
                 <th>NAMA BARANG</th>
                 <th style="width: 60px;">SATUAN</th>
                 <th style="width: 70px;">STOK AWAL (PAGI)</th>
@@ -131,6 +132,7 @@
             @forelse($records as $index => $item)
                 <tr>
                     <td class="text-center">{{ $index + 1 }}</td>
+                    <td class="text-center font-mono" style="font-size: 8px;">{{ $item->item->code_item ?? '-' }}</td>
                     <td class="font-bold">{{ $item->item->name ?? '-' }}</td>
                     <td class="text-center">{{ $item->item->unit ?? 'PCS' }}</td>
                     <td class="text-right font-mono">{{ format_quantity($item->initial_stock) }}</td>
@@ -146,13 +148,13 @@
                 </tr>
             @empty
                 <tr>
-                    <td colspan="9" class="text-center" style="padding: 20px;">Tidak ada item data.</td>
+                    <td colspan="10" class="text-center" style="padding: 20px;">Tidak ada item data.</td>
                 </tr>
             @endforelse
         </tbody>
         <tfoot>
             <tr style="background: #f9fafb; font-weight: bold;">
-                <td colspan="3" class="text-center">TOTAL KESELURUHAN</td>
+                <td colspan="4" class="text-center">TOTAL KESELURUHAN</td>
                 <td class="text-right font-mono">{{ format_quantity($records->sum('initial_stock')) }}</td>
                 <td class="text-right font-mono">{{ format_quantity($records->whereNotNull('final_stock')->sum('final_stock')) }}</td>
                 <td class="text-right font-mono">{{ format_quantity($records->sum('used_qty')) }}</td>

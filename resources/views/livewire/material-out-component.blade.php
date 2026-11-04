@@ -855,7 +855,10 @@
                             return items.filter(i => 
                                 (i.name && i.name.toLowerCase().includes(q)) || 
                                 (i.code && i.code.toLowerCase().includes(q)) ||
-                                (i.category && i.category.toLowerCase().includes(q))
+                                (i.category && i.category.toLowerCase().includes(q)) ||
+                                (i.dimension && i.dimension.toLowerCase().includes(q)) ||
+                                (i.parent_name && i.parent_name.toLowerCase().includes(q)) ||
+                                (i.heat_number && i.heat_number.toLowerCase().includes(q))
                             );
                         },
 
@@ -1279,6 +1282,7 @@
                         <th scope="col" class="px-4 py-3.5 text-center w-12">NO</th>
                         <th scope="col" class="px-4 py-3.5">TANGGAL</th>
                         <th scope="col" class="px-4 py-3.5">KATEGORI</th>
+                        <th scope="col" class="px-4 py-3.5">KODE MATERIAL</th>
                         <th scope="col" class="px-4 py-3.5">NAMA BARANG</th>
                         <th scope="col" class="px-4 py-3.5 text-center">JUMLAH KELUAR</th>
                         <th scope="col" class="px-4 py-3.5">PROJECT</th>
@@ -1329,18 +1333,44 @@
                                     </span>
                                 @endif
                             </td>
+                            <!-- KODE MATERIAL -->
+                            <td class="px-4 py-3.5 whitespace-nowrap">
+                                <span class="inline-flex items-center px-2 py-0.5 rounded-md text-xs font-mono font-bold bg-gray-100 dark:bg-gray-800 text-gray-800 dark:text-gray-200 border border-gray-200 dark:border-gray-700">
+                                    {{ $row->item->code_item ?? '-' }}
+                                </span>
+                            </td>
                             <!-- NAMA BARANG -->
                             <td class="px-4 py-3.5">
                                 <div class="flex flex-col">
-                                    <span class="font-bold text-gray-900 dark:text-white">{{ $row->item->name ?? '-' }}</span>
-                                    @if($row->item && $row->item->isCat())
-                                        <span class="text-[10px] text-gray-500 dark:text-gray-400 mt-0.5">
-                                            Tgl Pembuatan: <span class="font-semibold text-gray-700 dark:text-gray-300">{{ format_date($row->item->manufacturing_date, 'Belum diisi') }}</span>
-                                        </span>
-                                    @elseif($isRaw)
-                                        <span class="text-[10px] text-amber-600 dark:text-amber-400 mt-0.5 font-semibold">
-                                            Lokasi: STORAGE 2
-                                        </span>
+                                    @if($row->item && $row->item->is_offcut)
+                                        <div class="flex items-center gap-1.5 flex-wrap">
+                                            <span class="font-bold text-gray-900 dark:text-white">{{ $row->item->name }}</span>
+                                            <span class="px-1.5 py-0.5 rounded text-[9px] font-extrabold bg-amber-100 text-amber-800 dark:bg-amber-950/70 dark:text-amber-300 border border-amber-300 dark:border-amber-700">OFF-CUT</span>
+                                        </div>
+                                        <div class="flex items-center gap-2 text-[10px] text-gray-500 dark:text-gray-400 mt-0.5 flex-wrap">
+                                            @if($row->item->dimension)
+                                                <span class="font-semibold text-amber-700 dark:text-amber-400 bg-amber-50 dark:bg-amber-950/30 px-1 py-0.2 rounded border border-amber-200 dark:border-amber-800/50">
+                                                    {{ $row->item->dimension }}
+                                                </span>
+                                            @endif
+                                            @if($row->item->parentItem)
+                                                <span>Induk: {{ $row->item->parentItem->name }}</span>
+                                            @endif
+                                            @if($row->item->heat_number)
+                                                <span class="font-mono">Heat: {{ $row->item->heat_number }}</span>
+                                            @endif
+                                        </div>
+                                    @else
+                                        <span class="font-bold text-gray-900 dark:text-white">{{ $row->item->name ?? '-' }}</span>
+                                        @if($row->item && $row->item->isCat())
+                                            <span class="text-[10px] text-gray-500 dark:text-gray-400 mt-0.5">
+                                                Tgl Pembuatan: <span class="font-semibold text-gray-700 dark:text-gray-300">{{ format_date($row->item->manufacturing_date, 'Belum diisi') }}</span>
+                                            </span>
+                                        @elseif($isRaw)
+                                            <span class="text-[10px] text-amber-600 dark:text-amber-400 mt-0.5 font-semibold">
+                                                Lokasi: STORAGE 2
+                                            </span>
+                                        @endif
                                     @endif
                                 </div>
                             </td>
@@ -1771,7 +1801,10 @@
                                                              
                                                              <div class="flex-1 min-w-0 pr-2">
                                                                  <template x-if="selectedItem">
-                                                                     <span class="font-bold text-gray-900 dark:text-white truncate block text-xs" :title="selectedItem.name" x-text="selectedItem.name"></span>
+                                                                     <div class="flex items-center gap-1 truncate">
+                                                                         <span x-show="selectedItem.is_offcut" class="px-1 py-0.2 rounded text-[8px] font-extrabold bg-amber-100 text-amber-800 dark:bg-amber-950/70 dark:text-amber-300 shrink-0">OFF-CUT</span>
+                                                                         <span class="font-bold text-gray-900 dark:text-white truncate block text-xs" :title="selectedItem.name" x-text="selectedItem.name + (selectedItem.dimension ? ' (' + selectedItem.dimension + ')' : '')"></span>
+                                                                     </div>
                                                                  </template>
                                                                  <template x-if="!selectedItem">
                                                                      <span class="text-gray-400 dark:text-gray-500 truncate block text-xs">Ketik / Pilih Barang...</span>
@@ -1838,14 +1871,20 @@
                                                                               class="p-2 rounded-xl hover:bg-brand-50/90 dark:hover:bg-brand-950/50 cursor-pointer transition flex items-center justify-between gap-2 border border-transparent hover:border-brand-200 dark:hover:border-brand-800"
                                                                               :class="String(selectedId) === String(item.id) ? 'bg-brand-50 dark:bg-brand-950/60 border-brand-300 dark:border-brand-700' : ''">
                                                                              <div class="min-w-0 flex-1">
-                                                                                 <div class="flex items-center gap-1.5">
+                                                                                 <div class="flex items-center gap-1.5 flex-wrap">
+                                                                                     <template x-if="item.is_offcut">
+                                                                                         <span class="inline-flex items-center px-1.5 py-0.2 rounded text-[9px] font-extrabold uppercase shrink-0 bg-amber-100 text-amber-800 dark:bg-amber-950/70 dark:text-amber-300 border border-amber-300 dark:border-amber-700">OFF-CUT</span>
+                                                                                     </template>
                                                                                      <span class="inline-flex items-center px-1.5 py-0.2 rounded text-[9px] font-extrabold uppercase shrink-0"
                                                                                            :class="item.category && item.category.toLowerCase().includes('cat') ? 'bg-purple-100 text-purple-700 dark:bg-purple-950/60 dark:text-purple-300' : (item.category && item.category.toLowerCase().includes('secondary') ? 'bg-blue-100 text-blue-700 dark:bg-blue-950/60 dark:text-blue-300' : 'bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-300')"
                                                                                            x-text="item.category"></span>
                                                                                      <span class="font-bold text-xs text-gray-900 dark:text-white truncate" x-text="item.name"></span>
                                                                                  </div>
-                                                                                 <div class="flex items-center gap-2 mt-0.5 text-[10px]">
+                                                                                 <div class="flex items-center gap-2 mt-0.5 text-[10px] flex-wrap">
                                                                                      <span x-show="item.code" class="font-mono text-gray-400 bg-gray-100 dark:bg-gray-800 px-1 py-0.2 rounded" x-text="item.code"></span>
+                                                                                     <template x-if="item.dimension">
+                                                                                         <span class="font-semibold text-amber-700 dark:text-amber-400 bg-amber-50 dark:bg-amber-950/30 px-1 py-0.2 rounded border border-amber-200 dark:border-amber-800/50" x-text="item.dimension"></span>
+                                                                                     </template>
                                                                                      <span class="font-semibold"
                                                                                            :class="item.stock <= 0 ? 'text-rose-500 dark:text-rose-400' : (item.stock < 10 ? 'text-amber-600 dark:text-amber-400' : 'text-emerald-600 dark:text-emerald-400')">
                                                                                          Stok: <strong x-text="item.stock"></strong> <span x-text="item.unit"></span>
@@ -2117,7 +2156,10 @@
                                         
                                         <div class="flex-1 min-w-0 pr-2">
                                             <template x-if="selectedItem">
-                                                <span class="font-bold text-gray-900 dark:text-white truncate block text-xs" :title="selectedItem.name" x-text="selectedItem.name"></span>
+                                                <div class="flex items-center gap-1.5 truncate">
+                                                    <span x-show="selectedItem.is_offcut" class="px-1.5 py-0.5 rounded text-[9px] font-extrabold bg-amber-100 text-amber-800 dark:bg-amber-950/70 dark:text-amber-300 shrink-0">OFF-CUT</span>
+                                                    <span class="font-bold text-gray-900 dark:text-white truncate block text-xs" :title="selectedItem.name" x-text="selectedItem.name + (selectedItem.dimension ? ' (' + selectedItem.dimension + ')' : '')"></span>
+                                                </div>
                                             </template>
                                             <template x-if="!selectedItem">
                                                 <span class="text-gray-400 dark:text-gray-500 truncate block text-xs">Cari atau pilih barang...</span>
@@ -2185,14 +2227,20 @@
                                                          class="p-2 rounded-xl hover:bg-brand-50/90 dark:hover:bg-brand-950/50 cursor-pointer transition flex items-center justify-between gap-2 border border-transparent hover:border-brand-200 dark:hover:border-brand-800"
                                                          :class="String(selectedId) === String(item.id) ? 'bg-brand-50 dark:bg-brand-950/60 border-brand-300 dark:border-brand-700' : ''">
                                                         <div class="min-w-0 flex-1">
-                                                            <div class="flex items-center gap-1.5">
+                                                            <div class="flex items-center gap-1.5 flex-wrap">
+                                                                <template x-if="item.is_offcut">
+                                                                    <span class="inline-flex items-center px-1.5 py-0.2 rounded text-[9px] font-extrabold uppercase shrink-0 bg-amber-100 text-amber-800 dark:bg-amber-950/70 dark:text-amber-300 border border-amber-300 dark:border-amber-700">OFF-CUT</span>
+                                                                </template>
                                                                 <span class="inline-flex items-center px-1.5 py-0.2 rounded text-[9px] font-extrabold uppercase shrink-0"
                                                                       :class="item.category && item.category.toLowerCase().includes('cat') ? 'bg-purple-100 text-purple-700 dark:bg-purple-950/60 dark:text-purple-300' : (item.category && item.category.toLowerCase().includes('secondary') ? 'bg-blue-100 text-blue-700 dark:bg-blue-950/60 dark:text-blue-300' : 'bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-300')"
                                                                       x-text="item.category"></span>
                                                                 <span class="font-bold text-xs text-gray-900 dark:text-white truncate" x-text="item.name"></span>
                                                             </div>
-                                                            <div class="flex items-center gap-2 mt-0.5 text-[10px]">
+                                                            <div class="flex items-center gap-2 mt-0.5 text-[10px] flex-wrap">
                                                                 <span x-show="item.code" class="font-mono text-gray-400 bg-gray-100 dark:bg-gray-800 px-1 py-0.2 rounded" x-text="item.code"></span>
+                                                                <template x-if="item.dimension">
+                                                                    <span class="font-semibold text-amber-700 dark:text-amber-400 bg-amber-50 dark:bg-amber-950/30 px-1 py-0.2 rounded border border-amber-200 dark:border-amber-800/50" x-text="item.dimension"></span>
+                                                                </template>
                                                                 <span class="font-semibold"
                                                                       :class="item.stock <= 0 ? 'text-rose-500 dark:text-rose-400' : (item.stock < 10 ? 'text-amber-600 dark:text-amber-400' : 'text-emerald-600 dark:text-emerald-400')">
                                                                     Stok: <strong x-text="item.stock"></strong> <span x-text="item.unit"></span>
@@ -2233,6 +2281,25 @@
                                             <span class="font-bold">
                                                 Tgl Pembuatan: {{ $catManufacturingDate ?? 'Belum ada data' }}
                                             </span>
+                                        </div>
+                                    @endif
+
+                                    @if($isOffCutItem)
+                                        <div class="pt-2 border-t border-amber-200 dark:border-amber-800/60 flex flex-col gap-1 text-[11px] bg-amber-50/70 dark:bg-amber-950/30 p-2.5 rounded-xl border border-amber-200 dark:border-amber-900/40">
+                                            <div class="flex items-center justify-between">
+                                                <span class="px-2 py-0.5 rounded text-[10px] font-extrabold bg-amber-200 text-amber-900 dark:bg-amber-900/60 dark:text-amber-300 uppercase tracking-wider">OFF-CUT REMNANT</span>
+                                                <span class="font-bold text-amber-800 dark:text-amber-300">Dimensi: {{ $offCutDimension ?: '-' }}</span>
+                                            </div>
+                                            @if($offCutParentName)
+                                                <div class="text-[10px] text-gray-600 dark:text-gray-300">
+                                                    Material Induk: <strong>{{ $offCutParentName }}</strong>
+                                                </div>
+                                            @endif
+                                            @if($offCutHeatNumber)
+                                                <div class="text-[10px] text-gray-500 dark:text-gray-400 font-mono">
+                                                    Heat No: {{ $offCutHeatNumber }}
+                                                </div>
+                                            @endif
                                         </div>
                                     @endif
                                 </div>

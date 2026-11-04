@@ -165,8 +165,9 @@
         <thead>
             <tr>
                 <th style="width: 5%;">No</th>
-                <th style="width: 45%;">Nama Material / Barang</th>
-                <th style="width: 20%;">Kategori</th>
+                <th style="width: 15%;">Kode Material</th>
+                <th style="width: 35%;">Nama Material / Barang</th>
+                <th style="width: 15%;">Kategori</th>
                 <th style="width: 15%;">Lokasi Rak/Gudang</th>
                 <th style="width: 15%; text-align: center;">Jumlah Transaksi</th>
             </tr>
@@ -174,6 +175,7 @@
         <tbody>
             <tr>
                 <td style="text-align: center;">1</td>
+                <td style="font-family: monospace; font-size: 10px; text-align: center;">{{ $log->item?->code_item ?? '-' }}</td>
                 <td><strong>{{ $log->item?->name }}</strong></td>
                 <td>{{ $log->item?->category?->name ?? '-' }}</td>
                 <td>{{ $log->item?->location ?? 'Gudang Utama' }}</td>

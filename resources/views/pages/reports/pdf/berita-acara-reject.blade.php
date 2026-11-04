@@ -229,6 +229,7 @@
         <thead>
             <tr>
                 <th style="width: 25px;">No</th>
+                <th style="width: 80px;">Kode Material</th>
                 <th>Deskripsi Nama Material</th>
                 <th style="width: 90px;">Kategori</th>
                 <th style="width: 85px;">Qty Ditolak</th>
@@ -238,6 +239,7 @@
         <tbody>
             <tr>
                 <td style="text-align: center; font-weight: bold;">1</td>
+                <td style="text-align: center; font-family: monospace; font-size: 8px;">{{ $reject->item->code_item ?? '-' }}</td>
                 <td><strong>{{ $reject->item->name ?? '-' }}</strong></td>
                 <td style="text-align: center;">{{ $reject->item->category->name ?? 'Consumable' }}</td>
                 <td style="text-align: center; font-weight: bold; color: #991b1b; font-size: 11px;">

@@ -184,6 +184,7 @@
                         <th scope="col" class="px-4 py-3 min-w-[100px] border-r border-white/10">TANGGAL</th>
                         <!-- <th scope="col" class="px-4 py-3 min-w-[120px] border-r border-white/10">NO PO</th> -->
                         <th scope="col" class="px-4 py-3 min-w-[150px] border-r border-white/10">SUPPLIER</th>
+                        <th scope="col" class="px-4 py-3 min-w-[120px] border-r border-white/10">KODE MATERIAL</th>
                         <th scope="col" class="px-4 py-3 min-w-[200px] border-r border-white/10">BARANG / MATERIAL</th>
                         <th scope="col" class="px-4 py-3 text-center w-28 border-r border-white/10">QTY FISIK</th>
                         <th scope="col" class="px-4 py-3 text-center min-w-[120px] border-r border-white/10">TGL BUAT (CAT)</th>
@@ -213,6 +214,12 @@
                             </td> -->
                             <td class="px-4 py-2.5 font-semibold text-gray-900 dark:text-white border-r border-gray-100 dark:border-gray-800">
                                 {{ $row->supplier }}
+                            </td>
+                            <!-- KODE MATERIAL -->
+                            <td class="px-4 py-2.5 whitespace-nowrap border-r border-gray-100 dark:border-gray-800">
+                                <span class="px-2 py-0.5 rounded-md font-mono text-xs font-bold bg-gray-100 dark:bg-gray-800 text-gray-800 dark:text-gray-200 border border-gray-200 dark:border-gray-700">
+                                    {{ $row->item->code_item ?? '-' }}
+                                </span>
                             </td>
                             <td class="px-4 py-2.5 border-r border-gray-100 dark:border-gray-800">
                                 <div class="font-bold text-gray-900 dark:text-white uppercase">{{ $row->item->name ?? '-' }}</div>

@@ -590,6 +590,11 @@
                         'code_item' => $item->code_item ?? '',
                         'name' => $item->name,
                         'brand' => $item->brand ?? '',
+                        'is_offcut' => (bool) $item->isOffCut(),
+                        'parent_item_id' => (string)($item->parent_item_id ?? ''),
+                        'dimension' => $item->dimension ?? '',
+                        'origin_project' => $item->origin_project ?? '',
+                        'heat_number' => $item->heat_number ?? '',
                         'category_id' => (string)($item->category_id ?? ''),
                         'unit_id' => (string)($item->unit_id ?? ''),
                         'stock' => (float)$item->stock,
@@ -618,9 +623,24 @@
                                     :checked="!!selectedMap[{{ $item->id }}]">
                             </div>
                             <div class="min-w-0 space-y-1">
-                                <h4 class="text-sm font-bold text-gray-900 dark:text-white leading-snug break-words">
-                                    {{ $item->name }}
-                                </h4>
+                                <div class="flex items-center gap-2 flex-wrap">
+                                    <h4 class="text-sm font-bold text-gray-900 dark:text-white leading-snug break-words">
+                                        {{ $item->name }}
+                                    </h4>
+                                    @if($item->isOffCut())
+                                        <span class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[9px] font-black bg-amber-100 text-amber-900 border border-amber-300 dark:bg-amber-950/70 dark:text-amber-300 dark:border-amber-800">
+                                            OFF-CUT
+                                        </span>
+                                    @endif
+                                </div>
+                                @if($item->isOffCut() && !empty($item->dimension))
+                                    <div class="text-[11px] text-amber-800 dark:text-amber-300 font-medium">
+                                        Dimensi: <strong class="font-bold font-mono">{{ $item->dimension }}</strong>
+                                        @if($item->parentItem)
+                                            <span class="text-gray-500 text-[10px] block">Induk: {{ $item->parentItem->name }}</span>
+                                        @endif
+                                    </div>
+                                @endif
                                 @if(!empty($item->code_item))
                                     <div class="flex items-center gap-1.5">
                                         <span class="inline-flex items-center gap-1 font-mono text-[11px] font-extrabold text-gray-700 dark:text-gray-300 bg-gray-100 dark:bg-gray-800 px-2 py-0.5 rounded-md border border-gray-200 dark:border-gray-700 tracking-wider shadow-2xs">
@@ -875,6 +895,11 @@
                                 'code_item' => $item->code_item ?? '',
                                 'name' => $item->name,
                                 'brand' => $item->brand ?? '',
+                                'is_offcut' => (bool) $item->isOffCut(),
+                                'parent_item_id' => (string)($item->parent_item_id ?? ''),
+                                'dimension' => $item->dimension ?? '',
+                                'origin_project' => $item->origin_project ?? '',
+                                'heat_number' => $item->heat_number ?? '',
                                 'category_id' => (string)($item->category_id ?? ''),
                                 'unit_id' => (string)($item->unit_id ?? ''),
                                 'stock' => (float)$item->stock,
@@ -913,7 +938,37 @@
                             </td>
                             <td class="px-3.5 py-3 font-semibold text-gray-900 dark:text-white">
                                 <div class="space-y-1">
-                                    <div class="text-sm font-bold text-gray-900 dark:text-white leading-snug">{{ $item->name }}</div>
+                                    <div class="flex items-center gap-2 flex-wrap">
+                                        <span class="text-sm font-bold text-gray-900 dark:text-white leading-snug">{{ $item->name }}</span>
+                                        @if($item->isOffCut())
+                                            <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-black bg-amber-100 text-amber-900 border border-amber-300 dark:bg-amber-950/70 dark:text-amber-300 dark:border-amber-800" title="Sisa potongan raw material layak pakai">
+                                                <svg class="w-3 h-3 text-amber-600" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.121 14.121L19 19m-7-7l7-7m-7 7l-2.879 2.879a3 3 0 11-4.242-4.242L10.758 7.758M12 12l2.879-2.879a3 3 0 10-4.242-4.242L7.758 10.758"/></svg>
+                                                OFF-CUT
+                                            </span>
+                                        @endif
+                                    </div>
+                                    @if($item->isOffCut())
+                                        <div class="flex flex-wrap items-center gap-x-2 gap-y-0.5 text-[11px] text-gray-600 dark:text-gray-300">
+                                            @if(!empty($item->dimension))
+                                                <span class="font-medium inline-flex items-center gap-1 text-amber-800 dark:text-amber-300">
+                                                    <svg class="w-3 h-3 text-amber-600" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 8h16M4 16h16"/></svg>
+                                                    Dimensi: <strong class="font-bold font-mono">{{ $item->dimension }}</strong>
+                                                </span>
+                                            @endif
+                                            @if($item->parentItem)
+                                                <span class="text-gray-400">&bull;</span>
+                                                <span class="text-gray-500 dark:text-gray-400">Induk: {{ $item->parentItem->name }}</span>
+                                            @endif
+                                            @if(!empty($item->origin_project))
+                                                <span class="text-gray-400">&bull;</span>
+                                                <span class="text-gray-500 dark:text-gray-400">Proyek: {{ $item->origin_project }}</span>
+                                            @endif
+                                            @if(!empty($item->heat_number))
+                                                <span class="text-gray-400">&bull;</span>
+                                                <span class="font-mono text-[10px] bg-gray-100 dark:bg-gray-800 px-1 rounded text-gray-700 dark:text-gray-300">Heat No: {{ $item->heat_number }}</span>
+                                            @endif
+                                        </div>
+                                    @endif
                                     @if($item->isCat())
                                         <div class="text-[11px] text-gray-500 dark:text-gray-400 font-normal">
                                             Tgl Pembuatan: <span class="font-medium text-gray-700 dark:text-gray-300">{{ format_date($item->manufacturing_date, 'Belum diisi') }}</span>

@@ -213,7 +213,8 @@
                     <tr>
                         <th class="px-6 py-4 text-center">Tipe</th>
                         <th class="px-6 py-4 text-center">No. PO / MRF Ref</th>
-                        <th class="px-6 py-4 text-center">Kode & Nama Barang</th>
+                        <th class="px-6 py-4 text-center">Kode Material</th>
+                        <th class="px-6 py-4">Nama Barang</th>
                         <th class="px-6 py-4 text-center">Jumlah</th>
                         <th class="px-6 py-4 text-center">Penyedia / Penerima</th>
                         <th class="px-6 py-4 text-center">Waktu Transaksi</th>
@@ -236,6 +237,12 @@
                             </td>
                             <td class="px-6 py-4 whitespace-nowrap font-mono text-xs font-bold text-gray-800 dark:text-gray-200">
                                 {{ $log->reference_number ?? '-' }}
+                            </td>
+                            <!-- KODE MATERIAL -->
+                            <td class="px-6 py-4 whitespace-nowrap text-center">
+                                <span class="px-2.5 py-1 rounded-lg font-mono text-xs font-bold bg-gray-100 dark:bg-gray-800 text-gray-800 dark:text-gray-200 border border-gray-200 dark:border-gray-700">
+                                    {{ $log->item?->code_item ?? '-' }}
+                                </span>
                             </td>
                             <td class="px-6 py-4">
                                 <div class="font-medium text-gray-900 dark:text-white">{{ $log->item?->name ?? 'Barang #' . $log->item_id }}</div>

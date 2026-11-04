@@ -251,6 +251,7 @@
                     <thead class="theme-table-header font-bold uppercase text-white sticky top-0 z-10">
                         <tr>
                             <th class="px-4 py-2.5 text-center w-12 border-r border-gray-200 dark:border-gray-700">NO</th>
+                            <th class="px-4 py-2.5 border-r border-gray-200 dark:border-gray-700">KODE MATERIAL</th>
                             <th class="px-4 py-2.5 border-r border-gray-200 dark:border-gray-700">NAMA BARANG</th>
                             <th class="px-4 py-2.5 text-center border-r border-gray-200 dark:border-gray-700">SUBTOTAL QTY TERPAKAI</th>
                             <th class="px-4 py-2.5 text-center border-r border-gray-200 dark:border-gray-700">SATUAN</th>
@@ -266,6 +267,11 @@
                         @foreach($materialSummaryPerItem as $idx => $sum)
                             <tr x-show="searchSummary === '' || {{ json_encode(strtolower($sum->item->name ?? '')) }}.includes(searchSummary.toLowerCase())" class="hover:bg-gray-50/80 dark:hover:bg-gray-800/50 transition">
                                 <td class="px-4 py-2 text-center text-gray-500 border-r border-gray-100 dark:border-gray-800">{{ $idx + 1 }}</td>
+                                <td class="px-4 py-2 whitespace-nowrap border-r border-gray-100 dark:border-gray-800">
+                                    <span class="px-2 py-0.5 rounded-md font-mono text-xs font-bold bg-gray-100 dark:bg-gray-800 text-gray-800 dark:text-gray-200 border border-gray-200 dark:border-gray-700">
+                                        {{ $sum->item->code_item ?? '-' }}
+                                    </span>
+                                </td>
                                 <td class="px-4 py-2 font-bold text-gray-900 dark:text-white border-r border-gray-100 dark:border-gray-800">{{ $sum->item->name ?? '-' }}</td>
                                 <td class="px-4 py-2 text-center font-black text-rose-600 dark:text-rose-400 text-xs border-r border-gray-100 dark:border-gray-800 font-mono">
                                     -{{ format_unit_quantity($sum->total_qty, $sum->unit) }}
@@ -329,6 +335,7 @@
                     <tr>
                         <th class="px-4 py-3.5 text-center w-12">NO</th>
                         <th class="px-4 py-3.5">TANGGAL</th>
+                        <th class="px-4 py-3.5">KODE MATERIAL</th>
                         <th class="px-4 py-3.5">NAMA BARANG</th>
                         <th class="px-4 py-3.5 text-center">JUMLAH TERPAKAI</th>
                         <th class="px-4 py-3.5 text-center">SATUAN</th>
@@ -346,6 +353,11 @@
                             <td class="px-4 py-3 text-center text-gray-500">{{ $materialOuts->firstItem() + $index }}</td>
                             <td class="px-4 py-3 font-semibold text-gray-900 dark:text-white whitespace-nowrap">
                                 {{ format_date($mo->date) }}
+                            </td>
+                            <td class="px-4 py-3 whitespace-nowrap">
+                                <span class="px-2 py-0.5 rounded-md font-mono text-xs font-bold bg-gray-100 dark:bg-gray-800 text-gray-800 dark:text-gray-200 border border-gray-200 dark:border-gray-700">
+                                    {{ $mo->item->code_item ?? '-' }}
+                                </span>
                             </td>
                             <td class="px-4 py-3 font-bold text-gray-900 dark:text-white">
                                 {{ $mo->item->name ?? '-' }}

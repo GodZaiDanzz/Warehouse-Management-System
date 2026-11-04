@@ -38,6 +38,24 @@ class Category extends Model
     }
 
     /**
+     * Check if category is Raw Material or Raw Material subcategory.
+     */
+    public function isRawMaterial(): bool
+    {
+        $name = strtolower(trim($this->name));
+        return str_contains($name, 'raw material') || str_contains($name, 'raw');
+    }
+
+    /**
+     * Check if category is specifically for Off-Cut (Sisa Potongan).
+     */
+    public function isOffCut(): bool
+    {
+        $name = strtolower(trim($this->name));
+        return str_contains($name, 'off cut') || str_contains($name, 'offcut') || str_contains($name, 'sisa');
+    }
+
+    /**
      * Get IDs of all paint-related categories (umbrella + subcategories).
      *
      * @return array<int>
@@ -49,5 +67,15 @@ class Category extends Model
             ->orWhere('name', 'like', 'Cat %')
             ->pluck('id')
             ->toArray();
+    }
+
+    /**
+     * Get IDs of all raw material related categories (including off-cut).
+     *
+     * @return array<int>
+     */
+    public static function getRawMaterialCategoryIds(): array
+    {
+        return static::where('name', 'like', '%raw%')->pluck('id')->toArray();
     }
 }

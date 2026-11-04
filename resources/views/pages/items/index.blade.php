@@ -6,7 +6,7 @@
         openCreateModal: false,
         openEditModal: false,
         openPrModal: false,
-        editItem: { id: null, code_item: '', name: '', brand: '', category_id: '', unit_id: '', stock: 0, unit: 'PCS', min_stock: 0, requirement_per_ton: null, unit_price: 0, storage: 'STORAGE 1', location: '', wholesale_unit: '', conversion_factor: 1, manufacturing_date: '', expiry_date: '' },
+        editItem: { id: null, code_item: '', name: '', brand: '', category_id: '', unit_id: '', stock: 0, unit: 'PCS', min_stock: 0, requirement_per_ton: null, unit_price: 0, storage: 'STORAGE 1', location: '', wholesale_unit: '', conversion_factor: 1, manufacturing_date: '', expiry_date: '', is_offcut: false, parent_item_id: null, dimension: '', origin_project: '', heat_number: '' },
         prData: {
             document_no: '095/FPBJ/MGI/MEI/IX/2026',
             required_date: '',
@@ -22,13 +22,18 @@
         let initialStorage = detail.storage || 'STORAGE 1';
         let initialLoc = detail.location || '';
         if (!detail.storage) {
-            initialStorage = (detail.category_id == 194 || (detail.code_item && detail.code_item.startsWith('RAW'))) ? 'STORAGE 2' : 'STORAGE 1';
+            initialStorage = (detail.category_id == 194 || (detail.code_item && (detail.code_item.startsWith('RAW') || detail.code_item.startsWith('OFF'))) || detail.is_offcut) ? 'STORAGE 2' : 'STORAGE 1';
         }
         editItem = Object.assign({}, detail, {
             storage: initialStorage,
             location: initialLoc,
             requirement_per_ton: (detail && detail.requirement_per_ton !== null && detail.requirement_per_ton !== undefined && detail.requirement_per_ton !== '') ? parseFloat(detail.requirement_per_ton) : null,
-            conversion_factor: (detail && parseFloat(detail.conversion_factor) > 0) ? parseFloat(detail.conversion_factor) : 1
+            conversion_factor: (detail && parseFloat(detail.conversion_factor) > 0) ? parseFloat(detail.conversion_factor) : 1,
+            is_offcut: !!detail.is_offcut,
+            parent_item_id: detail.parent_item_id || null,
+            dimension: detail.dimension || '',
+            origin_project: detail.origin_project || '',
+            heat_number: detail.heat_number || ''
         });
         openEditModal = true;
     "
@@ -252,12 +257,18 @@
                     bulkMinStock: 5,
                     singleStorage: 'STORAGE 1',
                     singleLocation: '',
+                    isOffcut: false,
                     singleCategoryChanged(e) {
                         const text = e.target.options[e.target.selectedIndex]?.text?.toLowerCase() || '';
-                        if (text.includes('raw')) {
+                        if (text.includes('off cut') || text.includes('off-cut')) {
                             this.singleStorage = 'STORAGE 2';
+                            this.isOffcut = true;
+                        } else if (text.includes('raw')) {
+                            this.singleStorage = 'STORAGE 2';
+                            this.isOffcut = false;
                         } else {
                             this.singleStorage = 'STORAGE 1';
+                            this.isOffcut = false;
                         }
                     },
                     rows: [
@@ -605,6 +616,29 @@
                                 <input type="text" name="brand" :disabled="activeTab !== 'single'" placeholder="Contoh: Novalux, International, Jotun..." class="w-full rounded-xl border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 px-3 py-2 text-sm text-gray-900 dark:text-white focus:border-brand-500">
                             </div>
 
+                            <!-- Off-Cut Remnant Details (Single Form) -->
+                            <div x-show="isOffcut" x-cloak class="rounded-xl p-3.5 bg-amber-50/70 dark:bg-amber-950/30 border border-amber-300 dark:border-amber-800/80 space-y-3">
+                                <div class="flex items-center gap-2">
+                                    <span class="px-2 py-0.5 rounded text-[10px] bg-amber-200 text-amber-900 font-extrabold uppercase tracking-wider">OFF-CUT REMNANT</span>
+                                    <span class="text-xs font-bold text-amber-900 dark:text-amber-300">Spesifikasi Potongan Sisa Material</span>
+                                </div>
+                                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                                    <div class="space-y-1">
+                                        <label class="block text-xs font-bold text-gray-700 dark:text-gray-300">Dimensi Sisa <span class="text-rose-500">*</span></label>
+                                        <input type="text" name="dimension" :disabled="activeTab !== 'single' || !isOffcut" placeholder="Contoh: P: 2.4m, Tebal: 12mm" class="w-full rounded-xl border border-amber-300 dark:border-amber-700 bg-white dark:bg-gray-800 px-3 py-2 text-xs font-semibold text-gray-900 dark:text-white focus:border-amber-500">
+                                    </div>
+                                    <div class="space-y-1">
+                                        <label class="block text-xs font-bold text-gray-700 dark:text-gray-300">Heat No / Mill Cert</label>
+                                        <input type="text" name="heat_number" :disabled="activeTab !== 'single' || !isOffcut" placeholder="Contoh: HT-88291A" class="w-full rounded-xl border border-amber-300 dark:border-amber-700 bg-white dark:bg-gray-800 px-3 py-2 text-xs font-mono text-gray-900 dark:text-white focus:border-amber-500">
+                                    </div>
+                                </div>
+                                <div class="space-y-1">
+                                    <label class="block text-xs font-bold text-gray-700 dark:text-gray-300">Asal Proyek Pemotongan</label>
+                                    <input type="text" name="origin_project" :disabled="activeTab !== 'single' || !isOffcut" placeholder="Contoh: Tangki Pertamina RU VI" class="w-full rounded-xl border border-amber-300 dark:border-amber-700 bg-white dark:bg-gray-800 px-3 py-2 text-xs text-gray-900 dark:text-white focus:border-amber-500">
+                                </div>
+                                <input type="hidden" name="is_offcut" :value="isOffcut ? '1' : '0'" :disabled="activeTab !== 'single'">
+                            </div>
+
                             <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
                                 <div class="space-y-1">
                                     <label class="block text-xs font-bold text-gray-700 dark:text-gray-300">Stok Awal <span class="text-rose-500">*</span></label>
@@ -902,7 +936,10 @@
                             <label class="block text-xs font-bold text-gray-700 dark:text-gray-300">Kategori Barang <span class="text-rose-500">*</span></label>
                             <select name="category_id" x-model="editItem.category_id" @change="
                                 const text = $event.target.options[$event.target.selectedIndex]?.text?.toLowerCase() || '';
-                                if (text.includes('raw')) {
+                                if (text.includes('off cut') || text.includes('off-cut')) {
+                                    editItem.storage = 'STORAGE 2';
+                                    editItem.is_offcut = true;
+                                } else if (text.includes('raw')) {
                                     editItem.storage = 'STORAGE 2';
                                 } else {
                                     editItem.storage = 'STORAGE 1';
@@ -958,6 +995,36 @@
                                 Brand / Merk Cat <span class="text-xs font-normal text-gray-400">(Khusus Cat, contoh: Novalux, International, Jotun)</span>
                             </label>
                             <input type="text" name="brand" x-model="editItem.brand" placeholder="Contoh: Novalux, International, Jotun..." class="w-full rounded-xl border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 px-3 py-2 text-sm text-gray-900 dark:text-white focus:border-brand-500">
+                        </div>
+
+                        <!-- Off-Cut Remnant Details (Edit Modal) -->
+                        <div x-show="editItem.is_offcut" x-cloak class="rounded-xl p-3.5 bg-amber-50/70 dark:bg-amber-950/30 border border-amber-300 dark:border-amber-800/80 space-y-3">
+                            <div class="flex items-center justify-between">
+                                <div class="flex items-center gap-2">
+                                    <span class="px-2 py-0.5 rounded text-[10px] bg-amber-200 text-amber-900 font-extrabold uppercase tracking-wider">OFF-CUT REMNANT</span>
+                                    <span class="text-xs font-bold text-amber-900 dark:text-amber-300">Spesifikasi Potongan Sisa Material</span>
+                                </div>
+                                <template x-if="editItem.parent_item && editItem.parent_item.name">
+                                    <span class="text-[11px] text-amber-700 dark:text-amber-400 font-medium truncate max-w-xs" :title="'Material Induk: ' + editItem.parent_item.name">
+                                        Induk: <strong x-text="editItem.parent_item.name"></strong>
+                                    </span>
+                                </template>
+                            </div>
+                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                                <div class="space-y-1">
+                                    <label class="block text-xs font-bold text-gray-700 dark:text-gray-300">Dimensi Sisa <span class="text-rose-500">*</span></label>
+                                    <input type="text" name="dimension" x-model="editItem.dimension" placeholder="Contoh: P: 2.4m, Tebal: 12mm" class="w-full rounded-xl border border-amber-300 dark:border-amber-700 bg-white dark:bg-gray-800 px-3 py-2 text-xs font-semibold text-gray-900 dark:text-white focus:border-amber-500">
+                                </div>
+                                <div class="space-y-1">
+                                    <label class="block text-xs font-bold text-gray-700 dark:text-gray-300">Heat No / Mill Cert</label>
+                                    <input type="text" name="heat_number" x-model="editItem.heat_number" placeholder="Contoh: HT-88291A" class="w-full rounded-xl border border-amber-300 dark:border-amber-700 bg-white dark:bg-gray-800 px-3 py-2 text-xs font-mono text-gray-900 dark:text-white focus:border-amber-500">
+                                </div>
+                            </div>
+                            <div class="space-y-1">
+                                <label class="block text-xs font-bold text-gray-700 dark:text-gray-300">Asal Proyek Pemotongan</label>
+                                <input type="text" name="origin_project" x-model="editItem.origin_project" placeholder="Contoh: Tangki Pertamina RU VI" class="w-full rounded-xl border border-amber-300 dark:border-amber-700 bg-white dark:bg-gray-800 px-3 py-2 text-xs text-gray-900 dark:text-white focus:border-amber-500">
+                            </div>
+                            <input type="hidden" name="is_offcut" :value="editItem.is_offcut ? '1' : '0'">
                         </div>
 
                         <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">

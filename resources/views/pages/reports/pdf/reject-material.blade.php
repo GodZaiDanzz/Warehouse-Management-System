@@ -170,7 +170,8 @@
                 <th style="width: 75px;">NO REGISTRASI</th>
                 <th style="width: 60px;">NO PO</th>
                 <th style="width: 100px;">SUPPLIER / VENDOR</th>
-                <th>KODE & NAMA BARANG</th>
+                <th style="width: 65px;">KODE MATERIAL</th>
+                <th>NAMA BARANG</th>
                 <th style="width: 50px;">KATEGORI</th>
                 <th style="width: 45px;">QTY</th>
                 <th style="width: 35px;">SAT</th>
@@ -188,6 +189,7 @@
                     <td class="text-center font-mono font-bold">{{ $row->reference_number }}</td>
                     <td class="text-center font-mono">{{ $row->po_number ?? ($row->materialIn->po_number ?? '-') }}</td>
                     <td>{{ $row->supplier }}</td>
+                    <td class="text-center font-mono" style="font-size: 8px;">{{ $row->item->code_item ?? '-' }}</td>
                     <td>
                         <span class="font-bold">{{ $row->item->name ?? '-' }}</span>
                     </td>
@@ -209,7 +211,7 @@
                 </tr>
             @empty
                 <tr>
-                    <td colspan="13" class="text-center" style="padding: 15px; color: #9ca3af;">Tidak ada catatan material rusak atau reject pada periode ini.</td>
+                    <td colspan="14" class="text-center" style="padding: 15px; color: #9ca3af;">Tidak ada catatan material rusak atau reject pada periode ini.</td>
                 </tr>
             @endforelse
         </tbody>

@@ -133,6 +133,7 @@
         <thead>
             <tr>
                 <th style="width: 25px;">NO</th>
+                <th style="width: 80px;">KODE MATERIAL</th>
                 <th>NAMA BARANG CONSUMABLE</th>
                 <th style="width: 80px;">TOTAL TERPAKAI</th>
                 <th style="width: 65px;">RATA / HARI</th>
@@ -145,6 +146,7 @@
             @forelse($summaryTableData as $idx => $sum)
                 <tr>
                     <td class="text-center">{{ $idx + 1 }}</td>
+                    <td class="text-center font-mono" style="font-size: 8px;">{{ $sum['code_item'] ?? '-' }}</td>
                     <td class="font-bold">{{ $sum['item_name'] }}</td>
                     <td class="text-right font-bold" style="color: #dc2626;">-{{ format_quantity($sum['total_qty']) }} {{ $sum['unit'] }}</td>
                     <td class="text-center">{{ format_quantity($sum['avg_per_day']) }} {{ $sum['unit'] }}/hari</td>
@@ -174,6 +176,7 @@
             <tr>
                 <th style="width: 25px;">NO</th>
                 <th style="width: 65px;">TANGGAL</th>
+                <th style="width: 80px;">KODE MATERIAL</th>
                 <th>NAMA MATERIAL CONSUMABLE</th>
                 <th style="width: 60px;">JUMLAH</th>
                 <th style="width: 45px;">SATUAN</th>
@@ -186,6 +189,7 @@
                 <tr>
                     <td class="text-center">{{ $idx + 1 }}</td>
                     <td class="text-center">{{ format_date($row->date) }}</td>
+                    <td class="text-center font-mono" style="font-size: 8px;">{{ $row->item->code_item ?? '-' }}</td>
                     <td class="font-bold">{{ $row->item->name ?? '-' }}</td>
                     <td class="text-right font-bold" style="color: #dc2626;">-{{ format_quantity($row->quantity) }}</td>
                     <td class="text-center">{{ strtoupper($row->unit) }}</td>

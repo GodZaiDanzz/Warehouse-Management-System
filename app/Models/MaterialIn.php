@@ -17,6 +17,11 @@ class MaterialIn extends Model
         'unit_id',
         'quantity',
         'unit',
+        'is_offcut',
+        'parent_item_id',
+        'dimension',
+        'origin_project',
+        'heat_number',
         'supplier',
         'po_number',
         'received_by',
@@ -64,6 +69,14 @@ class MaterialIn extends Model
     public function item()
     {
         return $this->belongsTo(Item::class);
+    }
+
+    /**
+     * Relationship to parent virgin raw material (if off-cut).
+     */
+    public function parentItem()
+    {
+        return $this->belongsTo(Item::class, 'parent_item_id');
     }
 
     /**

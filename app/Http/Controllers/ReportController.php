@@ -227,6 +227,7 @@ class ReportController extends Controller
             }
 
             $summaryTableData[] = [
+                'code_item' => $itemObj ? $itemObj->code_item : '-',
                 'item_name' => $itemName,
                 'unit' => $unit,
                 'total_qty' => $itemTotalQty,
@@ -982,6 +983,7 @@ class ReportController extends Controller
             }
 
             $summaryTableData[] = [
+                'code_item' => $itemObj ? $itemObj->code_item : '-',
                 'item_name' => $itemName,
                 'unit' => strtoupper($unit),
                 'total_qty' => (float) $itemTotalQty,

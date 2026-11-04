@@ -425,8 +425,8 @@ class ItemTableComponent extends Component
         $totalActiveTonnage = Project::getTotalActiveTonnage();
         $activeProjects = Project::getActiveProjects();
 
-        $query = Item::select(['id', 'code_item', 'name', 'brand', 'category_id', 'unit_id', 'stock', 'unit', 'min_stock', 'requirement_per_ton', 'unit_price', 'location', 'manufacturing_date', 'expiry_date', 'wholesale_unit', 'conversion_factor', 'created_at', 'updated_at'])
-            ->with(['category:id,name', 'unitRelation:id,name,symbol']);
+        $query = Item::select(['id', 'code_item', 'name', 'brand', 'is_offcut', 'parent_item_id', 'dimension', 'origin_project', 'heat_number', 'category_id', 'unit_id', 'stock', 'unit', 'min_stock', 'requirement_per_ton', 'unit_price', 'location', 'manufacturing_date', 'expiry_date', 'wholesale_unit', 'conversion_factor', 'created_at', 'updated_at'])
+            ->with(['category:id,name', 'unitRelation:id,name,symbol', 'parentItem:id,name']);
 
         // Search Server-Side
         if (!empty($this->search)) {
@@ -438,11 +438,17 @@ class ItemTableComponent extends Component
                         foreach ($words as $word) {
                             $sub->where(function ($inner) use ($word) {
                                 $inner->where('name', 'like', "%{$word}%")
-                                      ->orWhere('brand', 'like', "%{$word}%");
+                                      ->orWhere('brand', 'like', "%{$word}%")
+                                      ->orWhere('dimension', 'like', "%{$word}%")
+                                      ->orWhere('origin_project', 'like', "%{$word}%")
+                                      ->orWhere('heat_number', 'like', "%{$word}%");
                             });
                         }
                     })->orWhere('code_item', 'like', "%{$search}%")
-                      ->orWhere('brand', 'like', "%{$search}%");
+                      ->orWhere('brand', 'like', "%{$search}%")
+                      ->orWhere('dimension', 'like', "%{$search}%")
+                      ->orWhere('origin_project', 'like', "%{$search}%")
+                      ->orWhere('heat_number', 'like', "%{$search}%");
                 });
             }
         }
