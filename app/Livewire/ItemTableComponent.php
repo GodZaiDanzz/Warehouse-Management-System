@@ -416,6 +416,20 @@ class ItemTableComponent extends Component
         }
     }
 
+    /**
+     * Lazy Load rincian perhitungan minimal stok material per project
+     */
+    public function loadMinStockBreakdown($itemId)
+    {
+        $item = Item::find($itemId);
+        if (!$item) {
+            return;
+        }
+
+        $breakdown = $item->getMinStockProjectBreakdown();
+        $this->dispatch('show-min-stock-breakdown', data: $breakdown);
+    }
+
     public function render()
     {
         if ($this->scannedItemId && (!$this->scannedItem || $this->scannedItem->id !== $this->scannedItemId)) {
@@ -423,7 +437,6 @@ class ItemTableComponent extends Component
         }
 
         $totalActiveTonnage = Project::getTotalActiveTonnage();
-        $activeProjects = Project::getActiveProjects();
 
         $query = Item::select(['id', 'code_item', 'name', 'brand', 'is_offcut', 'parent_item_id', 'dimension', 'origin_project', 'heat_number', 'category_id', 'unit_id', 'stock', 'unit', 'min_stock', 'requirement_per_ton', 'unit_price', 'location', 'manufacturing_date', 'expiry_date', 'wholesale_unit', 'conversion_factor', 'created_at', 'updated_at'])
             ->with(['category:id,name', 'unitRelation:id,name,symbol', 'parentItem:id,name']);
@@ -513,6 +526,27 @@ class ItemTableComponent extends Component
         $outOfStockCount = (int) ($metrics->out_of_stock_count ?? 0);
         $safeStockCount = max(0, $totalItemsCount - $criticalTotalCount);
 
+        // PPIC Inventory Alert: Critical Items List (dihitung di component secara terpusat, bukan di Blade view)
+        $criticalItemsList = [];
+        if ($criticalTotalCount > 0) {
+            $criticalItemsList = Item::whereRaw('stock <= COALESCE(requirement_per_ton * ?, min_stock)', [$totalActiveTonnage])
+                ->select(['id', 'name', 'code_item', 'stock', 'unit', 'min_stock', 'requirement_per_ton'])
+                ->get()
+                ->map(function ($i) use ($totalActiveTonnage) {
+                    $effMin = $i->getEffectiveMinStock($totalActiveTonnage);
+                    return [
+                        'id' => $i->id,
+                        'name' => $i->name,
+                        'code_item' => $i->code_item,
+                        'stock' => (float) $i->stock,
+                        'unit' => $i->unit ?: 'Pcs',
+                        'min_stock' => $effMin,
+                        'request_qty' => max(1, ($effMin * 2) - $i->stock),
+                        'notes' => 'Digunakan untuk semua project aktif',
+                    ];
+                })->values()->toArray();
+        }
+
         // Storage 1 & Storage 2 Counts
         $storage1Count = Item::inStorage(Item::STORAGE_1)->count();
         $storage2Count = Item::inStorage(Item::STORAGE_2)->count();
@@ -580,7 +614,7 @@ class ItemTableComponent extends Component
             'units' => $units,
             'projects' => $projects,
             'totalActiveTonnage' => $totalActiveTonnage,
-            'activeProjects' => $activeProjects,
+            'criticalItemsList' => $criticalItemsList,
             'totalItemsCount' => $totalItemsCount,
             'safeStockCount' => $safeStockCount,
             'criticalTotalCount' => $criticalTotalCount,

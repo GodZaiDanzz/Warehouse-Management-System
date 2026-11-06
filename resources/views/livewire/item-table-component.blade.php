@@ -273,25 +273,7 @@
     </div>
 
     <!-- PPIC Inventory Alert Smart Banner -->
-    @if($criticalTotalCount > 0)
-        @php
-            $criticalItemsList = \App\Models\Item::whereRaw('stock <= COALESCE(requirement_per_ton * ?, min_stock)', [$totalActiveTonnage])
-                ->select(['id', 'name', 'code_item', 'stock', 'unit', 'min_stock', 'requirement_per_ton'])
-                ->get()
-                ->map(function($i) use ($totalActiveTonnage) {
-                    $effMin = $i->getEffectiveMinStock($totalActiveTonnage);
-                    return [
-                        'id' => $i->id,
-                        'name' => $i->name,
-                        'code_item' => $i->code_item,
-                        'stock' => (float) $i->stock,
-                        'unit' => $i->unit ?: 'Pcs',
-                        'min_stock' => $effMin,
-                        'request_qty' => max(1, ($effMin * 2) - $i->stock),
-                        'notes' => 'Digunakan untuk semua project aktif'
-                    ];
-                })->values()->toArray();
-        @endphp
+    @if($criticalTotalCount > 0 && !empty($criticalItemsList))
         <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-3 p-4 rounded-2xl bg-rose-50 dark:bg-rose-950/30 border border-rose-200 dark:border-rose-900/60 text-rose-900 dark:text-rose-200 shadow-xs">
             <div class="flex items-center gap-3">
                 <span class="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-rose-600 text-white font-black text-sm">
@@ -685,10 +667,14 @@
                                 <span class="text-[11px] font-bold text-gray-500 uppercase">{{ $item->unit ?: 'Pcs' }}</span>
                                 @if($item->hasRequirementPerTon())
                                     <button type="button" 
-                                        @click="$dispatch('show-min-stock-breakdown', {{ json_encode($item->getMinStockProjectBreakdown($activeProjects)) }})"
-                                        class="inline-flex items-center gap-0.5 text-[10px] font-bold text-brand-600 dark:text-brand-400 bg-brand-50 dark:bg-brand-950/60 px-1.5 py-0.5 rounded border border-brand-200 dark:border-brand-800 cursor-pointer ml-1"
+                                        wire:click="loadMinStockBreakdown({{ $item->id }})"
+                                        wire:loading.attr="disabled"
+                                        wire:target="loadMinStockBreakdown({{ $item->id }})"
+                                        class="inline-flex items-center gap-1 text-[10px] font-bold text-brand-600 dark:text-brand-400 bg-brand-50 dark:bg-brand-950/60 px-1.5 py-0.5 rounded border border-brand-200 dark:border-brand-800 cursor-pointer ml-1 disabled:opacity-50"
                                         title="Lihat Rincian Minimal Stok Project">
-                                        Min: {{ format_quantity($effectiveMin) }} (Auto)
+                                        <svg wire:loading.remove wire:target="loadMinStockBreakdown({{ $item->id }})" class="w-2.5 h-2.5 text-brand-600 dark:text-brand-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                                        <svg wire:loading wire:target="loadMinStockBreakdown({{ $item->id }})" class="w-2.5 h-2.5 animate-spin text-brand-600 dark:text-brand-400" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"></path></svg>
+                                        <span>Min: {{ format_quantity($effectiveMin) }} (Auto)</span>
                                     </button>
                                 @else
                                     <span class="inline-flex items-center gap-0.5 text-[9px] font-semibold text-amber-700 bg-amber-50 dark:bg-amber-950/60 dark:text-amber-300 px-1.5 py-0.5 rounded border border-amber-200 dark:border-amber-800 ml-1" title="Belum diisi: Menggunakan fallback manual">
@@ -1062,10 +1048,13 @@
                                     </span>
                                     @if($item->hasRequirementPerTon())
                                         <button type="button" 
-                                            @click="$dispatch('show-min-stock-breakdown', {{ json_encode($item->getMinStockProjectBreakdown($activeProjects)) }})"
-                                            class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-extrabold bg-brand-50 text-brand-700 border border-brand-200 dark:bg-brand-950/60 dark:text-brand-300 dark:border-brand-800 hover:bg-brand-100 dark:hover:bg-brand-900/80 transition cursor-pointer shadow-2xs"
+                                            wire:click="loadMinStockBreakdown({{ $item->id }})"
+                                            wire:loading.attr="disabled"
+                                            wire:target="loadMinStockBreakdown({{ $item->id }})"
+                                            class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-extrabold bg-brand-50 text-brand-700 border border-brand-200 dark:bg-brand-950/60 dark:text-brand-300 dark:border-brand-800 hover:bg-brand-100 dark:hover:bg-brand-900/80 transition cursor-pointer shadow-2xs disabled:opacity-50"
                                             title="Klik untuk melihat rincian hitungan minimal stok per project">
-                                            <svg class="w-2.5 h-2.5 text-brand-600 dark:text-brand-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                                            <svg wire:loading.remove wire:target="loadMinStockBreakdown({{ $item->id }})" class="w-2.5 h-2.5 text-brand-600 dark:text-brand-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                                            <svg wire:loading wire:target="loadMinStockBreakdown({{ $item->id }})" class="w-2.5 h-2.5 animate-spin text-brand-600 dark:text-brand-400" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"></path></svg>
                                             <span>Auto ({{ format_quantity($item->requirement_per_ton) }}/Ton)</span>
                                         </button>
                                     @else
@@ -1805,9 +1794,17 @@
             fallback_min_stock: 0,
             projects: []
         },
-        openBreakdown(data) {
-            this.breakdown = data;
-            this.openBreakdownModal = true;
+        openBreakdown(detail) {
+            let data = detail;
+            if (detail && detail.data !== undefined) {
+                data = detail.data;
+            } else if (Array.isArray(detail) && detail.length > 0) {
+                data = detail[0];
+            }
+            if (data && typeof data === 'object') {
+                this.breakdown = data;
+                this.openBreakdownModal = true;
+            }
         },
         closeBreakdown() {
             this.openBreakdownModal = false;
