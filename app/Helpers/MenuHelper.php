@@ -93,15 +93,10 @@ class MenuHelper
                     ],
                 ]
             ],
-            // Grup 1: MENU WMS
+            // Grup 1: MENU WMS (Operasional Gudang - Tanpa Menu PO)
             [
                 'title' => 'MENU WMS',
                 'items' => [
-                    [
-                        'icon' => 'purchase-orders',
-                        'name' => 'Purchase Order (PO)',
-                        'path' => '/purchase-orders',
-                    ],
                     [
                         'icon' => 'boxes',
                         'name' => 'Stok Barang',
