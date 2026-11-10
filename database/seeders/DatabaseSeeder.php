@@ -53,6 +53,16 @@ class DatabaseSeeder extends Seeder
             ]
         );
 
+        // Create default Procurement Staff (Kelola Purchase Order & Pengadaan)
+        User::updateOrCreate(
+            ['email' => 'procurement@mudalaya.com'],
+            [
+                'name' => 'Procurement Staff',
+                'password' => Hash::make('password'),
+                'role' => 'procurement',
+            ]
+        );
+
         $this->call([
             CompanyProfileSeeder::class,
             CategorySeeder::class,

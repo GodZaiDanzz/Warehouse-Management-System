@@ -355,5 +355,14 @@ class WmsStandardizationSeeder extends Seeder
                 'role' => 'qc',
             ]
         );
+
+        User::updateOrCreate(
+            ['email' => 'procurement@mudalaya.com'],
+            [
+                'name' => 'Procurement Staff',
+                'password' => Hash::make('password'),
+                'role' => 'procurement',
+            ]
+        );
     }
 }

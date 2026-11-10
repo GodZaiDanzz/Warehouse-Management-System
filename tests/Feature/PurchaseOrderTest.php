@@ -80,6 +80,51 @@ class PurchaseOrderTest extends TestCase
     }
 
     /**
+     * Test warehouse user is restricted from accessing PO page and menu.
+     */
+    public function test_warehouse_user_is_restricted_from_purchase_orders(): void
+    {
+        // 1. HTTP route restriction
+        $response = $this->actingAs($this->warehouseUser)
+            ->get(route('purchase-orders.index'));
+
+        $response->assertRedirect(route('items.index'));
+        $response->assertSessionHas('error');
+
+        // 2. Menu visibility check: Purchase Order (PO) must NOT exist in Warehouse menu
+        auth()->login($this->warehouseUser);
+        $groups = \App\Helpers\MenuHelper::getMenuGroups();
+        foreach ($groups as $group) {
+            foreach ($group['items'] as $item) {
+                $this->assertNotEquals('/purchase-orders', $item['path']);
+                $this->assertNotEquals('Purchase Order (PO)', $item['name']);
+            }
+        }
+    }
+
+    /**
+     * Test procurement role user has dedicated PO menu group.
+     */
+    public function test_procurement_user_has_dedicated_purchase_order_menu(): void
+    {
+        auth()->login($this->procurementUser);
+        $groups = \App\Helpers\MenuHelper::getMenuGroups();
+
+        $foundPo = false;
+        foreach ($groups as $group) {
+            if ($group['title'] === 'PENGADAAN (PROCUREMENT)') {
+                foreach ($group['items'] as $item) {
+                    if ($item['path'] === '/purchase-orders') {
+                        $foundPo = true;
+                    }
+                }
+            }
+        }
+
+        $this->assertTrue($foundPo, 'Procurement role must have Purchase Order (PO) in menu.');
+    }
+
+    /**
      * Test procurement role user can create a new Purchase Order via Livewire.
      */
     public function test_procurement_user_can_create_purchase_order(): void
