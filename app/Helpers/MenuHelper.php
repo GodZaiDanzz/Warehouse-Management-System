@@ -177,9 +177,23 @@ class MenuHelper
             ],
         ];
 
-        // Khusus Web Administrator: Memiliki akses mengelola Company Profile, Pengaturan System, dan Debugging
+        // Khusus Web Administrator: Memiliki akses penuh mengelola Pengadaan (PO), Company Profile, Pengaturan System, dan Debugging
         // Role Gudang & PPIC disembunyikan dari menu ini.
         if ($currentUser && $currentUser->isWebAdmin()) {
+            // Sisipkan menu Pengadaan (PO) setelah MENU WMS untuk Web Administrator
+            array_splice($menu, 2, 0, [
+                [
+                    'title' => 'PENGADAAN (PROCUREMENT)',
+                    'items' => [
+                        [
+                            'icon' => 'purchase-orders',
+                            'name' => 'Purchase Order (PO)',
+                            'path' => '/purchase-orders',
+                        ],
+                    ]
+                ]
+            ]);
+
             $menu[] = [
                 'title' => 'COMPANY PROFILE',
                 'items' => [
