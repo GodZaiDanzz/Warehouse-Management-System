@@ -328,11 +328,12 @@
     <!-- MODAL 1: BUAT PURCHASE ORDER BARU -->
     <!-- ========================================================================= -->
     @if($isCreateModalOpen)
-        <div class="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-gray-950/80 backdrop-blur-xs overflow-y-auto animate-fadeIn">
-            <div class="relative w-full max-w-3xl rounded-2xl border border-gray-200 bg-white text-left shadow-2xl transition-all dark:border-gray-700 dark:bg-gray-900 my-auto max-h-[92vh] flex flex-col">
+        <div class="fixed inset-0 z-50 overflow-y-auto bg-gray-950/80 backdrop-blur-xs animate-fadeIn" role="dialog" aria-modal="true">
+            <div class="flex min-h-full items-center justify-center p-3 sm:p-4 md:p-6 text-center">
+                <div class="relative w-full max-w-4xl lg:max-w-5xl rounded-2xl border border-gray-200 bg-white text-left shadow-2xl transition-all dark:border-gray-700 dark:bg-gray-900 my-auto max-h-[90vh] flex flex-col overflow-hidden">
                 
                 <!-- Modal Header -->
-                <div class="flex items-center justify-between p-5 border-b border-gray-200 dark:border-gray-800">
+                <div class="flex items-center justify-between p-4 sm:p-5 border-b border-gray-200 dark:border-gray-800 shrink-0">
                     <div class="flex items-center gap-3">
                         <div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-purple-50 text-purple-700 dark:bg-purple-950/80 dark:text-purple-300">
                             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
@@ -342,13 +343,13 @@
                             <p class="text-xs text-gray-500 dark:text-gray-400">Penerbitan surat pesanan pembelian barang ke vendor / supplier</p>
                         </div>
                     </div>
-                    <button type="button" wire:click="closeCreateModal" class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 cursor-pointer">
+                    <button type="button" wire:click="closeCreateModal" class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 cursor-pointer p-1 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition">
                         <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
                     </button>
                 </div>
 
-                <!-- Modal Body (Scrollable) -->
-                <div class="p-6 overflow-y-auto space-y-4 custom-scrollbar flex-1">
+                <!-- Modal Body (Scrollable with min-h-0) -->
+                <div class="p-4 sm:p-6 overflow-y-auto space-y-4 custom-scrollbar flex-1 min-h-0">
                     
                     <!-- Top Form Grid -->
                     <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
@@ -540,7 +541,7 @@
                 </div>
 
                 <!-- Modal Footer -->
-                <div class="p-4 bg-gray-50 dark:bg-gray-800/80 border-t border-gray-200 dark:border-gray-800 flex items-center justify-end gap-3 rounded-b-2xl">
+                <div class="p-4 bg-gray-50 dark:bg-gray-800/80 border-t border-gray-200 dark:border-gray-800 flex items-center justify-end gap-3 rounded-b-2xl shrink-0">
                     <button
                         type="button"
                         wire:click="closeCreateModal"
@@ -559,6 +560,7 @@
                     </button>
                 </div>
 
+                </div>
             </div>
         </div>
     @endif
@@ -567,11 +569,12 @@
     <!-- MODAL 2: DETAIL PURCHASE ORDER & RIWAYAT PENERIMAAN GUDANG -->
     <!-- ========================================================================= -->
     @if($isDetailModalOpen && $detailPo)
-        <div class="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-gray-950/80 backdrop-blur-xs overflow-y-auto animate-fadeIn">
-            <div class="relative w-full max-w-4xl rounded-2xl border border-gray-200 bg-white text-left shadow-2xl transition-all dark:border-gray-700 dark:bg-gray-900 my-auto max-h-[92vh] flex flex-col">
+        <div class="fixed inset-0 z-50 overflow-y-auto bg-gray-950/80 backdrop-blur-xs animate-fadeIn" role="dialog" aria-modal="true">
+            <div class="flex min-h-full items-center justify-center p-3 sm:p-4 md:p-6 text-center">
+                <div class="relative w-full max-w-4xl lg:max-w-5xl rounded-2xl border border-gray-200 bg-white text-left shadow-2xl transition-all dark:border-gray-700 dark:bg-gray-900 my-auto max-h-[90vh] flex flex-col overflow-hidden">
                 
                 <!-- Modal Header -->
-                <div class="flex items-center justify-between p-5 border-b border-gray-200 dark:border-gray-800">
+                <div class="flex items-center justify-between p-4 sm:p-5 border-b border-gray-200 dark:border-gray-800 shrink-0">
                     <div class="flex items-center gap-3">
                         <div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-purple-50 text-purple-700 dark:bg-purple-950/80 dark:text-purple-300">
                             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
@@ -601,14 +604,14 @@
                             <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"/></svg>
                             Cetak PO
                         </a>
-                        <button type="button" wire:click="closeDetailModal" class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 cursor-pointer">
+                        <button type="button" wire:click="closeDetailModal" class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 cursor-pointer p-1 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition">
                             <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
                         </button>
                     </div>
                 </div>
 
-                <!-- Modal Body -->
-                <div class="p-6 overflow-y-auto space-y-5 custom-scrollbar flex-1">
+                <!-- Modal Body (with min-h-0) -->
+                <div class="p-4 sm:p-6 overflow-y-auto space-y-5 custom-scrollbar flex-1 min-h-0">
                     
                     <!-- PO Details Summary Cards -->
                     <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 p-4 rounded-xl bg-gray-50 dark:bg-gray-800/50 border border-gray-200 dark:border-gray-800 text-xs">
@@ -732,7 +735,7 @@
                 </div>
 
                 <!-- Modal Footer -->
-                <div class="p-4 bg-gray-50 dark:bg-gray-800/80 border-t border-gray-200 dark:border-gray-800 flex items-center justify-end rounded-b-2xl">
+                <div class="p-4 bg-gray-50 dark:bg-gray-800/80 border-t border-gray-200 dark:border-gray-800 flex items-center justify-end rounded-b-2xl shrink-0">
                     <button
                         type="button"
                         wire:click="closeDetailModal"
@@ -742,6 +745,7 @@
                     </button>
                 </div>
 
+                </div>
             </div>
         </div>
     @endif
@@ -750,11 +754,12 @@
     <!-- MODAL 3: EDIT PURCHASE ORDER -->
     <!-- ========================================================================= -->
     @if($isEditModalOpen)
-        <div class="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-gray-950/80 backdrop-blur-xs overflow-y-auto animate-fadeIn">
-            <div class="relative w-full max-w-3xl rounded-2xl border border-gray-200 bg-white text-left shadow-2xl transition-all dark:border-gray-700 dark:bg-gray-900 my-auto max-h-[92vh] flex flex-col">
+        <div class="fixed inset-0 z-50 overflow-y-auto bg-gray-950/80 backdrop-blur-xs animate-fadeIn" role="dialog" aria-modal="true">
+            <div class="flex min-h-full items-center justify-center p-3 sm:p-4 md:p-6 text-center">
+                <div class="relative w-full max-w-4xl lg:max-w-5xl rounded-2xl border border-gray-200 bg-white text-left shadow-2xl transition-all dark:border-gray-700 dark:bg-gray-900 my-auto max-h-[90vh] flex flex-col overflow-hidden">
                 
                 <!-- Modal Header -->
-                <div class="flex items-center justify-between p-5 border-b border-gray-200 dark:border-gray-800">
+                <div class="flex items-center justify-between p-4 sm:p-5 border-b border-gray-200 dark:border-gray-800 shrink-0">
                     <div class="flex items-center gap-3">
                         <div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-amber-50 text-amber-700 dark:bg-amber-950/80 dark:text-amber-300">
                             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
@@ -764,13 +769,13 @@
                             <p class="text-xs text-gray-500 dark:text-gray-400">Perbarui rincian pemesanan barang</p>
                         </div>
                     </div>
-                    <button type="button" wire:click="closeEditModal" class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 cursor-pointer">
+                    <button type="button" wire:click="closeEditModal" class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 cursor-pointer p-1 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition">
                         <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
                     </button>
                 </div>
 
-                <!-- Modal Body -->
-                <div class="p-6 overflow-y-auto space-y-4 custom-scrollbar flex-1">
+                <!-- Modal Body (with min-h-0) -->
+                <div class="p-4 sm:p-6 overflow-y-auto space-y-4 custom-scrollbar flex-1 min-h-0">
                     
                     <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
                         <div>
@@ -922,7 +927,7 @@
                 </div>
 
                 <!-- Modal Footer -->
-                <div class="p-4 bg-gray-50 dark:bg-gray-800/80 border-t border-gray-200 dark:border-gray-800 flex items-center justify-end gap-3 rounded-b-2xl">
+                <div class="p-4 bg-gray-50 dark:bg-gray-800/80 border-t border-gray-200 dark:border-gray-800 flex items-center justify-end gap-3 rounded-b-2xl shrink-0">
                     <button
                         type="button"
                         wire:click="closeEditModal"
@@ -941,6 +946,7 @@
                     </button>
                 </div>
 
+                </div>
             </div>
         </div>
     @endif
@@ -949,8 +955,9 @@
     <!-- MODAL 4: BATALKAN PURCHASE ORDER -->
     <!-- ========================================================================= -->
     @if($isCancelModalOpen)
-        <div class="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-gray-950/80 backdrop-blur-xs overflow-y-auto animate-fadeIn">
-            <div class="relative w-full max-w-md rounded-2xl border border-gray-200 bg-white text-left shadow-2xl transition-all dark:border-gray-700 dark:bg-gray-900 my-auto p-6 space-y-4">
+        <div class="fixed inset-0 z-50 overflow-y-auto bg-gray-950/80 backdrop-blur-xs animate-fadeIn" role="dialog" aria-modal="true">
+            <div class="flex min-h-full items-center justify-center p-3 sm:p-4 text-center">
+                <div class="relative w-full max-w-md rounded-2xl border border-gray-200 bg-white text-left shadow-2xl transition-all dark:border-gray-700 dark:bg-gray-900 my-auto p-6 space-y-4">
                 
                 <div class="flex items-center gap-3">
                     <div class="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-rose-50 text-rose-600 dark:bg-rose-950/80 dark:text-rose-400">
@@ -991,6 +998,7 @@
                     </button>
                 </div>
 
+                </div>
             </div>
         </div>
     @endif
