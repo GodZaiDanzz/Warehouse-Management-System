@@ -11,6 +11,7 @@ use App\Models\Project;
 use App\Models\StockLog;
 use App\Models\ActivityLog;
 use App\Models\Unit;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Livewire\Component;
 use Livewire\WithPagination;
@@ -116,6 +117,15 @@ class ItemTableComponent extends Component
         }
     }
 
+    public static function clearPerformanceCaches(): void
+    {
+        Cache::forget('wms_items_cat_list');
+        Cache::forget('wms_items_unit_list');
+        Cache::forget('wms_items_storage1');
+        Cache::forget('wms_items_storage2');
+        Cache::forget('wms_items_stock_by_units');
+    }
+
     public function delete($id)
     {
         $user = auth()->user();
@@ -134,6 +144,8 @@ class ItemTableComponent extends Component
 
         $name = $item->name;
         $item->delete();
+
+        self::clearPerformanceCaches();
 
         \App\Models\ActivityLog::record(
             activity: 'Hapus Barang',
@@ -511,8 +523,8 @@ class ItemTableComponent extends Component
 
         $items = $query->paginate($this->perPage);
 
-        $categories = Category::select(['id', 'name'])->get();
-        $units = Unit::where('is_active', true)->orderBy('name')->get();
+        $categories = Cache::remember('wms_items_cat_list', 300, fn() => Category::select(['id', 'name'])->get());
+        $units = Cache::remember('wms_items_unit_list', 300, fn() => Unit::where('is_active', true)->orderBy('name')->get());
 
         // Mini Dashboard Metrics untuk PPIC & Warehouse (Katalog & Status Stok)
         $metrics = Item::selectRaw('
@@ -547,27 +559,29 @@ class ItemTableComponent extends Component
                 })->values()->toArray();
         }
 
-        // Storage 1 & Storage 2 Counts
-        $storage1Count = Item::inStorage(Item::STORAGE_1)->count();
-        $storage2Count = Item::inStorage(Item::STORAGE_2)->count();
+        // Storage 1 & Storage 2 Counts (cached)
+        $storage1Count = Cache::remember('wms_items_storage1', 120, fn() => Item::inStorage(Item::STORAGE_1)->count());
+        $storage2Count = Cache::remember('wms_items_storage2', 120, fn() => Item::inStorage(Item::STORAGE_2)->count());
 
-        // Akumulasi Stok Terpisah per Satuan (mencegah pencampuran satuan berbeda seperti KG dengan PCS)
-        $stockByUnitsRaw = Item::selectRaw('COALESCE(unit, "PCS") as unit_symbol, COUNT(*) as item_count, SUM(stock) as total_stock')
-            ->groupBy('unit')
-            ->orderByDesc('item_count')
-            ->get();
+        // Akumulasi Stok Terpisah per Satuan (cached)
+        $stockByUnits = Cache::remember('wms_items_stock_by_units', 120, function () use ($units) {
+            $stockByUnitsRaw = Item::selectRaw('COALESCE(unit, "PCS") as unit_symbol, COUNT(*) as item_count, SUM(stock) as total_stock')
+                ->groupBy('unit')
+                ->orderByDesc('item_count')
+                ->get();
 
-        $stockByUnits = $stockByUnitsRaw->map(function ($row) use ($units) {
-            $matchedUnit = $units->first(function ($u) use ($row) {
-                return strcasecmp($u->symbol, $row->unit_symbol) === 0 || strcasecmp($u->name, $row->unit_symbol) === 0;
+            return $stockByUnitsRaw->map(function ($row) use ($units) {
+                $matchedUnit = $units->first(function ($u) use ($row) {
+                    return strcasecmp($u->symbol, $row->unit_symbol) === 0 || strcasecmp($u->name, $row->unit_symbol) === 0;
+                });
+                return (object) [
+                    'unit' => strtoupper($row->unit_symbol),
+                    'unit_id' => $matchedUnit?->id,
+                    'name' => $matchedUnit?->name ?? $row->unit_symbol,
+                    'item_count' => (int) $row->item_count,
+                    'total_stock' => (float) $row->total_stock,
+                ];
             });
-            return (object) [
-                'unit' => strtoupper($row->unit_symbol),
-                'unit_id' => $matchedUnit?->id,
-                'name' => $matchedUnit?->name ?? $row->unit_symbol,
-                'item_count' => (int) $row->item_count,
-                'total_stock' => (float) $row->total_stock,
-            ];
         });
 
         // Jika user sedang memfilter berdasarkan satuan tertentu (misal: KG)
