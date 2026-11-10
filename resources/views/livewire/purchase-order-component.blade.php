@@ -413,7 +413,7 @@
                             <label class="block text-xs font-bold text-gray-700 dark:text-gray-300 mb-1">
                                 Peruntukan Proyek (Opsional)
                             </label>
-                            <select wire:model="project_id" class="w-full rounded-xl border border-gray-300 bg-white px-3 py-2 text-xs text-gray-900 focus:border-brand-500 dark:border-gray-700 dark:bg-gray-800 dark:text-white cursor-pointer">
+                            <select wire:model="project_id" class="w-full rounded-xl border border-gray-300 bg-white pl-3 pr-8 py-2 text-xs text-gray-900 focus:border-brand-500 dark:border-gray-700 dark:bg-gray-800 dark:text-white cursor-pointer truncate">
                                 <option value="">Persediaan Umum Gudang (Non-Project)</option>
                                 @foreach($projects as $p)
                                     <option value="{{ $p->id }}">{{ $p->name }}</option>
@@ -479,7 +479,7 @@
                                             <label class="block text-[11px] font-semibold text-gray-600 dark:text-gray-400 mb-0.5">Barang</label>
                                             <select
                                                 wire:model.live="items.{{ $i }}.item_id"
-                                                class="w-full rounded-lg border border-gray-300 bg-white px-2.5 py-1.5 text-xs text-gray-900 focus:border-brand-500 dark:border-gray-700 dark:bg-gray-800 dark:text-white cursor-pointer"
+                                                class="w-full rounded-lg border border-gray-300 bg-white pl-2.5 pr-8 py-1.5 text-xs text-gray-900 focus:border-brand-500 dark:border-gray-700 dark:bg-gray-800 dark:text-white cursor-pointer truncate"
                                             >
                                                 <option value="">-- Pilih Barang dari Master --</option>
                                                 @foreach($availableItems as $ai)
@@ -839,7 +839,7 @@
                         </div>
                         <div>
                             <label class="block text-xs font-bold text-gray-700 dark:text-gray-300 mb-1">Peruntukan Proyek</label>
-                            <select wire:model="project_id" class="w-full rounded-xl border border-gray-300 bg-white px-3 py-2 text-xs text-gray-900 focus:border-brand-500 dark:border-gray-700 dark:bg-gray-800 dark:text-white cursor-pointer">
+                            <select wire:model="project_id" class="w-full rounded-xl border border-gray-300 bg-white pl-3 pr-8 py-2 text-xs text-gray-900 focus:border-brand-500 dark:border-gray-700 dark:bg-gray-800 dark:text-white cursor-pointer truncate">
                                 <option value="">Persediaan Umum Gudang</option>
                                 @foreach($projects as $p)
                                     <option value="{{ $p->id }}">{{ $p->name }}</option>
@@ -902,7 +902,7 @@
                                             <label class="block text-[11px] font-semibold text-gray-600 dark:text-gray-400 mb-0.5">Barang</label>
                                             <select
                                                 wire:model.live="items.{{ $i }}.item_id"
-                                                class="w-full rounded-lg border border-gray-300 bg-white px-2.5 py-1.5 text-xs text-gray-900 focus:border-brand-500 dark:border-gray-700 dark:bg-gray-800 dark:text-white cursor-pointer"
+                                                class="w-full rounded-lg border border-gray-300 bg-white pl-2.5 pr-8 py-1.5 text-xs text-gray-900 focus:border-brand-500 dark:border-gray-700 dark:bg-gray-800 dark:text-white cursor-pointer truncate"
                                             >
                                                 <option value="">-- Pilih Barang --</option>
                                                 @foreach($availableItems as $ai)
