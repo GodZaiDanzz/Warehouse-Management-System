@@ -2319,37 +2319,38 @@
     <!-- ========================================================================= -->
     <!-- MODAL: TERIMA BARANG FISIK DARI PURCHASE ORDER (PO) & HITUNG FISIK GUDANG -->
     <!-- ========================================================================= -->
-    @if ($isReceivePoModalOpen)
-        <div class="fixed inset-0 z-[999999] flex items-center justify-center p-3 sm:p-4 bg-gray-950/80 backdrop-blur-xs overflow-y-auto animate-fadeIn"
-             role="dialog" aria-modal="true">
-            <div class="relative z-10 inline-block w-full max-w-4xl overflow-hidden rounded-2xl border border-gray-200 bg-white text-left shadow-2xl transition-all dark:border-gray-700 dark:bg-gray-900 my-auto max-h-[92vh] flex flex-col">
-                
-                <!-- Modal Header -->
-                <div class="flex items-center justify-between p-5 border-b border-gray-100 dark:border-gray-800 bg-purple-50/40 dark:bg-purple-950/20">
-                    <div class="flex items-center gap-3">
-                        <div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-purple-100 text-purple-700 dark:bg-purple-900/60 dark:text-purple-300">
-                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2"></path><rect x="9" y="3" width="6" height="4" rx="1"></rect><path d="M9 12h6"></path><path d="M9 16h6"></path></svg>
-                        </div>
-                        <div>
-                            <h3 class="text-base font-bold text-gray-900 dark:text-white flex items-center gap-2">
-                                Penerimaan Barang Fisik dari Purchase Order (PO)
-                                <span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300">
-                                    Langsung ACC ke Stok
-                                </span>
-                            </h3>
-                            <p class="text-xs text-gray-500 dark:text-gray-400">
-                                Pilih nomor PO yang datang, input Surat Jalan vendor, lalu sesuaikan jumlah fisik yang dihitung untuk langsung menambah stok gudang.
-                            </p>
-                        </div>
-                    </div>
-                    <button type="button" wire:click="closeReceivePoModal" class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 cursor-pointer">
-                        <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
-                    </button>
-                </div>
-
-                <!-- Modal Body (Scrollable) -->
-                <div class="p-6 overflow-y-auto space-y-4 custom-scrollbar flex-1">
-                    
+    @if ($isReceivePoModalOpen)
+        <div class="fixed inset-0 z-[999999] overflow-y-auto bg-gray-950/80 backdrop-blur-xs animate-fadeIn"
+             role="dialog" aria-modal="true">
+            <div class="flex min-h-full items-center justify-center p-3 sm:p-4 md:p-6 text-center">
+                <div class="relative z-10 inline-block w-full max-w-4xl lg:max-w-5xl overflow-hidden rounded-2xl border border-gray-200 bg-white text-left shadow-2xl transition-all dark:border-gray-700 dark:bg-gray-900 my-auto max-h-[90vh] flex flex-col">
+                
+                <!-- Modal Header -->
+                <div class="flex items-center justify-between p-4 sm:p-5 border-b border-gray-100 dark:border-gray-800 bg-purple-50/40 dark:bg-purple-950/20 shrink-0">
+                    <div class="flex items-center gap-3">
+                        <div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-purple-100 text-purple-700 dark:bg-purple-900/60 dark:text-purple-300">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2"></path><rect x="9" y="3" width="6" height="4" rx="1"></rect><path d="M9 12h6"></path><path d="M9 16h6"></path></svg>
+                        </div>
+                        <div>
+                            <h3 class="text-base font-bold text-gray-900 dark:text-white flex items-center gap-2">
+                                Penerimaan Barang Fisik dari Purchase Order (PO)
+                                <span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300">
+                                    Langsung ACC ke Stok
+                                </span>
+                            </h3>
+                            <p class="text-xs text-gray-500 dark:text-gray-400">
+                                Pilih nomor PO yang datang, input Surat Jalan vendor, lalu sesuaikan jumlah fisik yang dihitung untuk langsung menambah stok gudang.
+                            </p>
+                        </div>
+                    </div>
+                    <button type="button" wire:click="closeReceivePoModal" class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 cursor-pointer p-1 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition">
+                        <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+                    </button>
+                </div>
+
+                <!-- Modal Body (Scrollable with min-h-0) -->
+                <div class="p-4 sm:p-6 overflow-y-auto space-y-4 custom-scrollbar flex-1 min-h-0">
+                    
                     <!-- Section 1: Pilih PO & Surat Jalan Vendor -->
                     <div class="grid grid-cols-1 sm:grid-cols-12 gap-3 p-4 rounded-xl bg-gray-50/80 dark:bg-gray-800/50 border border-gray-200 dark:border-gray-800">
                         <!-- Dropdown Purchase Order -->
@@ -2543,34 +2544,35 @@
 
                 </div>
 
-                <!-- Modal Footer -->
-                <div class="p-4 bg-gray-50 dark:bg-gray-800/80 border-t border-gray-200 dark:border-gray-800 flex items-center justify-end gap-3 rounded-b-2xl">
-                    <button
-                        type="button"
-                        wire:click="closeReceivePoModal"
-                        class="px-4 py-2 text-xs font-semibold rounded-xl border border-gray-300 bg-white text-gray-700 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-300 hover:bg-gray-50 transition cursor-pointer"
-                    >
-                        Batal
-                    </button>
-                    @if(!empty($selectedPoId) && !empty($poItemsToReceive))
-                        <button
-                            type="button"
-                            wire:click="submitReceivePo"
-                            wire:loading.attr="disabled"
-                            class="px-5 py-2 text-xs font-bold rounded-xl bg-purple-600 hover:bg-purple-700 text-white shadow-sm transition flex items-center gap-2 cursor-pointer disabled:opacity-50"
-                        >
-                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
-                            <span wire:loading.remove wire:target="submitReceivePo">ACC & Masukkan ke Stok Gudang</span>
-                            <span wire:loading wire:target="submitReceivePo">Memproses & Tambah Stok...</span>
-                        </button>
-                    @endif
-                </div>
-
-            </div>
-        </div>
-    @endif
-
-
+                <!-- Modal Footer -->
+                <div class="p-4 bg-gray-50 dark:bg-gray-800/80 border-t border-gray-200 dark:border-gray-800 flex items-center justify-end gap-3 rounded-b-2xl shrink-0">
+                    <button
+                        type="button"
+                        wire:click="closeReceivePoModal"
+                        class="px-4 py-2 text-xs font-semibold rounded-xl border border-gray-300 bg-white text-gray-700 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-300 hover:bg-gray-50 transition cursor-pointer"
+                    >
+                        Batal
+                    </button>
+                    @if(!empty($selectedPoId) && !empty($poItemsToReceive))
+                        <button
+                            type="button"
+                            wire:click="submitReceivePo"
+                            wire:loading.attr="disabled"
+                            class="px-5 py-2 text-xs font-bold rounded-xl bg-purple-600 hover:bg-purple-700 text-white shadow-sm transition flex items-center gap-2 cursor-pointer disabled:opacity-50"
+                        >
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+                            <span wire:loading.remove wire:target="submitReceivePo">ACC & Masukkan ke Stok Gudang</span>
+                            <span wire:loading wire:target="submitReceivePo">Memproses & Tambah Stok...</span>
+                        </button>
+                    @endif
+                </div>
+
+                </div>
+            </div>
+        </div>
+    @endif
+
+
     <script>
         window.warehouseItemsList = @json($itemsJsonList ?? []);
         window.warehouseProjectsList = @json($projectsJsonList ?? []);
