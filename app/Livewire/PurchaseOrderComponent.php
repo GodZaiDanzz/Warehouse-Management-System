@@ -180,6 +180,20 @@ class PurchaseOrderComponent extends Component
     }
 
     /**
+     * Computed property: Total estimated monetary value of all items in the form.
+     */
+    public function getTotalEstimatedAmountProperty(): float
+    {
+        $total = 0.0;
+        foreach ($this->items as $row) {
+            $qty = (float) ($row['quantity_ordered'] ?? 0);
+            $price = (float) ($row['unit_price'] ?? 0);
+            $total += ($qty * $price);
+        }
+        return $total;
+    }
+
+    /**
      * Auto-fill unit & price when item is selected.
      */
     public function updatedItems($value, $key)

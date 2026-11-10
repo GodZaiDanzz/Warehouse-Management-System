@@ -495,7 +495,7 @@
                                             <input
                                                 type="number"
                                                 step="any"
-                                                wire:model="items.{{ $i }}.quantity_ordered"
+                                                wire:model.live.debounce.300ms="items.{{ $i }}.quantity_ordered"
                                                 class="w-full rounded-lg border border-gray-300 bg-white px-2.5 py-1.5 text-xs text-gray-900 focus:border-brand-500 dark:border-gray-700 dark:bg-gray-800 dark:text-white"
                                             />
                                             @error("items.{$i}.quantity_ordered") <span class="text-[10px] text-rose-500 block">{{ $message }}</span> @enderror
@@ -518,46 +518,67 @@
                                             <input
                                                 type="number"
                                                 step="any"
-                                                wire:model="items.{{ $i }}.unit_price"
+                                                wire:model.live.debounce.300ms="items.{{ $i }}.unit_price"
                                                 class="w-full rounded-lg border border-gray-300 bg-white px-2.5 py-1.5 text-xs text-gray-900 focus:border-brand-500 dark:border-gray-700 dark:bg-gray-800 dark:text-white"
                                             />
                                         </div>
                                     </div>
 
-                                    <!-- Notes per item -->
-                                    <div>
-                                        <input
-                                            type="text"
-                                            wire:model="items.{{ $i }}.notes"
-                                            placeholder="Catatan spesifikasi/keterangan tambahan per item (opsional)..."
-                                            class="w-full rounded-lg border border-gray-300 bg-white px-2.5 py-1 text-[11px] text-gray-900 focus:border-brand-500 dark:border-gray-700 dark:bg-gray-800 dark:text-white"
-                                        />
+                                    <!-- Notes & Subtotal per item -->
+                                    <div class="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-2 pt-1 border-t border-gray-200/60 dark:border-gray-750">
+                                        <div class="flex-1">
+                                            <input
+                                                type="text"
+                                                wire:model="items.{{ $i }}.notes"
+                                                placeholder="Catatan spesifikasi/keterangan tambahan per item (opsional)..."
+                                                class="w-full rounded-lg border border-gray-200 bg-white px-2.5 py-1 text-[11px] text-gray-900 focus:border-brand-500 dark:border-gray-700 dark:bg-gray-800 dark:text-white"
+                                            />
+                                        </div>
+                                        <div class="text-[11px] text-gray-600 dark:text-gray-300 shrink-0 text-right font-medium">
+                                            Subtotal: <span class="font-bold font-mono text-purple-700 dark:text-purple-300">Rp {{ number_format((float)($itemRow['quantity_ordered'] ?? 0) * (float)($itemRow['unit_price'] ?? 0), 0, ',', '.') }}</span>
+                                        </div>
                                     </div>
                                 </div>
                             @endforeach
+                        </div>
+
+                        <!-- Summary Banner Total PO -->
+                        <div class="mt-3 p-3.5 rounded-xl bg-purple-50/70 dark:bg-purple-950/40 border border-purple-100 dark:border-purple-900/40 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+                            <div>
+                                <span class="text-xs font-semibold text-purple-950 dark:text-purple-200">Total Estimasi Nilai Purchase Order:</span>
+                                <span class="block text-[11px] text-purple-600 dark:text-purple-400">Akumulasi otomatis dari {{ count($items) }} item pesanan</span>
+                            </div>
+                            <div class="text-base sm:text-lg font-bold font-mono text-purple-700 dark:text-purple-300">
+                                Rp {{ number_format($this->totalEstimatedAmount, 0, ',', '.') }}
+                            </div>
                         </div>
                     </div>
 
                 </div>
 
                 <!-- Modal Footer -->
-                <div class="p-4 bg-gray-50 dark:bg-gray-800/80 border-t border-gray-200 dark:border-gray-800 flex items-center justify-end gap-3 rounded-b-2xl shrink-0">
-                    <button
-                        type="button"
-                        wire:click="closeCreateModal"
-                        class="px-4 py-2 text-xs font-semibold rounded-xl border border-gray-300 bg-white text-gray-700 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-300 hover:bg-gray-50 transition cursor-pointer"
-                    >
-                        Batal
-                    </button>
-                    <button
-                        type="button"
-                        wire:click="saveCreate"
-                        wire:loading.attr="disabled"
-                        class="px-5 py-2 text-xs font-bold rounded-xl bg-purple-600 hover:bg-purple-700 text-white shadow-sm transition flex items-center gap-2 cursor-pointer disabled:opacity-50"
-                    >
-                        <span wire:loading.remove wire:target="saveCreate">Terbitkan Purchase Order</span>
-                        <span wire:loading wire:target="saveCreate">Memproses...</span>
-                    </button>
+                <div class="p-4 bg-gray-50 dark:bg-gray-800/80 border-t border-gray-200 dark:border-gray-800 flex flex-col sm:flex-row items-center justify-between gap-3 rounded-b-2xl shrink-0">
+                    <div class="text-xs text-gray-500 hidden sm:block">
+                        <span class="font-semibold text-gray-700 dark:text-gray-300">{{ count($items) }} Item</span> dipesan • Estimasi: <strong class="font-mono text-purple-700 dark:text-purple-400">Rp {{ number_format($this->totalEstimatedAmount, 0, ',', '.') }}</strong>
+                    </div>
+                    <div class="flex items-center gap-2.5 w-full sm:w-auto justify-end">
+                        <button
+                            type="button"
+                            wire:click="closeCreateModal"
+                            class="px-4 py-2 text-xs font-semibold rounded-xl border border-gray-300 bg-white text-gray-700 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-300 hover:bg-gray-50 transition cursor-pointer"
+                        >
+                            Batal
+                        </button>
+                        <button
+                            type="button"
+                            wire:click="saveCreate"
+                            wire:loading.attr="disabled"
+                            class="px-5 py-2 text-xs font-bold rounded-xl bg-purple-600 hover:bg-purple-700 text-white shadow-sm transition flex items-center gap-2 cursor-pointer disabled:opacity-50"
+                        >
+                            <span wire:loading.remove wire:target="saveCreate">Terbitkan Purchase Order</span>
+                            <span wire:loading wire:target="saveCreate">Memproses...</span>
+                        </button>
+                    </div>
                 </div>
 
                 </div>
@@ -895,7 +916,7 @@
                                             <input
                                                 type="number"
                                                 step="any"
-                                                wire:model="items.{{ $i }}.quantity_ordered"
+                                                wire:model.live.debounce.300ms="items.{{ $i }}.quantity_ordered"
                                                 class="w-full rounded-lg border border-gray-300 bg-white px-2.5 py-1.5 text-xs text-gray-900 focus:border-brand-500 dark:border-gray-700 dark:bg-gray-800 dark:text-white"
                                             />
                                         </div>
@@ -914,36 +935,67 @@
                                             <input
                                                 type="number"
                                                 step="any"
-                                                wire:model="items.{{ $i }}.unit_price"
+                                                wire:model.live.debounce.300ms="items.{{ $i }}.unit_price"
                                                 class="w-full rounded-lg border border-gray-300 bg-white px-2.5 py-1.5 text-xs text-gray-900 focus:border-brand-500 dark:border-gray-700 dark:bg-gray-800 dark:text-white"
                                             />
                                         </div>
                                     </div>
+
+                                    <!-- Notes & Subtotal per item in Edit -->
+                                    <div class="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-2 pt-1 border-t border-gray-200/60 dark:border-gray-750">
+                                        <div class="flex-1">
+                                            <input
+                                                type="text"
+                                                wire:model="items.{{ $i }}.notes"
+                                                placeholder="Catatan spesifikasi/keterangan tambahan per item (opsional)..."
+                                                class="w-full rounded-lg border border-gray-200 bg-white px-2.5 py-1 text-[11px] text-gray-900 focus:border-brand-500 dark:border-gray-700 dark:bg-gray-800 dark:text-white"
+                                            />
+                                        </div>
+                                        <div class="text-[11px] text-gray-600 dark:text-gray-300 shrink-0 text-right font-medium">
+                                            Subtotal: <span class="font-bold font-mono text-amber-700 dark:text-amber-400">Rp {{ number_format((float)($itemRow['quantity_ordered'] ?? 0) * (float)($itemRow['unit_price'] ?? 0), 0, ',', '.') }}</span>
+                                        </div>
+                                    </div>
                                 </div>
                             @endforeach
+                        </div>
+
+                        <!-- Summary Banner Total PO Edit -->
+                        <div class="mt-3 p-3.5 rounded-xl bg-amber-50/70 dark:bg-amber-950/40 border border-amber-100 dark:border-amber-900/40 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+                            <div>
+                                <span class="text-xs font-semibold text-amber-950 dark:text-amber-200">Total Estimasi Nilai Purchase Order:</span>
+                                <span class="block text-[11px] text-amber-600 dark:text-amber-400">Akumulasi otomatis dari {{ count($items) }} item pesanan</span>
+                            </div>
+                            <div class="text-base sm:text-lg font-bold font-mono text-amber-700 dark:text-amber-300">
+                                Rp {{ number_format($this->totalEstimatedAmount, 0, ',', '.') }}
+                            </div>
                         </div>
                     </div>
 
                 </div>
 
                 <!-- Modal Footer -->
-                <div class="p-4 bg-gray-50 dark:bg-gray-800/80 border-t border-gray-200 dark:border-gray-800 flex items-center justify-end gap-3 rounded-b-2xl shrink-0">
-                    <button
-                        type="button"
-                        wire:click="closeEditModal"
-                        class="px-4 py-2 text-xs font-semibold rounded-xl border border-gray-300 bg-white text-gray-700 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-300 hover:bg-gray-50 transition cursor-pointer"
-                    >
-                        Batal
-                    </button>
-                    <button
-                        type="button"
-                        wire:click="saveEdit"
-                        wire:loading.attr="disabled"
-                        class="px-5 py-2 text-xs font-bold rounded-xl bg-amber-600 hover:bg-amber-700 text-white shadow-sm transition flex items-center gap-2 cursor-pointer disabled:opacity-50"
-                    >
-                        <span wire:loading.remove wire:target="saveEdit">Simpan Perubahan</span>
-                        <span wire:loading wire:target="saveEdit">Menyimpan...</span>
-                    </button>
+                <div class="p-4 bg-gray-50 dark:bg-gray-800/80 border-t border-gray-200 dark:border-gray-800 flex flex-col sm:flex-row items-center justify-between gap-3 rounded-b-2xl shrink-0">
+                    <div class="text-xs text-gray-500 hidden sm:block">
+                        <span class="font-semibold text-gray-700 dark:text-gray-300">{{ count($items) }} Item</span> dipesan • Estimasi: <strong class="font-mono text-amber-700 dark:text-amber-400">Rp {{ number_format($this->totalEstimatedAmount, 0, ',', '.') }}</strong>
+                    </div>
+                    <div class="flex items-center gap-2.5 w-full sm:w-auto justify-end">
+                        <button
+                            type="button"
+                            wire:click="closeEditModal"
+                            class="px-4 py-2 text-xs font-semibold rounded-xl border border-gray-300 bg-white text-gray-700 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-300 hover:bg-gray-50 transition cursor-pointer"
+                        >
+                            Batal
+                        </button>
+                        <button
+                            type="button"
+                            wire:click="saveEdit"
+                            wire:loading.attr="disabled"
+                            class="px-5 py-2 text-xs font-bold rounded-xl bg-amber-600 hover:bg-amber-700 text-white shadow-sm transition flex items-center gap-2 cursor-pointer disabled:opacity-50"
+                        >
+                            <span wire:loading.remove wire:target="saveEdit">Simpan Perubahan</span>
+                            <span wire:loading wire:target="saveEdit">Menyimpan...</span>
+                        </button>
+                    </div>
                 </div>
 
                 </div>
