@@ -14,6 +14,7 @@ use App\Models\PurchaseOrder;
 use App\Models\PurchaseOrderItem;
 use App\Models\StockLog;
 use App\Models\User;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Livewire\Component;
 use Livewire\WithPagination;
@@ -170,6 +171,11 @@ class MaterialInComponent extends Component
 
     private function syncPendingConsumables()
     {
+        // Early check to avoid expensive relation lookups when no pending records exist
+        if (!MaterialIn::where('qc_status', 'pending_qc')->exists()) {
+            return;
+        }
+
         $pending = MaterialIn::with('item.category')
             ->where('qc_status', 'pending_qc')
             ->whereHas('item.category', function ($q) {
@@ -457,6 +463,7 @@ class MaterialInComponent extends Component
     {
         $this->isModalOpen = false;
         $this->resetForm();
+        self::clearPerformanceCaches();
     }
 
     public function openOffCutModal()
@@ -475,6 +482,7 @@ class MaterialInComponent extends Component
     {
         $this->isOffCutModalOpen = false;
         $this->resetOffCutForm();
+        self::clearPerformanceCaches();
     }
 
     public function resetOffCutForm()
@@ -647,6 +655,7 @@ class MaterialInComponent extends Component
         $this->isReceivePoModalOpen = false;
         $this->poItemsToReceive = [];
         $this->resetErrorBag();
+        self::clearPerformanceCaches();
     }
 
     public function updatedSelectedPoId($val)
@@ -1501,6 +1510,8 @@ class MaterialInComponent extends Component
                 );
             });
 
+            self::clearPerformanceCaches();
+
             session()->flash('success', "Data penerimaan berhasil dihapus. Stok barang telah disesuaikan.");
             $this->dispatch('swal:success', title: 'Deleted!', message: "Data penerimaan berhasil dihapus. Stok barang telah disesuaikan.");
         }
@@ -1971,25 +1982,42 @@ class MaterialInComponent extends Component
         return $query;
     }
 
+    public static function clearPerformanceCaches(): void
+    {
+        Cache::forget('wms_inbound_items_list');
+        Cache::forget('wms_inbound_suppliers');
+        Cache::forget('wms_inbound_projects_payload');
+        Cache::forget('wms_pic_suggestions');
+        Cache::forget('wms_raw_material_parents');
+        Cache::forget('wms_active_units');
+    }
+
     public function render()
     {
         $perPage = CompanyProfile::getDefaultPerPage();
-        $units = \App\Models\Unit::where('is_active', true)->orderBy('name')->get();
+        $units = Cache::remember('wms_active_units', 300, fn() => \App\Models\Unit::where('is_active', true)->orderBy('name')->get());
 
-        $items = Item::select(['id', 'name', 'code_item', 'category_id', 'brand', 'stock', 'unit'])
-            ->with('category:id,name')
-            ->orderBy('name')
-            ->get();
+        $cachedItems = Cache::remember('wms_inbound_items_list', 180, function () {
+            $items = Item::select(['id', 'name', 'code_item', 'category_id', 'brand', 'stock', 'unit'])
+                ->with('category:id,name')
+                ->orderBy('name')
+                ->get();
 
-        $itemsJsonList = $items->map(fn($it) => [
-            'id' => (string) $it->id,
-            'name' => $it->name,
-            'code' => $it->code_item ?? '',
-            'brand' => $it->brand ?? '',
-            'category' => $it->category?->name ?? 'Consumable',
-            'stock' => (float) $it->stock,
-            'unit' => $it->unit ?? 'PCS',
-        ])->values()->toArray();
+            $itemsJsonList = $items->map(fn($it) => [
+                'id' => (string) $it->id,
+                'name' => $it->name,
+                'code' => $it->code_item ?? '',
+                'brand' => $it->brand ?? '',
+                'category' => $it->category?->name ?? 'Consumable',
+                'stock' => (float) $it->stock,
+                'unit' => $it->unit ?? 'PCS',
+            ])->values()->toArray();
+
+            return ['items' => $items, 'itemsJsonList' => $itemsJsonList];
+        });
+
+        $items = $cachedItems['items'];
+        $itemsJsonList = $cachedItems['itemsJsonList'];
 
         // Total Pending QC Global (selalu dihitung karena digunakan di badge tab header)
         $globalPendingQcCount = MaterialIn::where('qc_status', 'pending_qc')
@@ -2000,7 +2028,9 @@ class MaterialInComponent extends Component
 
         if ($this->activeTab === 'inbound') {
             $records = $this->buildQuery()->paginate($perPage, ['*'], 'inboundPage');
-            $suppliers = MaterialIn::select('supplier')->distinct()->whereNotNull('supplier')->where('supplier', '!=', '')->orderBy('supplier')->pluck('supplier');
+            $suppliers = Cache::remember('wms_inbound_suppliers', 300, function () {
+                return MaterialIn::select('supplier')->distinct()->whereNotNull('supplier')->where('supplier', '!=', '')->orderBy('supplier')->pluck('supplier');
+            });
 
             // Mini Dashboard Metrics untuk Inbound
             $baseQuery = $this->buildBaseQuery();
@@ -2041,48 +2071,63 @@ class MaterialInComponent extends Component
             $totalQtyApproved = 0;
         }
 
-        $allRegisteredProjects = Project::whereNull('deleted_at')->orderBy('name')->get();
-        $registeredProjectNames = $allRegisteredProjects->pluck('name')->toArray();
-        $historicalProjects = MaterialOut::select('project')
-            ->distinct()
-            ->whereNotNull('project')
-            ->where('project', '!=', '')
-            ->orderBy('project', 'asc')
-            ->pluck('project')
-            ->toArray();
-        $otherProjectsList = array_values(array_diff($historicalProjects, $registeredProjectNames));
+        $cachedProjects = Cache::remember('wms_inbound_projects_payload', 300, function () {
+            $allRegisteredProjects = Project::whereNull('deleted_at')->orderBy('name')->get();
+            $registeredProjectNames = $allRegisteredProjects->pluck('name')->toArray();
+            $historicalProjects = MaterialOut::select('project')
+                ->distinct()
+                ->whereNotNull('project')
+                ->where('project', '!=', '')
+                ->orderBy('project', 'asc')
+                ->pluck('project')
+                ->toArray();
+            $otherProjectsList = array_values(array_diff($historicalProjects, $registeredProjectNames));
 
-        $projectsJsonList = $allRegisteredProjects->map(fn($p) => [
-            'id' => $p->id,
-            'name' => $p->name,
-            'code' => $p->code ?? '-',
-            'location' => $p->location ?? '',
-            'status' => $p->status ?? 'Ongoing',
-            'client' => $p->client ?? '',
-        ])->values()->toArray();
+            $projectsJsonList = $allRegisteredProjects->map(fn($p) => [
+                'id' => $p->id,
+                'name' => $p->name,
+                'code' => $p->code ?? '-',
+                'location' => $p->location ?? '',
+                'status' => $p->status ?? 'Ongoing',
+                'client' => $p->client ?? '',
+            ])->values()->toArray();
 
-        foreach ($otherProjectsList as $otherName) {
-            if (!empty($otherName)) {
-                $projectsJsonList[] = [
-                    'id' => null,
-                    'name' => $otherName,
-                    'code' => '-',
-                    'status' => 'Historical',
-                    'client' => '',
-                ];
+            foreach ($otherProjectsList as $otherName) {
+                if (!empty($otherName)) {
+                    $projectsJsonList[] = [
+                        'id' => null,
+                        'name' => $otherName,
+                        'code' => '-',
+                        'status' => 'Historical',
+                        'client' => '',
+                    ];
+                }
             }
-        }
 
-        $picsFromOut = MaterialOut::select('pic')->distinct()->whereNotNull('pic')->where('pic', '!=', '')->pluck('pic')->toArray();
-        $userNames = User::pluck('name')->toArray();
-        $picSuggestionsList = array_values(array_unique(array_filter(array_merge($picsFromOut, $userNames))));
-        sort($picSuggestionsList, SORT_NATURAL | SORT_FLAG_CASE);
+            return [
+                'allRegisteredProjects' => $allRegisteredProjects,
+                'projectsJsonList' => $projectsJsonList,
+            ];
+        });
 
-        $rawMaterialParents = Item::inStorage(Item::STORAGE_2)
-            ->where('is_offcut', false)
-            ->whereDoesntHave('category', fn($q) => $q->where('name', 'like', '%off%'))
-            ->orderBy('name')
-            ->get(['id', 'name', 'code_item', 'stock', 'unit', 'location']);
+        $allRegisteredProjects = $cachedProjects['allRegisteredProjects'];
+        $projectsJsonList = $cachedProjects['projectsJsonList'];
+
+        $picSuggestionsList = Cache::remember('wms_pic_suggestions', 300, function () {
+            $picsFromOut = MaterialOut::select('pic')->distinct()->whereNotNull('pic')->where('pic', '!=', '')->pluck('pic')->toArray();
+            $userNames = User::pluck('name')->toArray();
+            $list = array_values(array_unique(array_filter(array_merge($picsFromOut, $userNames))));
+            sort($list, SORT_NATURAL | SORT_FLAG_CASE);
+            return $list;
+        });
+
+        $rawMaterialParents = Cache::remember('wms_raw_material_parents', 300, function () {
+            return Item::inStorage(Item::STORAGE_2)
+                ->where('is_offcut', false)
+                ->whereDoesntHave('category', fn($q) => $q->where('name', 'like', '%off%'))
+                ->orderBy('name')
+                ->get(['id', 'name', 'code_item', 'stock', 'unit', 'location']);
+        });
 
         $openPurchaseOrders = PurchaseOrder::whereIn('status', ['open', 'partial'])
             ->with(['items.item', 'project'])
