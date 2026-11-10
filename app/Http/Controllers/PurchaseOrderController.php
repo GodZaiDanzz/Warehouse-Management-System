@@ -13,6 +13,11 @@ class PurchaseOrderController extends Controller
      */
     public function index()
     {
+        $user = auth()->user();
+        if (!$user || (!$user->isProcurement() && !$user->isWebAdmin())) {
+            return redirect()->route('items.index')->with('error', 'Akses dibatasi: Menu Purchase Order (PO) hanya dapat diakses oleh akun Procurement.');
+        }
+
         return view('pages.purchase-orders.index');
     }
 
@@ -21,6 +26,11 @@ class PurchaseOrderController extends Controller
      */
     public function print(PurchaseOrder $purchaseOrder)
     {
+        $user = auth()->user();
+        if (!$user || (!$user->isProcurement() && !$user->isWebAdmin())) {
+            abort(403, 'Akses ditolak: Dokumen Purchase Order hanya dapat diakses oleh akun Procurement.');
+        }
+
         $purchaseOrder->load(['creator', 'project', 'items.item.category', 'materialIns']);
         $companyProfile = CompanyProfile::getProfile();
 

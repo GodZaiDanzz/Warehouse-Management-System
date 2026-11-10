@@ -84,6 +84,11 @@ class PurchaseOrderComponent extends Component
 
     public function mount()
     {
+        $user = auth()->user();
+        if (!$user || (!$user->isProcurement() && !$user->isWebAdmin())) {
+            abort(403, 'Akses ditolak: Menu Purchase Order (PO) hanya dapat diakses oleh akun Procurement.');
+        }
+
         $this->po_date = date('Y-m-d');
     }
 

@@ -27,9 +27,10 @@ class AdminMiddleware
         }
 
         // Role Gudang (Warehouse): Mengelola transaksi & master gudang,
-        // DIBATASI: Tidak bisa mengakses Pengaturan System, Debugging, Company Profile, dan Switch User.
+        // DIBATASI: Tidak bisa mengakses Pengaturan System, Debugging, Company Profile, Switch User, dan Purchase Order (khusus Procurement).
         if ($user->isWarehouse()) {
             $restrictedForWarehouse = [
+                'purchase-orders*',
                 'company-profile*',
                 'website-theme*',
                 'users*',
@@ -41,13 +42,18 @@ class AdminMiddleware
 
             foreach ($restrictedForWarehouse as $pattern) {
                 if ($request->is($pattern)) {
+                    $isPo = str_starts_with($pattern, 'purchase-orders');
+                    $errorMessage = $isPo
+                        ? 'Akses Dibatasi: Menu Purchase Order (PO) hanya dapat diakses oleh akun Procurement.'
+                        : 'Akses Dibatasi: Role Gudang tidak memiliki izin mengakses kategori Pengaturan System, Debugging, Company Profile, atau Ganti Akun. Fitur ini khusus untuk Web Administrator.';
+
                     if ($request->expectsJson() || $request->ajax()) {
                         return response()->json([
-                            'error' => 'Akses Dibatasi: Role Gudang tidak memiliki izin mengakses kategori Pengaturan System, Debugging, Company Profile, atau Ganti Akun. Fitur ini khusus untuk Web Administrator.'
+                            'error' => $errorMessage
                         ], 403);
                     }
 
-                    return redirect()->route('items.index')->with('error', 'Akses dibatasi: Role Gudang tidak memiliki izin mengakses fitur ini.');
+                    return redirect()->route('items.index')->with('error', $errorMessage);
                 }
             }
 
