@@ -11,6 +11,7 @@ use App\Models\MaterialOut;
 use App\Models\StockLog;
 use App\Services\FastMaterialOutImportService;
 use App\Services\MaterialOutExcelExportService;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Livewire\Component;
 use Livewire\WithFileUploads;
@@ -501,6 +502,7 @@ class MaterialOutComponent extends Component
     {
         $this->isModalOpen = false;
         $this->resetForm();
+        self::clearPerformanceCaches();
     }
 
     private function resetForm()
@@ -862,6 +864,8 @@ class MaterialOutComponent extends Component
             $record->delete();
         });
 
+        self::clearPerformanceCaches();
+
         session()->flash('success', 'Data Material Keluar berhasil dihapus dan stok barang telah dikembalikan.');
         $this->dispatch('swal:success', title: 'Deleted!', message: 'Data Material Keluar berhasil dihapus dan stok barang telah dikembalikan.');
     }
@@ -949,11 +953,24 @@ class MaterialOutComponent extends Component
         return $query->latest('date')->latest('id');
     }
 
+    public static function clearPerformanceCaches(): void
+    {
+        Cache::forget('wms_out_units');
+        Cache::forget('wms_out_projects_payload');
+        Cache::forget('wms_pic_suggestions');
+        Cache::forget('wms_out_module_counts');
+        Cache::forget('wms_out_total_trans');
+        Cache::forget('wms_out_total_projects');
+        Cache::forget('wms_out_month_stats_' . now()->format('Y_m'));
+    }
+
     public function render()
     {
         $perPage = CompanyProfile::getDefaultPerPage();
         $materialOuts = $this->getFilteredQuery()->paginate($perPage);
-        $units = \App\Models\Unit::select(['id', 'name', 'symbol'])->where('is_active', true)->orderBy('name')->get();
+        $units = Cache::remember('wms_out_units', 300, function () {
+            return \App\Models\Unit::select(['id', 'name', 'symbol'])->where('is_active', true)->orderBy('name')->get();
+        });
         
         // Scope items list if activeModule is set
         $itemsQuery = Item::select(['id', 'name', 'code_item', 'category_id', 'brand', 'stock', 'unit', 'is_offcut', 'dimension', 'parent_item_id', 'origin_project', 'heat_number'])
@@ -978,21 +995,55 @@ class MaterialOutComponent extends Component
             ? $items 
             : Item::select(['id', 'name', 'code_item', 'category_id', 'brand', 'stock', 'unit', 'is_offcut', 'dimension', 'parent_item_id', 'origin_project', 'heat_number'])->with(['category:id,name', 'parentItem:id,name'])->orderBy('name', 'asc')->get();
 
-        $allRegisteredProjects = \App\Models\Project::select(['id', 'name', 'code', 'location', 'status', 'client'])->orderBy('name', 'asc')->get();
-        $registeredProjectNames = $allRegisteredProjects->pluck('name')->toArray();
+        $cachedProjectData = Cache::remember('wms_out_projects_payload', 300, function () {
+            $allRegisteredProjects = \App\Models\Project::select(['id', 'name', 'code', 'location', 'status', 'client'])->orderBy('name', 'asc')->get();
+            $registeredProjectNames = $allRegisteredProjects->pluck('name')->toArray();
 
-        $historicalProjects = MaterialOut::select('project')
-            ->distinct()
-            ->whereNotNull('project')
-            ->where('project', '!=', '')
-            ->orderBy('project', 'asc')
-            ->pluck('project')
-            ->toArray();
+            $historicalProjects = MaterialOut::select('project')
+                ->distinct()
+                ->whereNotNull('project')
+                ->where('project', '!=', '')
+                ->orderBy('project', 'asc')
+                ->pluck('project')
+                ->toArray();
 
-        $otherProjectsList = array_values(array_diff($historicalProjects, $registeredProjectNames));
+            $otherProjectsList = array_values(array_diff($historicalProjects, $registeredProjectNames));
+            $projectsList = array_unique(array_merge($registeredProjectNames, $historicalProjects));
+            sort($projectsList);
 
-        $projectsList = array_unique(array_merge($registeredProjectNames, $historicalProjects));
-        sort($projectsList);
+            $projectsJsonList = $allRegisteredProjects->map(fn($p) => [
+                'id' => $p->id,
+                'name' => $p->name,
+                'code' => $p->code ?? '-',
+                'location' => $p->location ?? '',
+                'status' => $p->status ?? 'Ongoing',
+                'client' => $p->client ?? '',
+            ])->values()->toArray();
+
+            foreach ($otherProjectsList as $otherName) {
+                if (!empty($otherName)) {
+                    $projectsJsonList[] = [
+                        'id' => null,
+                        'name' => $otherName,
+                        'code' => '-',
+                        'status' => 'Historical',
+                        'client' => '',
+                    ];
+                }
+            }
+
+            return [
+                'allRegisteredProjects' => $allRegisteredProjects,
+                'projectsList' => $projectsList,
+                'projectsJsonList' => $projectsJsonList,
+                'otherProjectsList' => $otherProjectsList,
+            ];
+        });
+
+        $allRegisteredProjects = $cachedProjectData['allRegisteredProjects'];
+        $projectsList = $cachedProjectData['projectsList'];
+        $projectsJsonList = $cachedProjectData['projectsJsonList'];
+        $otherProjectsList = $cachedProjectData['otherProjectsList'] ?? [];
 
         $filteredTotalQuantity = $this->getFilteredQuery()->sum('quantity');
         $filteredTotalRecords = $this->getFilteredQuery()->count();
@@ -1002,69 +1053,57 @@ class MaterialOutComponent extends Component
             ? ImportStatus::find($this->activeImportId)
             : ImportStatus::where('user_id', $userId)->latest()->first();
 
-        // Stat metrics
-        $totalTransactions = MaterialOut::count();
-        $totalProjects = MaterialOut::distinct('project')->count('project');
+        // Stat metrics cached for performance
+        $totalTransactions = Cache::remember('wms_out_total_trans', 120, fn() => MaterialOut::count());
+        $totalProjects = Cache::remember('wms_out_total_projects', 120, fn() => MaterialOut::distinct('project')->count('project'));
 
-        // Separate discrete and decimal outputs for this month
-        $monthOutRows = MaterialOut::whereMonth('date', now()->month)
-            ->whereYear('date', now()->year)
-            ->leftJoin('items', 'material_outs.item_id', '=', 'items.id')
-            ->select('material_outs.quantity', DB::raw("UPPER(TRIM(COALESCE(material_outs.unit, items.unit, 'PCS'))) as item_unit"))
-            ->get();
+        // Separate discrete and decimal outputs for this month (cached)
+        $monthStats = Cache::remember('wms_out_month_stats_' . now()->format('Y_m'), 120, function () {
+            $monthOutRows = MaterialOut::whereMonth('date', now()->month)
+                ->whereYear('date', now()->year)
+                ->leftJoin('items', 'material_outs.item_id', '=', 'items.id')
+                ->select('material_outs.quantity', DB::raw("UPPER(TRIM(COALESCE(material_outs.unit, items.unit, 'PCS'))) as item_unit"))
+                ->get();
 
-        $monthDiscreteQty = 0;
-        $monthDecimalTotals = [];
-        foreach ($monthOutRows as $mo) {
-            $u = $mo->item_unit;
-            $q = (float) $mo->quantity;
-            if (is_decimal_unit($u)) {
-                $monthDecimalTotals[$u] = ($monthDecimalTotals[$u] ?? 0) + $q;
-            } else {
-                $monthDiscreteQty += $q;
+            $monthDiscreteQty = 0;
+            $monthDecimalTotals = [];
+            foreach ($monthOutRows as $mo) {
+                $u = $mo->item_unit;
+                $q = (float) $mo->quantity;
+                if (is_decimal_unit($u)) {
+                    $monthDecimalTotals[$u] = ($monthDecimalTotals[$u] ?? 0) + $q;
+                } else {
+                    $monthDiscreteQty += $q;
+                }
             }
-        }
-        $monthDecimalString = format_unit_breakdown($monthDecimalTotals);
+            return [
+                'discrete' => $monthDiscreteQty,
+                'decimal_str' => format_unit_breakdown($monthDecimalTotals),
+            ];
+        });
+        $monthDiscreteQty = $monthStats['discrete'];
+        $monthDecimalString = $monthStats['decimal_str'];
 
-        // Module specific counts in 1 consolidated query
+        // Module specific counts in 1 consolidated cached query
         $catCategoryIds = Category::getCatCategoryIds();
         $catIdsSql = !empty($catCategoryIds) ? implode(',', $catCategoryIds) : '0';
-        $moduleCounts = MaterialOut::leftJoin('items', 'material_outs.item_id', '=', 'items.id')
-            ->leftJoin('categories', 'items.category_id', '=', 'categories.id')
-            ->selectRaw("
-                COUNT(CASE WHEN categories.name = 'Consumable' THEN 1 END) as consumable_count,
-                COUNT(CASE WHEN categories.name = 'Secondary Part' THEN 1 END) as secondary_count,
-                COUNT(CASE WHEN categories.name LIKE '%Cat%' OR items.category_id IN ({$catIdsSql}) THEN 1 END) as cat_count,
-                COUNT(CASE WHEN categories.name LIKE '%Raw Material%' THEN 1 END) as raw_material_count,
-                COUNT(CASE WHEN categories.name LIKE '%Gas%' THEN 1 END) as gas_count
-            ")->first();
+        $moduleCounts = Cache::remember('wms_out_module_counts', 120, function () use ($catIdsSql) {
+            return MaterialOut::leftJoin('items', 'material_outs.item_id', '=', 'items.id')
+                ->leftJoin('categories', 'items.category_id', '=', 'categories.id')
+                ->selectRaw("
+                    COUNT(CASE WHEN categories.name = 'Consumable' THEN 1 END) as consumable_count,
+                    COUNT(CASE WHEN categories.name = 'Secondary Part' THEN 1 END) as secondary_count,
+                    COUNT(CASE WHEN categories.name LIKE '%Cat%' OR items.category_id IN ({$catIdsSql}) THEN 1 END) as cat_count,
+                    COUNT(CASE WHEN categories.name LIKE '%Raw Material%' THEN 1 END) as raw_material_count,
+                    COUNT(CASE WHEN categories.name LIKE '%Gas%' THEN 1 END) as gas_count
+                ")->first();
+        });
 
         $consumableCount = (int) ($moduleCounts->consumable_count ?? 0);
         $secondaryCount = (int) ($moduleCounts->secondary_count ?? 0);
         $catCount = (int) ($moduleCounts->cat_count ?? 0);
         $rawMaterialCount = (int) ($moduleCounts->raw_material_count ?? 0);
         $gasCount = (int) ($moduleCounts->gas_count ?? 0);
-
-        $projectsJsonList = $allRegisteredProjects->map(fn($p) => [
-            'id' => $p->id,
-            'name' => $p->name,
-            'code' => $p->code ?? '-',
-            'location' => $p->location ?? '',
-            'status' => $p->status ?? 'Ongoing',
-            'client' => $p->client ?? '',
-        ])->values()->toArray();
-
-        foreach ($otherProjectsList as $otherName) {
-            if (!empty($otherName)) {
-                $projectsJsonList[] = [
-                    'id' => null,
-                    'name' => $otherName,
-                    'code' => '-',
-                    'status' => 'Historical',
-                    'client' => '',
-                ];
-            }
-        }
 
         $itemsJsonList = $items->map(fn($it) => [
             'id' => (string) $it->id,
@@ -1080,17 +1119,13 @@ class MaterialOutComponent extends Component
             'parent_name' => $it->parentItem?->name ?? '',
         ])->values()->toArray();
 
-        $picsFromOut = MaterialOut::select('pic')
-            ->distinct()
-            ->whereNotNull('pic')
-            ->where('pic', '!=', '')
-            ->pluck('pic')
-            ->toArray();
-
-        $userNames = \App\Models\User::pluck('name')->toArray();
-
-        $picSuggestionsList = array_values(array_unique(array_filter(array_merge($picsFromOut, $userNames))));
-        sort($picSuggestionsList, SORT_NATURAL | SORT_FLAG_CASE);
+        $picSuggestionsList = Cache::remember('wms_pic_suggestions', 300, function () {
+            $picsFromOut = MaterialOut::select('pic')->distinct()->whereNotNull('pic')->where('pic', '!=', '')->pluck('pic')->toArray();
+            $userNames = \App\Models\User::pluck('name')->toArray();
+            $list = array_values(array_unique(array_filter(array_merge($picsFromOut, $userNames))));
+            sort($list, SORT_NATURAL | SORT_FLAG_CASE);
+            return $list;
+        });
 
         return view('livewire.material-out-component', [
             'materialOuts' => $materialOuts,
