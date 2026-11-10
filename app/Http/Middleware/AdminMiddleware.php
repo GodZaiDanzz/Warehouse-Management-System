@@ -96,6 +96,21 @@ class AdminMiddleware
             return redirect()->route('material-in.index')->with('error', 'Akses dibatasi: Akun QC hanya memiliki izin untuk mengakses Material Masuk.');
         }
 
+        // Procurement Role: Mengelola Purchase Order, melihat katalog barang, dan rekap proyek
+        if ($user->isProcurement()) {
+            if ($request->is('/') || $request->is('purchase-orders*') || $request->is('items*') || $request->is('projects*') || $request->is('livewire*') || $request->is('user-profile*') || $request->is('logout*')) {
+                return $next($request);
+            }
+
+            if ($request->expectsJson() || $request->ajax()) {
+                return response()->json([
+                    'error' => 'Akses Dibatasi: Role Procurement hanya memiliki izin mengakses Purchase Order, Katalog Barang, dan Rekap Proyek.'
+                ], 403);
+            }
+
+            return redirect()->route('purchase-orders.index')->with('error', 'Akses dibatasi: Role Procurement hanya memiliki izin mengakses Purchase Order, Katalog Barang, dan Rekap Proyek.');
+        }
+
         return $next($request);
     }
 }

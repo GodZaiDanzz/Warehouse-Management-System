@@ -93,11 +93,28 @@ class User extends Authenticatable
     }
 
     /**
-     * Check if user can view prices and stock asset valuation (Web Administrator & Finance).
+     * Check if user is procurement role.
+     */
+    public function isProcurement(): bool
+    {
+        $role = strtolower(trim($this->role ?? ''));
+        return in_array($role, ['procurement', 'purchasing']);
+    }
+
+    /**
+     * Check if user can manage Purchase Orders (Procurement & Web Administrator).
+     */
+    public function canManageProcurement(): bool
+    {
+        return $this->isProcurement() || $this->isWebAdmin();
+    }
+
+    /**
+     * Check if user can view prices and stock asset valuation (Web Administrator, Finance, & Procurement).
      */
     public function canViewPrices(): bool
     {
-        return $this->isWebAdmin() || $this->isFinance();
+        return $this->isWebAdmin() || $this->isFinance() || $this->isProcurement();
     }
 
     /**
@@ -116,6 +133,7 @@ class User extends Authenticatable
     {
         $role = strtolower(trim($this->role ?? ''));
         return match (true) {
+            in_array($role, ['procurement', 'purchasing']) => 'Procurement (Purchasing)',
             in_array($role, ['finance', 'keuangan']) => 'Finance (Keuangan)',
             in_array($role, ['ppic']) => 'PPIC (View Only)',
             in_array($role, ['qc']) => 'Quality Control (QC)',
@@ -131,6 +149,7 @@ class User extends Authenticatable
     {
         $role = strtolower(trim($this->role ?? ''));
         return match (true) {
+            in_array($role, ['procurement', 'purchasing']) => 'Kelola Purchase Order (PO) & Pengadaan Material',
             in_array($role, ['finance', 'keuangan']) => 'Melihat Stok, Nilai Aset & Rekap Harga Barang',
             in_array($role, ['ppic']) => 'Melihat Ketersediaan Stok Barang',
             in_array($role, ['qc']) => 'Memiliki Akses ke Menu Material Masuk & Inspeksi Mutu',

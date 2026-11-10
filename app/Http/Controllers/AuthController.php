@@ -22,6 +22,9 @@ class AuthController extends Controller
             if ($user->isQc()) {
                 return redirect()->route('material-in.index');
             }
+            if ($user->isProcurement()) {
+                return redirect()->route('purchase-orders.index');
+            }
             return redirect()->route('dashboard');
         }
 
@@ -60,6 +63,10 @@ class AuthController extends Controller
 
             if ($user->isQc()) {
                 return redirect()->intended(route('material-in.index'))->with('success', 'Selamat datang, ' . $user->name . ' (Akses QC: Material Masuk).');
+            }
+
+            if ($user->isProcurement()) {
+                return redirect()->intended(route('purchase-orders.index'))->with('success', 'Selamat datang, ' . $user->name . ' (Akses Procurement: Purchase Order).');
             }
 
             return redirect()->intended(route('dashboard'))->with('success', 'Selamat datang kembali, ' . $user->name . '!');
@@ -127,6 +134,10 @@ class AuthController extends Controller
 
         if ($user->isQc()) {
             return redirect()->route('material-in.index')->with('success', 'Beralih ke akun ' . $user->name . ' [' . $roleText . '].');
+        }
+
+        if ($user->isProcurement()) {
+            return redirect()->route('purchase-orders.index')->with('success', 'Beralih ke akun ' . $user->name . ' [' . $roleText . '].');
         }
 
         if ($user->isPpic()) {

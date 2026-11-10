@@ -201,3 +201,17 @@ if (!function_exists('unit_code')) {
     }
 }
 
+if (!function_exists('format_number')) {
+    /**
+     * Format a generic numeric value cleanly using format_quantity formatting.
+     */
+    function format_number($value, int $decimals = 0): string
+    {
+        if ($value === null || $value === '') {
+            return '0';
+        }
+        return format_quantity($value);
+    }
+}
+
+

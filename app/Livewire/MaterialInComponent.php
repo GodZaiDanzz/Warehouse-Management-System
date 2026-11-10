@@ -10,6 +10,8 @@ use App\Models\MaterialIn;
 use App\Models\MaterialOut;
 use App\Models\MaterialReject;
 use App\Models\Project;
+use App\Models\PurchaseOrder;
+use App\Models\PurchaseOrderItem;
 use App\Models\StockLog;
 use App\Models\User;
 use Illuminate\Support\Facades\DB;
@@ -85,6 +87,16 @@ class MaterialInComponent extends Component
     public $offCutHeatNumber = '';
     public $offCutLocation = 'STORAGE 2 (Area Sisa / Off-Cut)';
     public $offCutNotes = '';
+
+    // Terima Barang dari Purchase Order (PO) Modal States
+    public bool $isReceivePoModalOpen = false;
+    public $selectedPoId = '';
+    public string $poDeliveryOrderNumber = '';
+    public string $poReceivedDate = '';
+    public string $poReceivedBy = '';
+    public string $poLocation = 'STORAGE 1';
+    public string $poGeneralNotes = '';
+    public array $poItemsToReceive = [];
 
     // QC Inspection Modal
     public bool $isQcModalOpen = false;
@@ -610,6 +622,189 @@ class MaterialInComponent extends Component
         });
 
         $this->closeOffCutModal();
+    }
+
+    public function openReceivePoModal()
+    {
+        if (auth()->user() && auth()->user()->isPpic()) {
+            session()->flash('error', 'Akses Ditolak: Akun PPIC hanya memiliki hak akses melihat riwayat.');
+            return;
+        }
+
+        $this->poReceivedDate = date('Y-m-d');
+        $this->poReceivedBy = auth()->user()->name ?? 'Staff Gudang';
+        $this->selectedPoId = '';
+        $this->poDeliveryOrderNumber = '';
+        $this->poLocation = 'STORAGE 1';
+        $this->poGeneralNotes = '';
+        $this->poItemsToReceive = [];
+        $this->resetErrorBag();
+        $this->isReceivePoModalOpen = true;
+    }
+
+    public function closeReceivePoModal()
+    {
+        $this->isReceivePoModalOpen = false;
+        $this->poItemsToReceive = [];
+        $this->resetErrorBag();
+    }
+
+    public function updatedSelectedPoId($val)
+    {
+        $this->poItemsToReceive = [];
+
+        if (empty($val)) {
+            return;
+        }
+
+        $po = PurchaseOrder::with(['items.item', 'project'])->find($val);
+        if (!$po) {
+            return;
+        }
+
+        $this->poGeneralNotes = "Penerimaan PO #{$po->po_number} - Supplier: {$po->supplier}";
+
+        foreach ($po->items as $item) {
+            $remaining = (float) $item->quantity_remaining;
+            if ($remaining > 0) {
+                $this->poItemsToReceive[] = [
+                    'po_item_id' => $item->id,
+                    'item_id' => $item->item_id,
+                    'item_code' => $item->item ? $item->item->item_code : '-',
+                    'item_name' => $item->item ? $item->item->name : '-',
+                    'quantity_ordered' => (float) $item->quantity_ordered,
+                    'quantity_received_so_far' => (float) $item->quantity_received,
+                    'quantity_remaining' => $remaining,
+                    'quantity_to_receive' => $remaining,
+                    'unit' => $item->unit,
+                    'location' => 'STORAGE 1',
+                    'manufacturing_date' => null,
+                    'expiry_date' => null,
+                    'notes' => '',
+                    'selected' => true,
+                ];
+            }
+        }
+    }
+
+    public function submitReceivePo()
+    {
+        if (auth()->user() && auth()->user()->isPpic()) {
+            session()->flash('error', 'Akses Ditolak: Akun PPIC tidak memiliki izin penerimaan barang.');
+            return;
+        }
+
+        $this->validate([
+            'selectedPoId' => 'required|exists:purchase_orders,id',
+            'poDeliveryOrderNumber' => 'required|string|max:100',
+            'poReceivedDate' => 'required|date',
+            'poReceivedBy' => 'required|string|max:255',
+            'poItemsToReceive' => 'required|array|min:1',
+        ], [
+            'selectedPoId.required' => 'Silakan pilih Purchase Order yang akan diterima.',
+            'poDeliveryOrderNumber.required' => 'Nomor Surat Jalan / Delivery Order (DO) vendor wajib diisi.',
+            'poReceivedDate.required' => 'Tanggal penerimaan fisik wajib diisi.',
+            'poReceivedBy.required' => 'Nama staff penerima gudang wajib diisi.',
+            'poItemsToReceive.required' => 'Tidak ada item yang dapat diterima pada PO ini.',
+        ]);
+
+        $itemsToProcess = [];
+        foreach ($this->poItemsToReceive as $idx => $row) {
+            if (!empty($row['selected']) && (float) ($row['quantity_to_receive'] ?? 0) > 0) {
+                $qty = (float) $row['quantity_to_receive'];
+                $remaining = (float) $row['quantity_remaining'];
+
+                if ($qty > $remaining) {
+                    $this->addError("poItemsToReceive.{$idx}.quantity_to_receive", "Jumlah fisik yang dihitung ({$qty}) melebihi sisa pesanan ({$remaining}).");
+                    return;
+                }
+
+                $itemsToProcess[] = $row;
+            }
+        }
+
+        if (empty($itemsToProcess)) {
+            session()->flash('error', 'Silakan centang minimal 1 item barang yang diterima fisik dengan jumlah lebih dari 0.');
+            return;
+        }
+
+        DB::transaction(function () use ($itemsToProcess) {
+            $po = PurchaseOrder::lockForUpdate()->findOrFail($this->selectedPoId);
+            $totalReceivedItems = 0;
+
+            foreach ($itemsToProcess as $row) {
+                $poItem = PurchaseOrderItem::lockForUpdate()->findOrFail($row['po_item_id']);
+                $item = Item::lockForUpdate()->findOrFail($row['item_id']);
+                $qty = (float) $row['quantity_to_receive'];
+                $unit = $poItem->unit ?: $item->unit;
+                $location = !empty($row['location']) ? $row['location'] : $this->poLocation;
+
+                $refNo = 'IN-PO-' . date('Ymd') . '-' . strtoupper(substr(uniqid(), -4));
+
+                // 1. Buat record MaterialIn (qc_status = 'approved' atas instruksi: tidak perlu QC untuk penerimaan PO)
+                MaterialIn::create([
+                    'purchase_order_id' => $po->id,
+                    'purchase_order_item_id' => $poItem->id,
+                    'reference_number' => $refNo,
+                    'po_number' => trim($this->poDeliveryOrderNumber),
+                    'delivery_order_number' => trim($this->poDeliveryOrderNumber),
+                    'date' => $this->poReceivedDate,
+                    'item_id' => $item->id,
+                    'unit_id' => $item->unit_id,
+                    'quantity' => $qty,
+                    'unit' => $unit,
+                    'supplier' => $po->supplier,
+                    'received_by' => trim($this->poReceivedBy),
+                    'location' => $location,
+                    'notes' => !empty($row['notes']) ? trim($row['notes']) : $this->poGeneralNotes,
+                    'manufacturing_date' => !empty($row['manufacturing_date']) ? $row['manufacturing_date'] : null,
+                    'expiry_date' => !empty($row['expiry_date']) ? $row['expiry_date'] : null,
+                    'qc_status' => 'approved',
+                    'qc_by' => auth()->id() ?? 1,
+                    'qc_at' => now(),
+                    'qc_notes' => "ACC Otomatis dari PO #{$po->po_number} (Surat Jalan: {$this->poDeliveryOrderNumber})",
+                    'user_id' => auth()->id() ?? 1,
+                ]);
+
+                // 2. Tambah stok master barang
+                $item->increment('stock', $qty);
+
+                if (!empty($row['expiry_date'])) {
+                    $item->update(['expiry_date' => $row['expiry_date']]);
+                }
+
+                // 3. Catat Stock Log
+                StockLog::create([
+                    'reference_number' => $refNo,
+                    'item_id' => $item->id,
+                    'type' => 'in',
+                    'quantity' => $qty,
+                    'recipient_or_provider' => $po->supplier,
+                    'notes' => "Penerimaan PO #{$po->po_number} (SJ: {$this->poDeliveryOrderNumber})",
+                    'user_id' => auth()->id() ?? 1,
+                ]);
+
+                // 4. Update quantity_received di PurchaseOrderItem
+                $poItem->quantity_received = (float) $poItem->quantity_received + $qty;
+                $poItem->save();
+
+                $totalReceivedItems++;
+            }
+
+            // 5. Update status PO (open -> partial -> completed)
+            $po->recalculateStatus();
+
+            ActivityLog::record(
+                activity: 'Penerimaan Barang PO',
+                description: 'Gudang menerima ' . $totalReceivedItems . ' item dari PO #' . $po->po_number . ' (Surat Jalan: ' . $this->poDeliveryOrderNumber . ') dan langsung di-ACC ke stok.',
+                module: 'Material Masuk'
+            );
+
+            session()->flash('success', "Penerimaan PO #{$po->po_number} berhasil di-ACC! {$totalReceivedItems} item telah otomatis ditambahkan ke stok gudang.");
+            $this->dispatch('swal:success', title: 'Berhasil!', message: "Penerimaan barang dari PO #{$po->po_number} telah di-ACC dan otomatis masuk ke inventaris stok gudang!");
+        });
+
+        $this->closeReceivePoModal();
     }
 
     private function resetForm()
@@ -1889,6 +2084,11 @@ class MaterialInComponent extends Component
             ->orderBy('name')
             ->get(['id', 'name', 'code_item', 'stock', 'unit', 'location']);
 
+        $openPurchaseOrders = PurchaseOrder::whereIn('status', ['open', 'partial'])
+            ->with(['items.item', 'project'])
+            ->latest('po_date')
+            ->get();
+
         return view('livewire.material-in-component', [
             'records' => $records,
             'units' => $units,
@@ -1913,6 +2113,7 @@ class MaterialInComponent extends Component
             'totalPendingDisposition' => $totalPendingDisposition,
             'totalCompletedDisposition' => $totalCompletedDisposition,
             'rejectSuppliers' => $rejectSuppliers,
+            'openPurchaseOrders' => $openPurchaseOrders,
         ]);
     }
 }

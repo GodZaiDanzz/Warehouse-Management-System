@@ -208,6 +208,11 @@
                 </button>
 
                 @if(!auth()->user() || !auth()->user()->isPpic())
+                    <button type="button" wire:click="openReceivePoModal" class="inline-flex items-center gap-1.5 px-3.5 py-2 text-xs font-bold rounded-xl bg-purple-600 text-white hover:bg-purple-700 transition shadow-xs cursor-pointer" title="Terima Barang Datang Berdasarkan Purchase Order (PO) & Hitung Fisik untuk Langsung ACC ke Stok">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2"></path><rect x="9" y="3" width="6" height="4" rx="1"></rect><path d="M9 12h6"></path><path d="M9 16h6"></path></svg>
+                        <span>Terima dari PO</span>
+                    </button>
+
                     <button type="button" wire:click="openOffCutModal" class="inline-flex items-center gap-1.5 px-3.5 py-2 text-xs font-bold rounded-xl bg-amber-600 text-white hover:bg-amber-700 transition shadow-xs cursor-pointer" title="Catat Pengembalian Sisa Potongan Raw Material dari Workshop ke Storage 2">
                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.121 14.121L19 19m-7-7l7-7m-7 7l-2.879 2.879a3 3 0 11-4.242-4.242L10.758 7.758M12 12l2.879-2.879a3 3 0 10-4.242-4.242L7.758 10.758"/></svg>
                         <span>Retur Sisa (Off-Cut)</span>
@@ -450,6 +455,14 @@
                             </td>
                             <td class="px-4 py-3">
                                 <span class="font-bold text-gray-900 dark:text-white block">{{ $row->supplier ?: '-' }}</span>
+                                @if($row->purchaseOrder)
+                                    <span class="inline-flex items-center gap-1 mt-0.5 px-2 py-0.5 rounded text-[10px] font-mono font-bold bg-purple-50 text-purple-700 dark:bg-purple-950/60 dark:text-purple-300 border border-purple-200 dark:border-purple-800/60" title="Diterima dari PO {{ $row->purchaseOrder->po_number }}">
+                                        PO: {{ $row->purchaseOrder->po_number }}
+                                    </span>
+                                @endif
+                                @if($row->delivery_order_number)
+                                    <span class="text-[10px] text-gray-400 block font-mono">SJ: {{ $row->delivery_order_number }}</span>
+                                @endif
                             </td>
                             <td class="px-4 py-3 whitespace-nowrap">
                                 <span class="block font-semibold">{{ $row->received_by }}</span>
@@ -2301,6 +2314,262 @@
             </div>
         </div>
     @endif
+
+
+    <!-- ========================================================================= -->
+    <!-- MODAL: TERIMA BARANG FISIK DARI PURCHASE ORDER (PO) & HITUNG FISIK GUDANG -->
+    <!-- ========================================================================= -->
+    @if ($isReceivePoModalOpen)
+        <div class="fixed inset-0 z-[999999] flex items-center justify-center p-3 sm:p-4 bg-gray-950/80 backdrop-blur-xs overflow-y-auto animate-fadeIn"
+             role="dialog" aria-modal="true">
+            <div class="relative z-10 inline-block w-full max-w-4xl overflow-hidden rounded-2xl border border-gray-200 bg-white text-left shadow-2xl transition-all dark:border-gray-700 dark:bg-gray-900 my-auto max-h-[92vh] flex flex-col">
+                
+                <!-- Modal Header -->
+                <div class="flex items-center justify-between p-5 border-b border-gray-100 dark:border-gray-800 bg-purple-50/40 dark:bg-purple-950/20">
+                    <div class="flex items-center gap-3">
+                        <div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-purple-100 text-purple-700 dark:bg-purple-900/60 dark:text-purple-300">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2"></path><rect x="9" y="3" width="6" height="4" rx="1"></rect><path d="M9 12h6"></path><path d="M9 16h6"></path></svg>
+                        </div>
+                        <div>
+                            <h3 class="text-base font-bold text-gray-900 dark:text-white flex items-center gap-2">
+                                Penerimaan Barang Fisik dari Purchase Order (PO)
+                                <span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300">
+                                    Langsung ACC ke Stok
+                                </span>
+                            </h3>
+                            <p class="text-xs text-gray-500 dark:text-gray-400">
+                                Pilih nomor PO yang datang, input Surat Jalan vendor, lalu sesuaikan jumlah fisik yang dihitung untuk langsung menambah stok gudang.
+                            </p>
+                        </div>
+                    </div>
+                    <button type="button" wire:click="closeReceivePoModal" class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 cursor-pointer">
+                        <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+                    </button>
+                </div>
+
+                <!-- Modal Body (Scrollable) -->
+                <div class="p-6 overflow-y-auto space-y-4 custom-scrollbar flex-1">
+                    
+                    <!-- Section 1: Pilih PO & Surat Jalan Vendor -->
+                    <div class="grid grid-cols-1 sm:grid-cols-12 gap-3 p-4 rounded-xl bg-gray-50/80 dark:bg-gray-800/50 border border-gray-200 dark:border-gray-800">
+                        <!-- Dropdown Purchase Order -->
+                        <div class="sm:col-span-7">
+                            <label class="block text-xs font-bold text-gray-700 dark:text-gray-300 mb-1">
+                                Pilih Purchase Order (PO) <span class="text-rose-500">*</span>
+                            </label>
+                            <select
+                                wire:model.live="selectedPoId"
+                                class="w-full rounded-xl border border-gray-300 bg-white px-3 py-2 text-xs font-bold text-gray-900 focus:border-purple-500 dark:border-gray-700 dark:bg-gray-800 dark:text-white cursor-pointer"
+                            >
+                                <option value="">-- Pilih Purchase Order Aktif --</option>
+                                @foreach($openPurchaseOrders as $opo)
+                                    <option value="{{ $opo->id }}">
+                                        {{ $opo->po_number }} - {{ $opo->supplier }} ({{ $opo->project ? 'Proyek: ' . $opo->project->name : 'Persediaan Umum' }}) [{{ $opo->status === 'partial' ? 'Parsial' : 'Open' }}]
+                                    </option>
+                                @endforeach
+                            </select>
+                            @error('selectedPoId') <span class="text-[11px] text-rose-500 block mt-1">{{ $message }}</span> @enderror
+                        </div>
+
+                        <!-- No. Surat Jalan / DO Vendor -->
+                        <div class="sm:col-span-5">
+                            <label class="block text-xs font-bold text-gray-700 dark:text-gray-300 mb-1">
+                                No. Surat Jalan / DO Vendor <span class="text-rose-500">*</span>
+                            </label>
+                            <input
+                                type="text"
+                                wire:model="poDeliveryOrderNumber"
+                                placeholder="Contoh: SJ-2026/XI/0091"
+                                class="w-full rounded-xl border border-gray-300 bg-white px-3 py-2 text-xs font-mono font-bold text-gray-900 focus:border-purple-500 dark:border-gray-700 dark:bg-gray-800 dark:text-white"
+                            />
+                            @error('poDeliveryOrderNumber') <span class="text-[11px] text-rose-500 block mt-1">{{ $message }}</span> @enderror
+                        </div>
+
+                        <!-- Tanggal Terima Fisik -->
+                        <div class="sm:col-span-4">
+                            <label class="block text-xs font-bold text-gray-700 dark:text-gray-300 mb-1">
+                                Tanggal Penerimaan Fisik <span class="text-rose-500">*</span>
+                            </label>
+                            <input
+                                type="date"
+                                wire:model="poReceivedDate"
+                                class="w-full rounded-xl border border-gray-300 bg-white px-3 py-2 text-xs text-gray-900 focus:border-purple-500 dark:border-gray-700 dark:bg-gray-800 dark:text-white"
+                            />
+                            @error('poReceivedDate') <span class="text-[11px] text-rose-500 block mt-1">{{ $message }}</span> @enderror
+                        </div>
+
+                        <!-- Petugas Penerima Gudang -->
+                        <div class="sm:col-span-4">
+                            <label class="block text-xs font-bold text-gray-700 dark:text-gray-300 mb-1">
+                                Petugas Penerima Gudang <span class="text-rose-500">*</span>
+                            </label>
+                            <input
+                                type="text"
+                                wire:model="poReceivedBy"
+                                class="w-full rounded-xl border border-gray-300 bg-white px-3 py-2 text-xs text-gray-900 focus:border-purple-500 dark:border-gray-700 dark:bg-gray-800 dark:text-white"
+                            />
+                            @error('poReceivedBy') <span class="text-[11px] text-rose-500 block mt-1">{{ $message }}</span> @enderror
+                        </div>
+
+                        <!-- Lokasi Gudang -->
+                        <div class="sm:col-span-4">
+                            <label class="block text-xs font-bold text-gray-700 dark:text-gray-300 mb-1">
+                                Lokasi Penyimpanan Fisik <span class="text-rose-500">*</span>
+                            </label>
+                            <select wire:model="poLocation" class="w-full rounded-xl border border-gray-300 bg-white px-3 py-2 text-xs text-gray-900 focus:border-purple-500 dark:border-gray-700 dark:bg-gray-800 dark:text-white cursor-pointer">
+                                <option value="STORAGE 1">STORAGE 1 (Utama / Finishing & Fast Moving)</option>
+                                <option value="STORAGE 2">STORAGE 2 (Raw Material & Heavy Steel)</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <!-- Section 2: Items Table -->
+                    @if(empty($selectedPoId))
+                        <div class="p-8 rounded-xl border border-dashed border-gray-300 dark:border-gray-700 text-center space-y-2">
+                            <div class="flex h-10 w-10 items-center justify-center rounded-full bg-purple-50 text-purple-600 dark:bg-purple-950/60 dark:text-purple-400 mx-auto">
+                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                            </div>
+                            <p class="text-xs font-bold text-gray-700 dark:text-gray-300">Silakan pilih Purchase Order terlebih dahulu</p>
+                            <p class="text-[11px] text-gray-500 max-w-sm mx-auto">
+                                Rincian item pesanan, sisa yang belum dikirim, dan kolom perhitungan fisik akan otomatis muncul setelah Anda memilih nomor PO di atas.
+                            </p>
+                        </div>
+                    @elseif(empty($poItemsToReceive))
+                        <div class="p-6 rounded-xl border border-emerald-200 bg-emerald-50 dark:border-emerald-800/60 dark:bg-emerald-950/30 text-center">
+                            <p class="text-xs font-bold text-emerald-800 dark:text-emerald-300">Semua item pesanan pada Purchase Order ini telah selesai diterima!</p>
+                            <p class="text-[11px] text-emerald-600 dark:text-emerald-400 mt-1">Status PO telah terpenuhi penuh (Completed).</p>
+                        </div>
+                    @else
+                        <div>
+                            <div class="flex items-center justify-between mb-2">
+                                <div>
+                                    <h4 class="text-xs font-bold uppercase tracking-wider text-gray-800 dark:text-gray-200">
+                                        Perhitungan Fisik Item Barang Datang
+                                    </h4>
+                                    <p class="text-[11px] text-gray-500">
+                                        Periksa fisik barang yang tiba, sesuaikan angka di kolom <strong>"Qty Fisik Dihitung"</strong> jika pengiriman bertahap (parsial).
+                                    </p>
+                                </div>
+                                <span class="text-[11px] font-semibold text-purple-600 dark:text-purple-400">
+                                    {{ count($poItemsToReceive) }} item belum terpenuhi
+                                </span>
+                            </div>
+
+                            <div class="overflow-x-auto rounded-xl border border-gray-200 dark:border-gray-800">
+                                <table class="w-full text-left text-xs">
+                                    <thead class="bg-gray-50 dark:bg-gray-800/60 text-gray-600 dark:text-gray-400 font-bold uppercase text-[10px]">
+                                        <tr>
+                                            <th class="px-3 py-2 text-center w-8">Terima</th>
+                                            <th class="px-3 py-2">Kode & Nama Barang</th>
+                                            <th class="px-3 py-2 text-center">Dipesan</th>
+                                            <th class="px-3 py-2 text-center">Sisa Order</th>
+                                            <th class="px-3 py-2 text-center min-w-[130px]">Qty Fisik Dihitung</th>
+                                            <th class="px-3 py-2 text-center">Satuan</th>
+                                            <th class="px-3 py-2">Keterangan / Kondisi Fisik</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody class="divide-y divide-gray-100 dark:divide-gray-800">
+                                        @foreach($poItemsToReceive as $idx => $itemRow)
+                                            <tr class="hover:bg-gray-50/50 dark:hover:bg-gray-800/30 {{ empty($itemRow['selected']) ? 'opacity-50' : '' }}">
+                                                <!-- Checkbox -->
+                                                <td class="px-3 py-2 text-center">
+                                                    <input
+                                                        type="checkbox"
+                                                        wire:model.live="poItemsToReceive.{{ $idx }}.selected"
+                                                        class="rounded border-gray-300 text-purple-600 focus:ring-purple-500 cursor-pointer h-4 w-4"
+                                                    />
+                                                </td>
+
+                                                <!-- Item Code & Name -->
+                                                <td class="px-3 py-2">
+                                                    <div class="font-bold text-gray-900 dark:text-white">{{ $itemRow['item_name'] }}</div>
+                                                    <div class="text-[10px] font-mono text-gray-500">{{ $itemRow['item_code'] }}</div>
+                                                </td>
+
+                                                <!-- Quantity Ordered -->
+                                                <td class="px-3 py-2 text-center text-gray-600 dark:text-gray-400">
+                                                    {{ format_number($itemRow['quantity_ordered']) }}
+                                                </td>
+
+                                                <!-- Quantity Remaining -->
+                                                <td class="px-3 py-2 text-center font-bold text-amber-700 dark:text-amber-400">
+                                                    {{ format_number($itemRow['quantity_remaining']) }}
+                                                </td>
+
+                                                <!-- Input Qty Fisik Dihitung -->
+                                                <td class="px-3 py-2 text-center">
+                                                    <input
+                                                        type="number"
+                                                        step="any"
+                                                        min="0"
+                                                        max="{{ $itemRow['quantity_remaining'] }}"
+                                                        wire:model="poItemsToReceive.{{ $idx }}.quantity_to_receive"
+                                                        class="w-24 text-center rounded-lg border border-purple-300 bg-white dark:border-purple-700 dark:bg-gray-800 font-bold text-xs text-purple-700 dark:text-purple-300 py-1 focus:ring-1 focus:ring-purple-500"
+                                                    />
+                                                    @error("poItemsToReceive.{$idx}.quantity_to_receive")
+                                                        <span class="text-[10px] text-rose-500 block mt-0.5">{{ $message }}</span>
+                                                    @enderror
+                                                </td>
+
+                                                <!-- Unit -->
+                                                <td class="px-3 py-2 text-center font-semibold text-gray-700 dark:text-gray-300">
+                                                    {{ $itemRow['unit'] }}
+                                                </td>
+
+                                                <!-- Notes per item -->
+                                                <td class="px-3 py-2">
+                                                    <input
+                                                        type="text"
+                                                        wire:model="poItemsToReceive.{{ $idx }}.notes"
+                                                        placeholder="Kondisi baik, lot, dll..."
+                                                        class="w-full rounded-lg border border-gray-200 bg-white dark:border-gray-700 dark:bg-gray-800 px-2 py-1 text-[11px] text-gray-800 dark:text-gray-200"
+                                                    />
+                                                </td>
+                                            </tr>
+                                        @endforeach
+                                    </tbody>
+                                </table>
+                            </div>
+
+                            <!-- Alert Info Otomatis ACC -->
+                            <div class="mt-3 p-3 rounded-xl bg-purple-50 border border-purple-200 dark:bg-purple-950/30 dark:border-purple-800/60 flex items-start gap-2.5">
+                                <svg class="w-4 h-4 text-purple-600 dark:text-purple-400 shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                                <div class="text-[11px] text-purple-900 dark:text-purple-300">
+                                    <strong>ACC Otomatis ke Stok:</strong> Seluruh barang yang dicentang di atas akan langsung berstatus <em>Approved</em> dan otomatis menambah stok master barang gudang tanpa perlu melalui antrean inspeksi QC terpisah.
+                                </div>
+                            </div>
+                        </div>
+                    @endif
+
+                </div>
+
+                <!-- Modal Footer -->
+                <div class="p-4 bg-gray-50 dark:bg-gray-800/80 border-t border-gray-200 dark:border-gray-800 flex items-center justify-end gap-3 rounded-b-2xl">
+                    <button
+                        type="button"
+                        wire:click="closeReceivePoModal"
+                        class="px-4 py-2 text-xs font-semibold rounded-xl border border-gray-300 bg-white text-gray-700 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-300 hover:bg-gray-50 transition cursor-pointer"
+                    >
+                        Batal
+                    </button>
+                    @if(!empty($selectedPoId) && !empty($poItemsToReceive))
+                        <button
+                            type="button"
+                            wire:click="submitReceivePo"
+                            wire:loading.attr="disabled"
+                            class="px-5 py-2 text-xs font-bold rounded-xl bg-purple-600 hover:bg-purple-700 text-white shadow-sm transition flex items-center gap-2 cursor-pointer disabled:opacity-50"
+                        >
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+                            <span wire:loading.remove wire:target="submitReceivePo">ACC & Masukkan ke Stok Gudang</span>
+                            <span wire:loading wire:target="submitReceivePo">Memproses & Tambah Stok...</span>
+                        </button>
+                    @endif
+                </div>
+
+            </div>
+        </div>
+    @endif
+
 
     <script>
         window.warehouseItemsList = @json($itemsJsonList ?? []);

@@ -23,6 +23,7 @@ use App\Http\Controllers\ProjectConsumptionController;
 use App\Http\Controllers\ItemBarcodeController;
 use App\Http\Controllers\UnitController;
 use App\Http\Controllers\FinishGoodController;
+use App\Http\Controllers\PurchaseOrderController;
 
 /*
 |--------------------------------------------------------------------------
@@ -68,6 +69,10 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/items/template', [ItemController::class, 'downloadTemplate'])->name('items.template');
     Route::post('/items/import', [ItemController::class, 'import'])->name('items.import');
     Route::match(['get', 'post'], '/items/purchase-request/export', [ItemController::class, 'exportPurchaseRequest'])->name('items.purchase-request.export');
+
+    // Purchase Order (Menu Pengadaan PO & WMS)
+    Route::get('/purchase-orders', [PurchaseOrderController::class, 'index'])->name('purchase-orders.index');
+    Route::get('/purchase-orders/{purchaseOrder}/print', [PurchaseOrderController::class, 'print'])->name('purchase-orders.print');
 
     // Material Masuk & Keluar (Menu WMS)
     Route::get('/material-in', [MaterialInController::class, 'index'])->name('material-in.index');

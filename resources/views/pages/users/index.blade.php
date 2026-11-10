@@ -77,6 +77,11 @@
                                         <span class="w-1.5 h-1.5 rounded-full bg-amber-500"></span>
                                         Quality Control (QC)
                                     </span>
+                                @elseif($usr->role === 'procurement')
+                                    <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-purple-50 text-purple-800 dark:bg-purple-950/50 dark:text-purple-300 border border-purple-200 dark:border-purple-800/60 shadow-2xs">
+                                        <span class="w-1.5 h-1.5 rounded-full bg-purple-500"></span>
+                                        Procurement / Purchasing
+                                    </span>
                                 @elseif($usr->role === 'warehouse')
                                     <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-emerald-50 text-emerald-800 dark:bg-emerald-950/50 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800/60 shadow-2xs">
                                         <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
@@ -166,6 +171,7 @@
                                 <option value="finance">Finance / Keuangan (Akses Stok, Nilai Aset & Rekap Harga)</option>
                                 <option value="warehouse">Gudang / Warehouse (Kelola Data Stok & Transaksi Gudang)</option>
                                 <option value="ppic">PPIC (View Only - Ketersediaan Stok, Riwayat & Laporan)</option>
+                                <option value="procurement">Procurement / Purchasing (Kelola Purchase Order & Pengadaan)</option>
                                 <option value="qc">Quality Control (Inspeksi & Approval Penerimaan Barang)</option>
                             </select>
                             <p class="text-[11px] text-gray-500 dark:text-gray-400">Web Administrator dapat mengelola semua data website. Role Gudang dibatasi dari menu Pengaturan System, Debugging, dan Company Profile.</p>
@@ -222,6 +228,7 @@
                                 <option value="finance">Finance / Keuangan (Akses Stok, Nilai Aset & Rekap Harga)</option>
                                 <option value="warehouse">Gudang / Warehouse (Kelola Data Stok & Transaksi Gudang)</option>
                                 <option value="ppic">PPIC (View Only - Ketersediaan Stok, Riwayat & Laporan)</option>
+                                <option value="procurement">Procurement / Purchasing (Kelola Purchase Order & Pengadaan)</option>
                                 <option value="qc">Quality Control (Inspeksi & Approval Penerimaan Barang)</option>
                             </select>
                         </div>

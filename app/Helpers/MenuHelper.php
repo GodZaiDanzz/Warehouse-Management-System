@@ -45,6 +45,42 @@ class MenuHelper
             ];
         }
 
+        // Khusus Role Procurement: Purchase Order, Stok Barang, dan Rekap Project
+        if ($currentUser && $currentUser->isProcurement()) {
+            return [
+                [
+                    'title' => '',
+                    'items' => [
+                        [
+                            'icon' => 'dashboard',
+                            'name' => 'Dashboard',
+                            'path' => '/',
+                        ],
+                    ]
+                ],
+                [
+                    'title' => 'PENGADAAN (PROCUREMENT)',
+                    'items' => [
+                        [
+                            'icon' => 'purchase-orders',
+                            'name' => 'Purchase Order (PO)',
+                            'path' => '/purchase-orders',
+                        ],
+                        [
+                            'icon' => 'boxes',
+                            'name' => 'Katalog & Stok Barang',
+                            'path' => '/items',
+                        ],
+                        [
+                            'icon' => 'projects',
+                            'name' => 'Rekap Project',
+                            'path' => '/projects-summary',
+                        ],
+                    ]
+                ],
+            ];
+        }
+
         $menu = [
             // Standalone top menu item (Dashboard)
             [
@@ -61,6 +97,11 @@ class MenuHelper
             [
                 'title' => 'MENU WMS',
                 'items' => [
+                    [
+                        'icon' => 'purchase-orders',
+                        'name' => 'Purchase Order (PO)',
+                        'path' => '/purchase-orders',
+                    ],
                     [
                         'icon' => 'boxes',
                         'name' => 'Stok Barang',
@@ -209,6 +250,9 @@ class MenuHelper
     public static function getIconSvg($iconName)
     {
         $icons = [
+            // 0. Purchase Order (Procurement Clipboard)
+            'purchase-orders' => '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2"></path><rect x="9" y="3" width="6" height="4" rx="1"></rect><path d="M9 12h6"></path><path d="M9 16h6"></path></svg>',
+
             // 1. Dashboard
             'dashboard' => '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="9" rx="1"></rect><rect x="14" y="3" width="7" height="5" rx="1"></rect><rect x="14" y="12" width="7" height="9" rx="1"></rect><rect x="3" y="16" width="7" height="5" rx="1"></rect></svg>',
 

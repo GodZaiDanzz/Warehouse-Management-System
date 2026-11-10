@@ -24,6 +24,9 @@ class MaterialIn extends Model
         'heat_number',
         'supplier',
         'po_number',
+        'delivery_order_number',
+        'purchase_order_id',
+        'purchase_order_item_id',
         'received_by',
         'notes',
         'user_id',
@@ -61,6 +64,19 @@ class MaterialIn extends Model
         static::deleted(function () {
             \Illuminate\Support\Facades\Cache::forget('wms_header_notifications_data');
         });
+    }
+
+    /**
+     * Accessor / mutator for delivery_order_number alias to po_number.
+     */
+    public function getDeliveryOrderNumberAttribute(): ?string
+    {
+        return $this->attributes['po_number'] ?? null;
+    }
+
+    public function setDeliveryOrderNumberAttribute($value): void
+    {
+        $this->attributes['po_number'] = $value;
     }
 
     /**
@@ -121,6 +137,22 @@ class MaterialIn extends Model
     public function materialRejects()
     {
         return $this->hasMany(MaterialReject::class);
+    }
+
+    /**
+     * Relationship to Purchase Order.
+     */
+    public function purchaseOrder()
+    {
+        return $this->belongsTo(PurchaseOrder::class, 'purchase_order_id');
+    }
+
+    /**
+     * Relationship to Purchase Order Item.
+     */
+    public function purchaseOrderItem()
+    {
+        return $this->belongsTo(PurchaseOrderItem::class, 'purchase_order_item_id');
     }
 
     /**

@@ -45,6 +45,14 @@ class Item extends Model
     ];
 
     /**
+     * Alias accessor for code_item.
+     */
+    public function getItemCodeAttribute(): string
+    {
+        return $this->code_item ?? '';
+    }
+
+    /**
      * Get computed total asset valuation for this item (Stock x Unit Price).
      */
     public function getTotalAssetValueAttribute(): float

@@ -74,6 +74,10 @@
                     <span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-200 border border-gray-300 dark:border-gray-700 shrink-0">Gudang</span>
                 @elseif(isset($currentUser->role) && $currentUser->role === 'qc')
                     <span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-200 border border-gray-300 dark:border-gray-700 shrink-0">QC</span>
+                @elseif(isset($currentUser->role) && ($currentUser->role === 'procurement' || $currentUser->role === 'purchasing'))
+                    <span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-purple-100 text-purple-800 dark:bg-purple-950/60 dark:text-purple-300 border border-purple-300 dark:border-purple-700 shrink-0">Procurement</span>
+                @elseif(isset($currentUser->role) && $currentUser->role === 'finance')
+                    <span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-indigo-100 text-indigo-800 dark:bg-indigo-950/60 dark:text-indigo-300 border border-indigo-300 dark:border-indigo-700 shrink-0">Finance</span>
                 @else
                     <span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-brand-50 text-brand-800 dark:bg-brand-950/60 dark:text-brand-300 border border-brand-200 shrink-0">Web Admin</span>
                 @endif
@@ -91,7 +95,7 @@
                         class="flex items-center justify-between px-2.5 py-1.5 rounded-lg text-xs font-semibold transition {{ isset($currentUser->id) && $currentUser->id === $u->id ? 'bg-brand-50 text-brand-700 dark:bg-brand-950/40 dark:text-brand-300 font-bold border border-brand-200 dark:border-brand-800' : 'text-gray-600 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-800' }}">
                         <span class="truncate max-w-[130px]">{{ $u->name }}</span>
                         <span class="text-[10px] font-mono uppercase font-bold text-gray-600 dark:text-gray-400 flex items-center gap-1">
-                            {{ $u->role === 'ppic' ? 'PPIC' : ($u->role === 'warehouse' ? 'Gudang' : ($u->role === 'qc' ? 'QC' : 'Web Admin')) }}
+                            {{ $u->role === 'ppic' ? 'PPIC' : ($u->role === 'warehouse' ? 'Gudang' : ($u->role === 'qc' ? 'QC' : ($u->role === 'procurement' ? 'Procurement' : ($u->role === 'finance' ? 'Finance' : 'Admin')))) }}
                             @if(isset($currentUser->id) && $currentUser->id === $u->id)
                                 <svg class="w-3.5 h-3.5 text-brand-600 dark:text-brand-400 inline" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/></svg>
                             @endif
