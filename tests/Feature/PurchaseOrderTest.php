@@ -125,6 +125,36 @@ class PurchaseOrderTest extends TestCase
     }
 
     /**
+     * Test admin user has full access to all features including Purchase Order menu and page.
+     */
+    public function test_admin_user_can_access_purchase_orders_and_has_menu(): void
+    {
+        // 1. Admin can access PO index page
+        $response = $this->actingAs($this->adminUser)
+            ->get(route('purchase-orders.index'));
+
+        $response->assertStatus(200);
+        $response->assertSee('Purchase Order (PO)');
+
+        // 2. Admin has Purchase Order (PO) in dedicated PENGADAAN (PROCUREMENT) menu group
+        auth()->login($this->adminUser);
+        $groups = \App\Helpers\MenuHelper::getMenuGroups();
+
+        $foundPo = false;
+        foreach ($groups as $group) {
+            if ($group['title'] === 'PENGADAAN (PROCUREMENT)') {
+                foreach ($group['items'] as $item) {
+                    if ($item['path'] === '/purchase-orders') {
+                        $foundPo = true;
+                    }
+                }
+            }
+        }
+
+        $this->assertTrue($foundPo, 'Web Administrator must have Purchase Order (PO) in menu.');
+    }
+
+    /**
      * Test procurement role user can create a new Purchase Order via Livewire.
      */
     public function test_procurement_user_can_create_purchase_order(): void
