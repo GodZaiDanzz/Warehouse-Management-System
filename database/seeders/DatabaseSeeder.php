@@ -6,6 +6,21 @@ use App\Models\User;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\Hash;
 
+/**
+ * DatabaseSeeder
+ *
+ * Seed database with initial system users, standard categories, master items, and profiles.
+ *
+ * Default Seeded Accounts:
+ * - Web Administrator : admin@mudalaya.com       | password
+ * - Warehouse Staff    : warehouse@mudalaya.com   | password
+ * - PPIC Staff         : ppic@mudalaya.com        | password
+ * - QC Inspector       : qc@mudalaya.com          | password
+ * - Procurement Staff  : procurement@mudalaya.com | password
+ *
+ * Command to execute:
+ *   php artisan db:seed
+ */
 class DatabaseSeeder extends Seeder
 {
     /**
