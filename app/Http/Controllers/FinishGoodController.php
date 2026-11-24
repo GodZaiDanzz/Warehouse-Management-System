@@ -66,6 +66,7 @@ class FinishGoodController extends Controller
             'delivered_count' => FinishGood::where('status', 'Delivered')->count(),
             'qc_passed_count' => FinishGood::where('qc_status', 'Passed')->count(),
             'total_quantity' => FinishGood::sum('quantity'),
+            'total_hpp' => FinishGood::sum('total_hpp'),
         ];
 
         $projects = Project::orderBy('name')->get();
@@ -88,6 +89,9 @@ class FinishGoodController extends Controller
             'delivery_date' => ['nullable', 'date'],
             'delivery_order_number' => ['nullable', 'string', 'max:100'],
             'notes' => ['nullable', 'string'],
+            'material_cost' => ['nullable', 'numeric', 'min:0'],
+            'manpower_cost' => ['nullable', 'numeric', 'min:0'],
+            'auto_calculate_wip' => ['nullable', 'boolean'],
         ], [
             'project_id.required' => 'Project wajib dipilih.',
             'item_name.required' => 'Nama barang jadi wajib diisi.',
@@ -104,7 +108,38 @@ class FinishGoodController extends Controller
             $validated['delivery_date'] = now()->toDateString();
         }
 
+        // Kalkulasi Otomatis WIP & Manpower dari Material Out Proyek (Sesuai Kebutuhan Finance)
+        if ($request->boolean('auto_calculate_wip')) {
+            $wipOuts = \App\Models\MaterialOut::with('item')
+                ->where('project_id', $validated['project_id'])
+                ->whereNull('finish_good_id')
+                ->get();
+
+            $calcMaterial = $wipOuts->sum(fn($m) => (float)$m->quantity * (float)($m->item?->unit_price ?? 0));
+            $calcManpower = $wipOuts->sum(fn($m) => (float)($m->manpower_cost ?? 0));
+
+            $validated['material_cost'] = $calcMaterial;
+            $validated['manpower_cost'] = $calcManpower;
+        }
+
+        $matCost = (float) ($validated['material_cost'] ?? 0);
+        $manCost = (float) ($validated['manpower_cost'] ?? 0);
+        $totalHpp = $matCost + $manCost;
+        $qty = (float) $validated['quantity'];
+
+        $validated['material_cost'] = $matCost;
+        $validated['manpower_cost'] = $manCost;
+        $validated['total_hpp'] = $totalHpp;
+        $validated['hpp_per_unit'] = $qty > 0 ? ($totalHpp / $qty) : 0;
+        unset($validated['auto_calculate_wip']);
+
         $fg = FinishGood::create($validated);
+
+        if ($request->boolean('auto_calculate_wip')) {
+            \App\Models\MaterialOut::where('project_id', $validated['project_id'])
+                ->whereNull('finish_good_id')
+                ->update(['finish_good_id' => $fg->id]);
+        }
         $project = Project::find($validated['project_id']);
         $projectName = $project ? $project->name : 'Project';
 
@@ -131,11 +166,23 @@ class FinishGoodController extends Controller
             'delivery_date' => ['nullable', 'date'],
             'delivery_order_number' => ['nullable', 'string', 'max:100'],
             'notes' => ['nullable', 'string'],
+            'material_cost' => ['nullable', 'numeric', 'min:0'],
+            'manpower_cost' => ['nullable', 'numeric', 'min:0'],
         ]);
 
         if ($validated['status'] === 'Delivered' && empty($validated['delivery_date'])) {
             $validated['delivery_date'] = $finishGood->delivery_date ? $finishGood->delivery_date->toDateString() : now()->toDateString();
         }
+
+        $matCost = isset($validated['material_cost']) ? (float) $validated['material_cost'] : (float) $finishGood->material_cost;
+        $manCost = isset($validated['manpower_cost']) ? (float) $validated['manpower_cost'] : (float) $finishGood->manpower_cost;
+        $totalHpp = $matCost + $manCost;
+        $qty = (float) ($validated['quantity'] ?? $finishGood->quantity);
+
+        $validated['material_cost'] = $matCost;
+        $validated['manpower_cost'] = $manCost;
+        $validated['total_hpp'] = $totalHpp;
+        $validated['hpp_per_unit'] = $qty > 0 ? ($totalHpp / $qty) : 0;
 
         $finishGood->update($validated);
 
@@ -249,12 +296,16 @@ class FinishGoodController extends Controller
             'E5' => 'TAG / SPOOL / NO DRAWING',
             'F5' => 'JUMLAH',
             'G5' => 'SATUAN',
-            'H5' => 'TGL SELESAI PRODUKSI',
-            'I5' => 'STATUS QC',
-            'J5' => 'STATUS PENGIRIMAN',
-            'K5' => 'TGL PENGIRIMAN',
-            'L5' => 'NO SURAT JALAN / DO',
-            'M5' => 'CATATAN',
+            'H5' => 'BIAYA MATERIAL (RP)',
+            'I5' => 'BIAYA MANPOWER (RP)',
+            'J5' => 'TOTAL HPP (RP)',
+            'K5' => 'HPP SATUAN (RP)',
+            'L5' => 'TGL SELESAI PRODUKSI',
+            'M5' => 'STATUS QC',
+            'N5' => 'STATUS PENGIRIMAN',
+            'O5' => 'TGL PENGIRIMAN',
+            'P5' => 'NO SURAT JALAN / DO',
+            'Q5' => 'CATATAN',
         ];
 
         foreach ($headers as $cell => $title) {
@@ -267,7 +318,7 @@ class FinishGoodController extends Controller
             'alignment' => ['horizontal' => Alignment::HORIZONTAL_CENTER, 'vertical' => Alignment::VERTICAL_CENTER],
             'borders' => ['allBorders' => ['borderStyle' => Border::BORDER_THIN, 'color' => ['rgb' => '000000']]],
         ];
-        $sheet->getStyle('A5:M5')->applyFromArray($headerStyle);
+        $sheet->getStyle('A5:Q5')->applyFromArray($headerStyle);
 
         $rowIdx = 6;
         foreach ($records as $index => $item) {
@@ -278,21 +329,27 @@ class FinishGoodController extends Controller
             $sheet->setCellValue('E' . $rowIdx, $item->item_code ?? '-');
             $sheet->setCellValue('F' . $rowIdx, (float)$item->quantity);
             $sheet->setCellValue('G' . $rowIdx, $item->unit);
-            $sheet->setCellValue('H' . $rowIdx, $item->production_date ? $item->production_date->format('d/m/Y') : '-');
-            $sheet->setCellValue('I' . $rowIdx, $item->qc_status);
-            $sheet->setCellValue('J' . $rowIdx, $item->status === 'Delivered' ? 'Terkirim ke Klien' : 'Tersimpan di Gudang');
-            $sheet->setCellValue('K' . $rowIdx, $item->delivery_date ? $item->delivery_date->format('d/m/Y') : '-');
-            $sheet->setCellValue('L' . $rowIdx, $item->delivery_order_number ?? '-');
-            $sheet->setCellValue('M' . $rowIdx, $item->notes ?? '-');
+            $sheet->setCellValue('H' . $rowIdx, (float)($item->material_cost ?? 0));
+            $sheet->setCellValue('I' . $rowIdx, (float)($item->manpower_cost ?? 0));
+            $sheet->setCellValue('J' . $rowIdx, (float)($item->total_hpp ?? 0));
+            $sheet->setCellValue('K' . $rowIdx, (float)($item->hpp_per_unit ?? 0));
+            $sheet->setCellValue('L' . $rowIdx, $item->production_date ? $item->production_date->format('d/m/Y') : '-');
+            $sheet->setCellValue('M' . $rowIdx, $item->qc_status);
+            $sheet->setCellValue('N' . $rowIdx, $item->status === 'Delivered' ? 'Terkirim ke Klien' : 'Tersimpan di Gudang');
+            $sheet->setCellValue('O' . $rowIdx, $item->delivery_date ? $item->delivery_date->format('d/m/Y') : '-');
+            $sheet->setCellValue('P' . $rowIdx, $item->delivery_order_number ?? '-');
+            $sheet->setCellValue('Q' . $rowIdx, $item->notes ?? '-');
 
-            $sheet->getStyle("A{$rowIdx}:M{$rowIdx}")->getBorders()->getAllBorders()->setBorderStyle(Border::BORDER_THIN);
+            $sheet->getStyle("A{$rowIdx}:Q{$rowIdx}")->getBorders()->getAllBorders()->setBorderStyle(Border::BORDER_THIN);
             $sheet->getStyle("A{$rowIdx}")->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
             $sheet->getStyle("F{$rowIdx}")->getAlignment()->setHorizontal(Alignment::HORIZONTAL_RIGHT);
-            $sheet->getStyle("H{$rowIdx}:L{$rowIdx}")->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
+            $sheet->getStyle("H{$rowIdx}:K{$rowIdx}")->getAlignment()->setHorizontal(Alignment::HORIZONTAL_RIGHT);
+            $sheet->getStyle("H{$rowIdx}:K{$rowIdx}")->getNumberFormat()->setFormatCode('#,##0');
+            $sheet->getStyle("L{$rowIdx}:P{$rowIdx}")->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
             $rowIdx++;
         }
 
-        foreach (range('A', 'M') as $col) {
+        foreach (range('A', 'Q') as $col) {
             $sheet->getColumnDimension($col)->setAutoSize(true);
         }
 

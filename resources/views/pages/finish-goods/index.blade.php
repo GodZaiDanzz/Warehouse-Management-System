@@ -17,6 +17,8 @@
         status: 'In Storage',
         delivery_date: '',
         delivery_order_number: '',
+        material_cost: '',
+        manpower_cost: '',
         notes: ''
     },
     deliveryData: {
@@ -39,6 +41,8 @@
             status: item.status,
             delivery_date: item.delivery_date ? item.delivery_date.substring(0, 10) : '',
             delivery_order_number: item.delivery_order_number || '',
+            material_cost: item.material_cost || '',
+            manpower_cost: item.manpower_cost || '',
             notes: item.notes || ''
         };
         this.openEditModal = true;
@@ -205,6 +209,7 @@
                         <th class="px-4 py-3.5">NAMA PROJECT & NO PO</th>
                         <th class="px-4 py-3.5">PRODUK JADI / TAG NO</th>
                         <th class="px-4 py-3.5 text-center">JUMLAH</th>
+                        <th class="px-4 py-3.5 text-right">TOTAL HPP</th>
                         <th class="px-4 py-3.5">TGL PRODUKSI</th>
                         <th class="px-4 py-3.5 text-center">STATUS QC</th>
                         <th class="px-4 py-3.5 text-center">STATUS PENGIRIMAN</th>
@@ -267,6 +272,24 @@
                                 <span class="text-[11px] font-bold text-gray-500 dark:text-gray-400 ml-0.5">
                                     {{ $fg->unit }}
                                 </span>
+                            </td>
+
+                            <!-- TOTAL HPP -->
+                            <td class="px-4 py-3.5 text-right whitespace-nowrap">
+                                @if($fg->total_hpp > 0)
+                                    <div class="font-extrabold text-gray-900 dark:text-white font-mono text-xs">
+                                        {{ format_currency($fg->total_hpp) }}
+                                    </div>
+                                    <div class="text-[10px] text-gray-500 dark:text-gray-400">
+                                        @if($fg->quantity > 1)
+                                            <span>@ {{ format_currency($fg->hpp_per_unit) }}/{{ $fg->unit }}</span>
+                                        @else
+                                            <span class="text-emerald-600 dark:text-emerald-400 font-semibold">Tervalidasi</span>
+                                        @endif
+                                    </div>
+                                @else
+                                    <span class="text-gray-400 dark:text-gray-600 text-[11px]">-</span>
+                                @endif
                             </td>
 
                             <!-- TGL PRODUKSI -->
@@ -616,6 +639,33 @@
                         </select>
                     </div>
 
+                    <!-- Bagian Perhitungan HPP & Akumulasi WIP (Finance) -->
+                    <div class="rounded-xl border border-indigo-100 bg-indigo-50/50 p-3.5 text-xs dark:border-indigo-900/40 dark:bg-indigo-950/20 space-y-2.5">
+                        <div class="flex items-center justify-between">
+                            <span class="font-bold text-indigo-950 dark:text-indigo-200 flex items-center gap-1.5 text-xs">
+                                <svg class="w-4 h-4 text-indigo-600 dark:text-indigo-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z"/></svg>
+                                <span>Perhitungan HPP & Akumulasi WIP (Finance)</span>
+                            </span>
+                            <label class="inline-flex items-center gap-1.5 cursor-pointer">
+                                <input type="checkbox" name="auto_calculate_wip" value="1" checked class="rounded text-brand-600 focus:ring-brand-500">
+                                <span class="text-[11px] font-bold text-indigo-700 dark:text-indigo-300">Tarik Otomatis dari Material Keluar Proyek</span>
+                            </label>
+                        </div>
+                        <p class="text-[11px] text-gray-500 dark:text-gray-400">
+                            Centang untuk menjumlahkan otomatis seluruh biaya material part & manpower yang telah dikeluarkan untuk proyek ini ke HPP produk jadi.
+                        </p>
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                            <div>
+                                <label class="block text-[11px] font-semibold text-gray-700 dark:text-gray-300 mb-1">Estimasi Biaya Material Part (Rp)</label>
+                                <input type="number" step="any" min="0" name="material_cost" placeholder="0 (Kosongkan jika otomatis)" class="w-full rounded-xl border border-gray-200 bg-white px-3 py-2 text-xs text-gray-800 outline-none focus:border-brand-500 dark:border-gray-700 dark:bg-gray-800 dark:text-white">
+                            </div>
+                            <div>
+                                <label class="block text-[11px] font-semibold text-gray-700 dark:text-gray-300 mb-1">Estimasi Biaya Manpower (Rp)</label>
+                                <input type="number" step="any" min="0" name="manpower_cost" placeholder="0 (Kosongkan jika otomatis)" class="w-full rounded-xl border border-gray-200 bg-white px-3 py-2 text-xs text-gray-800 outline-none focus:border-brand-500 dark:border-gray-700 dark:bg-gray-800 dark:text-white">
+                            </div>
+                        </div>
+                    </div>
+
                     <!-- Notes -->
                     <div>
                         <label class="block text-xs font-bold text-gray-700 dark:text-gray-300 mb-1">Catatan / Spesifikasi Tambahan</label>
@@ -867,6 +917,28 @@
                             <input type="text" name="delivery_order_number" x-model="editData.delivery_order_number" placeholder="Nomor DO..." class="w-full rounded-xl border border-gray-200 bg-gray-50 px-3.5 py-2 text-xs font-mono uppercase text-gray-800 outline-none focus:border-brand-500 focus:bg-white dark:border-gray-700 dark:bg-gray-800 dark:text-white">
                         </div>
                     </div>
+
+                    <!-- HPP Breakdown (Finance) -->
+                    @if(auth()->user() && auth()->user()->canViewPrices())
+                    <div class="rounded-xl border border-gray-100 bg-gray-50/70 p-3.5 dark:border-gray-800 dark:bg-gray-800/40 space-y-2.5">
+                        <div class="flex items-center justify-between">
+                            <span class="text-xs font-bold text-gray-900 dark:text-white flex items-center gap-1.5">
+                                <svg class="w-3.5 h-3.5 text-emerald-600" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                                Penyesuaian Biaya HPP (Finance)
+                            </span>
+                        </div>
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                            <div>
+                                <label class="block text-[11px] font-bold text-gray-600 dark:text-gray-300 mb-1">Biaya Material (Rp)</label>
+                                <input type="number" step="0.01" min="0" name="material_cost" x-model="editData.material_cost" placeholder="0" class="w-full rounded-xl border border-gray-200 bg-white px-3.5 py-2 text-xs font-semibold text-gray-800 outline-none focus:border-brand-500 dark:border-gray-700 dark:bg-gray-900 dark:text-white">
+                            </div>
+                            <div>
+                                <label class="block text-[11px] font-bold text-gray-600 dark:text-gray-300 mb-1">Biaya Manpower (Rp)</label>
+                                <input type="number" step="0.01" min="0" name="manpower_cost" x-model="editData.manpower_cost" placeholder="0" class="w-full rounded-xl border border-gray-200 bg-white px-3.5 py-2 text-xs font-semibold text-gray-800 outline-none focus:border-brand-500 dark:border-gray-700 dark:bg-gray-900 dark:text-white">
+                            </div>
+                        </div>
+                    </div>
+                    @endif
 
                     <!-- Notes -->
                     <div>
