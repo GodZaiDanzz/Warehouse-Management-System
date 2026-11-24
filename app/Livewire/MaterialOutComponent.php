@@ -30,6 +30,7 @@ class MaterialOutComponent extends Component
     public array $selectedItemIds = [];
     public $selectedProject = '';
     public $selectedUnit = '';
+    public $selectedWipStage = '';
 
     // Category Module Tabs ('all', 'Consumable', 'Secondary Part', 'Cat / Painting')
     public $activeModule = 'all';
@@ -147,6 +148,7 @@ class MaterialOutComponent extends Component
         $this->selectedItemIds = [];
         $this->selectedProject = '';
         $this->selectedUnit = '';
+        $this->selectedWipStage = '';
         $this->resetPage();
     }
 
@@ -971,6 +973,10 @@ class MaterialOutComponent extends Component
 
         if (!empty($this->selectedProject)) {
             $query->where('project', $this->selectedProject);
+        }
+
+        if (!empty($this->selectedWipStage)) {
+            $query->where('wip_stage', $this->selectedWipStage);
         }
 
         if (!empty($this->selectedUnit)) {

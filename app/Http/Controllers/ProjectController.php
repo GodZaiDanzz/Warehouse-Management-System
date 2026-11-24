@@ -105,10 +105,11 @@ class ProjectController extends Controller
               ->orWhere('project', $project->name);
         });
 
-        $materialOuts = (clone $baseQuery)
-            ->with(['item', 'user'])
-            ->latest('date')
-            ->paginate(15);
+        $outsQuery = (clone $baseQuery)->with(['item', 'user'])->latest('date');
+        if (request()->filled('wip_stage')) {
+            $outsQuery->where('wip_stage', request('wip_stage'));
+        }
+        $materialOuts = $outsQuery->paginate(15)->withQueryString();
 
         $itemsList = Item::orderBy('name')->get();
 

@@ -1166,13 +1166,49 @@
                 @endif
 
                 <!-- Linked Material Outs & WIP Details Table -->
-                <div class="space-y-2">
-                    <div class="flex items-center justify-between">
-                        <h4 class="text-xs font-black uppercase tracking-wider text-gray-900 dark:text-white flex items-center gap-2">
-                            <span>Material & Manpower Terpakai (WIP Breakdown)</span>
-                            <span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-300"
-                                  x-text="(traceItem?.material_outs?.length || 0) + ' Transaksi Keluar'"></span>
-                        </h4>
+                <div class="space-y-2.5" x-data="{ stageFilter: 'all' }">
+                    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 border-b border-gray-100 dark:border-gray-800 pb-2.5">
+                        <div>
+                            <h4 class="text-xs font-black uppercase tracking-wider text-gray-900 dark:text-white flex items-center gap-2">
+                                <span>Material & Manpower Terpakai (WIP Breakdown)</span>
+                                <span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-indigo-50 text-indigo-700 dark:bg-indigo-950/60 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-800"
+                                      x-text="((traceItem?.material_outs || []).filter(m => stageFilter === 'all' || m.wip_stage === stageFilter).length) + ' Item Terfilter'"></span>
+                            </h4>
+                            <p class="text-[11px] text-gray-400">Pilih tahapan untuk men-trace material spesifik:</p>
+                        </div>
+
+                        <!-- Filter Tabs Tahapan -->
+                        <div class="flex items-center gap-1.5 flex-wrap">
+                            <button type="button" @click="stageFilter = 'all'"
+                                    :class="stageFilter === 'all' ? 'bg-indigo-600 text-white shadow-xs' : 'bg-gray-100 text-gray-700 hover:bg-gray-200 dark:bg-gray-800 dark:text-gray-300'"
+                                    class="px-2.5 py-1 rounded-lg text-[10px] font-bold transition cursor-pointer">
+                                Semua Tahap
+                            </button>
+                            <button type="button" @click="stageFilter = 'Cutting'"
+                                    :class="stageFilter === 'Cutting' ? 'bg-amber-600 text-white shadow-xs' : 'bg-amber-50 text-amber-800 hover:bg-amber-100 dark:bg-amber-950/60 dark:text-amber-300'"
+                                    class="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-[10px] font-bold transition cursor-pointer">
+                                <span class="w-1.5 h-1.5 rounded-full bg-amber-400"></span>
+                                Tahap 1: Cutting
+                            </button>
+                            <button type="button" @click="stageFilter = 'Welding'"
+                                    :class="stageFilter === 'Welding' ? 'bg-rose-600 text-white shadow-xs' : 'bg-rose-50 text-rose-800 hover:bg-rose-100 dark:bg-rose-950/60 dark:text-rose-300'"
+                                    class="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-[10px] font-bold transition cursor-pointer">
+                                <span class="w-1.5 h-1.5 rounded-full bg-rose-400"></span>
+                                Tahap 3: Welding
+                            </button>
+                            <button type="button" @click="stageFilter = 'Painting'"
+                                    :class="stageFilter === 'Painting' ? 'bg-sky-600 text-white shadow-xs' : 'bg-sky-50 text-sky-800 hover:bg-sky-100 dark:bg-sky-950/60 dark:text-sky-300'"
+                                    class="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-[10px] font-bold transition cursor-pointer">
+                                <span class="w-1.5 h-1.5 rounded-full bg-sky-400"></span>
+                                Tahap 3: Painting
+                            </button>
+                            <button type="button" @click="stageFilter = 'Packing'"
+                                    :class="stageFilter === 'Packing' ? 'bg-emerald-600 text-white shadow-xs' : 'bg-emerald-50 text-emerald-800 hover:bg-emerald-100 dark:bg-emerald-950/60 dark:text-emerald-300'"
+                                    class="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-[10px] font-bold transition cursor-pointer">
+                                <span class="w-1.5 h-1.5 rounded-full bg-emerald-400"></span>
+                                Tahap 4: Packing
+                            </button>
+                        </div>
                     </div>
 
                     <div class="overflow-x-auto max-h-72 overflow-y-auto custom-scrollbar rounded-xl border border-gray-100 dark:border-gray-800">
@@ -1193,7 +1229,7 @@
                             </thead>
                             <tbody class="divide-y divide-gray-100 dark:divide-gray-800 font-medium">
                                 <template x-for="(mo, idx) in (traceItem?.material_outs || [])" :key="mo.id">
-                                    <tr class="hover:bg-gray-50/80 dark:hover:bg-gray-800/50 transition">
+                                    <tr x-show="stageFilter === 'all' || mo.wip_stage === stageFilter" class="hover:bg-gray-50/80 dark:hover:bg-gray-800/50 transition">
                                         <td class="px-3 py-2.5 text-center text-gray-400 font-mono" x-text="idx + 1"></td>
                                         <td class="px-3 py-2.5 font-mono text-gray-600 dark:text-gray-300 whitespace-nowrap" x-text="mo.date ? mo.date.substring(0, 10) : '-'"></td>
                                         <td class="px-3 py-2.5 whitespace-nowrap">

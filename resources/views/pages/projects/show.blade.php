@@ -455,12 +455,40 @@
 
     <!-- Materials Used Table -->
     <div class="rounded-2xl border border-gray-100 bg-white shadow-xs dark:border-gray-800 dark:bg-gray-900 overflow-hidden">
-        <div class="p-4 border-b border-gray-100 dark:border-gray-800 flex items-center justify-between">
-            <h3 class="text-sm font-bold text-gray-900 dark:text-white">Rincian Material Terpakai untuk Project {{ $project->name }}</h3>
-            <span class="inline-flex items-center gap-1.5 text-xs text-emerald-600 dark:text-emerald-400 font-semibold">
-                <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/></svg>
-                <span>Pemotongan Stok Gudang Otomatis Active</span>
-            </span>
+        <div class="p-4 border-b border-gray-100 dark:border-gray-800 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+            <div>
+                <h3 class="text-sm font-bold text-gray-900 dark:text-white">Rincian Material Terpakai untuk Project {{ $project->name }}</h3>
+                <p class="text-xs text-gray-500 dark:text-gray-400">Filter transaksi pengeluaran material berdasarkan tahapan proses fabrikasi (WIP).</p>
+            </div>
+            
+            <!-- Filter Tabs Tahap WIP -->
+            <div class="flex items-center gap-1.5 flex-wrap">
+                @php $curWip = request('wip_stage'); @endphp
+                <a href="{{ route('projects.show', ['project' => $project->id]) }}" 
+                   class="px-2.5 py-1 rounded-lg text-xs font-bold transition {{ empty($curWip) ? 'bg-brand-600 text-white shadow-xs' : 'bg-gray-100 text-gray-700 hover:bg-gray-200 dark:bg-gray-800 dark:text-gray-300' }}">
+                    Semua Tahap
+                </a>
+                <a href="{{ route('projects.show', ['project' => $project->id, 'wip_stage' => 'Cutting']) }}" 
+                   class="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-bold transition {{ $curWip === 'Cutting' ? 'bg-amber-600 text-white shadow-xs' : 'bg-amber-50 text-amber-800 hover:bg-amber-100 dark:bg-amber-950/60 dark:text-amber-300' }}">
+                    <span class="w-1.5 h-1.5 rounded-full bg-amber-400"></span>
+                    Tahap 1: Cutting
+                </a>
+                <a href="{{ route('projects.show', ['project' => $project->id, 'wip_stage' => 'Welding']) }}" 
+                   class="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-bold transition {{ $curWip === 'Welding' ? 'bg-rose-600 text-white shadow-xs' : 'bg-rose-50 text-rose-800 hover:bg-rose-100 dark:bg-rose-950/60 dark:text-rose-300' }}">
+                    <span class="w-1.5 h-1.5 rounded-full bg-rose-400"></span>
+                    Tahap 3: Welding
+                </a>
+                <a href="{{ route('projects.show', ['project' => $project->id, 'wip_stage' => 'Painting']) }}" 
+                   class="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-bold transition {{ $curWip === 'Painting' ? 'bg-sky-600 text-white shadow-xs' : 'bg-sky-50 text-sky-800 hover:bg-sky-100 dark:bg-sky-950/60 dark:text-sky-300' }}">
+                    <span class="w-1.5 h-1.5 rounded-full bg-sky-400"></span>
+                    Tahap 3: Painting
+                </a>
+                <a href="{{ route('projects.show', ['project' => $project->id, 'wip_stage' => 'Packing']) }}" 
+                   class="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-bold transition {{ $curWip === 'Packing' ? 'bg-emerald-600 text-white shadow-xs' : 'bg-emerald-50 text-emerald-800 hover:bg-emerald-100 dark:bg-emerald-950/60 dark:text-emerald-300' }}">
+                    <span class="w-1.5 h-1.5 rounded-full bg-emerald-400"></span>
+                    Tahap 4: Packing
+                </a>
+            </div>
         </div>
 
         <div class="overflow-x-auto">
@@ -469,6 +497,7 @@
                     <tr>
                         <th class="px-4 py-3.5 text-center w-12">NO</th>
                         <th class="px-4 py-3.5">TANGGAL</th>
+                        <th class="px-4 py-3.5">TAHAP WIP</th>
                         <th class="px-4 py-3.5">KODE MATERIAL</th>
                         <th class="px-4 py-3.5">NAMA BARANG</th>
                         <th class="px-4 py-3.5 text-center">JUMLAH TERPAKAI</th>
@@ -487,6 +516,27 @@
                             <td class="px-4 py-3 text-center text-gray-500">{{ $materialOuts->firstItem() + $index }}</td>
                             <td class="px-4 py-3 font-semibold text-gray-900 dark:text-white whitespace-nowrap">
                                 {{ format_date($mo->date) }}
+                            </td>
+                            <td class="px-4 py-3 whitespace-nowrap">
+                                @if($mo->wip_stage)
+                                    @php
+                                        $wipBadgeStyle = match($mo->wip_stage) {
+                                            'Cutting' => 'bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-950/50 dark:text-amber-300 dark:border-amber-800',
+                                            'Welding' => 'bg-rose-50 text-rose-700 border-rose-200 dark:bg-rose-950/50 dark:text-rose-300 dark:border-rose-800',
+                                            'Painting' => 'bg-sky-50 text-sky-700 border-sky-200 dark:bg-sky-950/50 dark:text-sky-300 dark:border-sky-800',
+                                            'Packing' => 'bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-950/50 dark:text-emerald-300 dark:border-emerald-800',
+                                            default => 'bg-gray-100 text-gray-700 border-gray-200 dark:bg-gray-800 dark:text-gray-300 dark:border-gray-700',
+                                        };
+                                    @endphp
+                                    <span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-bold border {{ $wipBadgeStyle }}">
+                                        {{ $mo->wip_stage }}
+                                        @if($mo->manpower_hours > 0)
+                                            <span class="opacity-75 font-mono text-[10px]">({{ (float)$mo->manpower_hours }} Jam)</span>
+                                        @endif
+                                    </span>
+                                @else
+                                    <span class="text-gray-400 italic text-[11px]">-</span>
+                                @endif
                             </td>
                             <td class="px-4 py-3 whitespace-nowrap">
                                 <span class="px-2 py-0.5 rounded-md font-mono text-xs font-bold bg-gray-100 dark:bg-gray-800 text-gray-800 dark:text-gray-200 border border-gray-200 dark:border-gray-700">
