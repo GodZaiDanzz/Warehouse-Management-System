@@ -62,14 +62,37 @@
     setTrace(item) {
         this.traceItem = item;
         this.openTraceModal = true;
+    },
+    openWipModalState: false,
+    wipData: {
+        project_id: '{{ request('project_id') }}',
+        wip_stage: '{{ $stageKey ?? 'Cutting' }}',
+        date: '{{ date('Y-m-d') }}',
+        item_id: '',
+        quantity: 1,
+        unit: 'PCS',
+        manpower_hours: 0,
+        manpower_rate_per_hour: 25000,
+        pic: '{{ auth()->user()->name ?? 'Operator Fabrikasi' }}',
+        notes: ''
+    },
+    openWipModal(stage) {
+        this.wipData.wip_stage = stage;
+        this.wipData.project_id = '{{ request('project_id') }}';
+        this.openWipModalState = true;
     }
 }" class="p-4 sm:p-6 space-y-6">
 
     <!-- Header Section -->
     <div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between print:hidden">
         <div>
-            <h1 class="text-2xl font-black text-gray-900 dark:text-white">Barang Jadi (Finish Goods)</h1>
-            <p class="text-xs sm:text-sm text-gray-500 dark:text-gray-400 mt-1">Pencatatan dan pelacakan produk jadi hasil fabrikasi per project hingga pengiriman ke klien.</p>
+            @if($currentTab === 'finish_goods')
+                <h1 class="text-2xl font-black text-gray-900 dark:text-white">Barang Jadi & WIP (Work In Process)</h1>
+                <p class="text-xs sm:text-sm text-gray-500 dark:text-gray-400 mt-1">Pencatatan produk jadi hasil fabrikasi per project hingga pengiriman ke klien.</p>
+            @else
+                <h1 class="text-2xl font-black text-gray-900 dark:text-white">WIP (Work In Process) - Tahap {{ $stageKey }}</h1>
+                <p class="text-xs sm:text-sm text-gray-500 dark:text-gray-400 mt-1">Pencatatan dan pemantauan material keluar serta upah tenaga kerja pada proses <strong>{{ $stageKey }}</strong>.</p>
+            @endif
         </div>
 
         <div class="flex flex-wrap items-center gap-2.5">
@@ -79,15 +102,77 @@
             </a>
 
             @if(auth()->user() && auth()->user()->canManageWarehouse())
-            <button type="button" @click="openCreateModal = true" class="inline-flex items-center gap-1.5 rounded-xl bg-brand-600 px-4 py-2 text-xs font-bold text-white hover:bg-brand-700 shadow-xs transition cursor-pointer">
-                <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
-                Catat Barang Jadi Baru
-            </button>
+                @if($currentTab === 'finish_goods')
+                    <button type="button" @click="openCreateModal = true" class="inline-flex items-center gap-1.5 rounded-xl bg-brand-600 px-4 py-2 text-xs font-bold text-white hover:bg-brand-700 shadow-xs transition cursor-pointer">
+                        <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+                        Catat Barang Jadi Baru
+                    </button>
+                @else
+                    <button type="button" @click="openWipModal('{{ $stageKey }}')" class="inline-flex items-center gap-1.5 rounded-xl bg-amber-600 px-4 py-2 text-xs font-bold text-white hover:bg-amber-700 shadow-xs transition cursor-pointer">
+                        <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+                        <span>+ Input WIP ({{ $stageKey }})</span>
+                    </button>
+                @endif
             @endif
         </div>
     </div>
 
+    <!-- TABS NAVIGASI 5 TAHAP PROSES FABRIKASI & WIP -->
+    <div class="flex items-center gap-2 overflow-x-auto pb-1 border-b border-gray-200 dark:border-gray-800 print:hidden">
+        <!-- Tab 0: Produk Jadi -->
+        <a href="{{ route('finish-goods.index', array_merge(request()->except(['tab', 'page']), ['tab' => 'finish_goods'])) }}"
+           class="inline-flex items-center gap-2 rounded-xl px-4 py-2.5 text-xs font-bold transition shadow-xs cursor-pointer {{ $currentTab === 'finish_goods' ? 'bg-brand-600 text-white shadow-brand-500/20' : 'bg-white text-gray-700 hover:bg-gray-50 border border-gray-200 dark:bg-gray-800 dark:border-gray-700 dark:text-gray-300 dark:hover:bg-gray-700' }}">
+            <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+            <span>Produk Jadi (Finish Goods)</span>
+            <span class="rounded-full {{ $currentTab === 'finish_goods' ? 'bg-white/20 text-white' : 'bg-brand-100 text-brand-800 dark:bg-brand-950/60 dark:text-brand-300' }} px-2 py-0.5 text-[10px] font-black font-mono">
+                {{ $wipCounts['finish_goods'] ?? 0 }}
+            </span>
+        </a>
+
+        <!-- Tab 1: Cutting -->
+        <a href="{{ route('finish-goods.index', array_merge(request()->except(['tab', 'page']), ['tab' => 'cutting'])) }}"
+           class="inline-flex items-center gap-2 rounded-xl px-4 py-2.5 text-xs font-bold transition shadow-xs cursor-pointer {{ $currentTab === 'cutting' ? 'bg-amber-600 text-white shadow-amber-500/20' : 'bg-white text-gray-700 hover:bg-gray-50 border border-gray-200 dark:bg-gray-800 dark:border-gray-700 dark:text-gray-300 dark:hover:bg-gray-700' }}">
+            <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.121 14.121L19 19m-7-7l7-7m-7 7l-2.828 2.828a2 2 0 11-2.828-2.828L8.99 11.293m0 0L4.707 7.001a2 2 0 112.828-2.828l4.283 4.283m0 0L19 19"/></svg>
+            <span>Tahap 1: Cutting & Profiling</span>
+            <span class="rounded-full {{ $currentTab === 'cutting' ? 'bg-white/20 text-white' : 'bg-amber-100 text-amber-800 dark:bg-amber-950/60 dark:text-amber-300' }} px-2 py-0.5 text-[10px] font-black font-mono">
+                {{ $wipCounts['cutting'] ?? 0 }}
+            </span>
+        </a>
+
+        <!-- Tab 2: Vendor Eksternal -->
+        <a href="{{ route('finish-goods.index', array_merge(request()->except(['tab', 'page']), ['tab' => 'vendor'])) }}"
+           class="inline-flex items-center gap-2 rounded-xl px-4 py-2.5 text-xs font-bold transition shadow-xs cursor-pointer {{ $currentTab === 'vendor' ? 'bg-blue-600 text-white shadow-blue-500/20' : 'bg-white text-gray-700 hover:bg-gray-50 border border-gray-200 dark:bg-gray-800 dark:border-gray-700 dark:text-gray-300 dark:hover:bg-gray-700' }}">
+            <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/></svg>
+            <span>Tahap 2: Vendor Eksternal (Subkon)</span>
+            <span class="rounded-full {{ $currentTab === 'vendor' ? 'bg-white/20 text-white' : 'bg-blue-100 text-blue-800 dark:bg-blue-950/60 dark:text-blue-300' }} px-2 py-0.5 text-[10px] font-black font-mono">
+                {{ $wipCounts['vendor'] ?? 0 }}
+            </span>
+        </a>
+
+        <!-- Tab 3: Welding -->
+        <a href="{{ route('finish-goods.index', array_merge(request()->except(['tab', 'page']), ['tab' => 'welding'])) }}"
+           class="inline-flex items-center gap-2 rounded-xl px-4 py-2.5 text-xs font-bold transition shadow-xs cursor-pointer {{ $currentTab === 'welding' ? 'bg-rose-600 text-white shadow-rose-500/20' : 'bg-white text-gray-700 hover:bg-gray-50 border border-gray-200 dark:bg-gray-800 dark:border-gray-700 dark:text-gray-300 dark:hover:bg-gray-700' }}">
+            <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+            <span>Tahap 3: Welding & Assembling</span>
+            <span class="rounded-full {{ $currentTab === 'welding' ? 'bg-white/20 text-white' : 'bg-rose-100 text-rose-800 dark:bg-rose-950/60 dark:text-rose-300' }} px-2 py-0.5 text-[10px] font-black font-mono">
+                {{ $wipCounts['welding'] ?? 0 }}
+            </span>
+        </a>
+
+        <!-- Tab 4: Painting -->
+        <a href="{{ route('finish-goods.index', array_merge(request()->except(['tab', 'page']), ['tab' => 'painting'])) }}"
+           class="inline-flex items-center gap-2 rounded-xl px-4 py-2.5 text-xs font-bold transition shadow-xs cursor-pointer {{ $currentTab === 'painting' ? 'bg-purple-600 text-white shadow-purple-500/20' : 'bg-white text-gray-700 hover:bg-gray-50 border border-gray-200 dark:bg-gray-800 dark:border-gray-700 dark:text-gray-300 dark:hover:bg-gray-700' }}">
+            <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21a4 4 0 01-4-4 4 4 0 014-4 4 4 0 014-4 4 4 0 01-4 4zm0 0h12a2 2 0 002-2v-4a2 2 0 00-2-2h-2.343M11 7.343l1.657-1.657a2 2 0 012.828 0l2.829 2.829a2 2 0 010 2.828l-8.486 8.485M7 17h.01"/></svg>
+            <span>Tahap 4: Painting & Finishing</span>
+            <span class="rounded-full {{ $currentTab === 'painting' ? 'bg-white/20 text-white' : 'bg-purple-100 text-purple-800 dark:bg-purple-950/60 dark:text-purple-300' }} px-2 py-0.5 text-[10px] font-black font-mono">
+                {{ $wipCounts['painting'] ?? 0 }}
+            </span>
+        </a>
+    </div>
+
     <!-- Stats Cards -->
+    @if($currentTab === 'finish_goods')
+
     <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4 print:hidden">
         <!-- Total Barang Jadi -->
         <div class="rounded-2xl border border-gray-200 bg-white p-5 dark:border-gray-800 dark:bg-gray-900 shadow-xs">
@@ -145,10 +230,42 @@
             <p class="mt-3 text-xs text-gray-400">Memenuhi spesifikasi standar kualitas</p>
         </div>
     </div>
+    @else
+    <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4 print:hidden">
+        <!-- Total Catatan WIP -->
+        <div class="rounded-2xl border border-gray-200 bg-white p-5 dark:border-gray-800 dark:bg-gray-900 shadow-xs">
+            <span class="text-xs font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400">Catatan Material WIP</span>
+            <h3 class="mt-2 text-2xl font-black text-brand-600 dark:text-brand-400 font-mono">{{ number_format($stageStats['total_items'] ?? 0) }} Catatan</h3>
+            <p class="mt-3 text-xs text-gray-400">Tahap: <span class="font-bold text-gray-700 dark:text-gray-300">{{ $stageKey }}</span></p>
+        </div>
+
+        <!-- Total Kuantitas Fisik -->
+        <div class="rounded-2xl border border-gray-200 bg-white p-5 dark:border-gray-800 dark:bg-gray-900 shadow-xs">
+            <span class="text-xs font-bold uppercase tracking-wider text-amber-600 dark:text-amber-400">Total Kuantitas Fisik</span>
+            <h3 class="mt-2 text-2xl font-black text-amber-600 dark:text-amber-400 font-mono">{{ number_format($stageStats['total_qty'] ?? 0, 1) }} Unit</h3>
+            <p class="mt-3 text-xs text-gray-400">Total volume material terserap</p>
+        </div>
+
+        <!-- Total Jam Kerja Manpower -->
+        <div class="rounded-2xl border border-gray-200 bg-white p-5 dark:border-gray-800 dark:bg-gray-900 shadow-xs">
+            <span class="text-xs font-bold uppercase tracking-wider text-rose-600 dark:text-rose-400">Total Jam Manpower</span>
+            <h3 class="mt-2 text-2xl font-black text-rose-600 dark:text-rose-400 font-mono">{{ number_format($stageStats['total_manpower_hours'] ?? 0, 1) }} Jam</h3>
+            <p class="mt-3 text-xs text-gray-400">Total jam kerja operator fabrikasi</p>
+        </div>
+
+        <!-- Total Upah Tenaga Kerja -->
+        <div class="rounded-2xl border border-gray-200 bg-white p-5 dark:border-gray-800 dark:bg-gray-900 shadow-xs">
+            <span class="text-xs font-bold uppercase tracking-wider text-emerald-600 dark:text-emerald-400">Total Biaya Manpower</span>
+            <h3 class="mt-2 text-xl font-black text-emerald-600 dark:text-emerald-400 font-mono">Rp {{ number_format($stageStats['total_manpower_cost'] ?? 0, 0, ',', '.') }}</h3>
+            <p class="mt-3 text-xs text-gray-400">Akumulasi upah tenaga kerja WIP</p>
+        </div>
+    </div>
+    @endif
 
     <!-- Filter Bar -->
     <div class="rounded-2xl border border-gray-200 bg-white p-4.5 dark:border-gray-800 dark:bg-gray-900 shadow-xs print:hidden">
         <form method="GET" action="{{ route('finish-goods.index') }}" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-6 gap-3">
+            <input type="hidden" name="tab" value="{{ $currentTab }}">
             <!-- Search -->
             <div class="lg:col-span-2">
                 <label class="block text-[11px] font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400 mb-1">Cari Barang / Tag / Surat Jalan</label>
@@ -205,6 +322,7 @@
         </form>
     </div>
 
+    @if($currentTab === 'finish_goods')
     <!-- Finish Goods Table -->
     <div class="rounded-2xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-gray-900 shadow-xs overflow-hidden">
         <div class="overflow-x-auto">
@@ -411,6 +529,152 @@
         @endif
     </div>
 
+        @else
+    <!-- WIP Process Materials & Manpower Table -->
+    <div class="rounded-2xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-gray-900 shadow-xs overflow-hidden">
+        <div class="p-4 border-b border-gray-100 dark:border-gray-800 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 bg-gray-50/50 dark:bg-gray-800/30">
+            <div>
+                <h3 class="text-sm font-bold text-gray-900 dark:text-white flex items-center gap-2">
+                    <span>Daftar Penggunaan Material & Manpower: {{ $stageKey }}</span>
+                    <span class="px-2 py-0.5 rounded-full text-[11px] font-bold bg-amber-100 text-amber-800 dark:bg-amber-950/60 dark:text-amber-300">
+                        {{ $stageKey }}
+                    </span>
+                </h3>
+                <p class="text-xs text-gray-500 dark:text-gray-400">Setiap material yang keluar di bawah otomatis memotong stok gudang dan terakumulasi ke HPP barang jadi.</p>
+            </div>
+            @if(auth()->user() && auth()->user()->canManageWarehouse())
+                <button type="button" @click="openWipModal('{{ $stageKey }}')" class="inline-flex items-center gap-1.5 rounded-xl bg-amber-600 px-3.5 py-2 text-xs font-bold text-white hover:bg-amber-700 shadow-xs transition cursor-pointer">
+                    <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+                    <span>+ Input WIP {{ $stageKey }}</span>
+                </button>
+            @endif
+        </div>
+
+        <div class="overflow-x-auto">
+            <table class="w-full text-left text-xs">
+                <thead class="theme-table-header text-white font-extrabold uppercase border-b border-gray-200 dark:border-gray-800">
+                    <tr>
+                        <th class="px-4 py-3.5 text-center w-12">NO</th>
+                        <th class="px-4 py-3.5">PROJECT & NO PO</th>
+                        <th class="px-4 py-3.5">TANGGAL</th>
+                        <th class="px-4 py-3.5">KODE MATERIAL</th>
+                        <th class="px-4 py-3.5">NAMA BARANG</th>
+                        <th class="px-4 py-3.5 text-center">KUANTITAS FISIK</th>
+                        <th class="px-4 py-3.5 text-center">MANPOWER (JAM)</th>
+                        <th class="px-4 py-3.5 text-right">BIAYA MANPOWER</th>
+                        <th class="px-4 py-3.5">PIC PELAKSANA</th>
+                        <th class="px-4 py-3.5">CATATAN</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-gray-100 dark:divide-gray-800">
+                    @forelse($wipRecords as $index => $mo)
+                        <tr class="hover:bg-gray-50/80 transition dark:hover:bg-gray-800/50">
+                            <!-- NO -->
+                            <td class="px-4 py-3.5 text-center font-semibold text-gray-500 dark:text-gray-400">
+                                {{ $wipRecords->firstItem() + $index }}
+                            </td>
+
+                            <!-- PROJECT & NO PO -->
+                            <td class="px-4 py-3.5">
+                                <div class="flex flex-col">
+                                    <span class="font-bold text-gray-900 dark:text-white">{{ $mo->projectRelation->name ?? $mo->project }}</span>
+                                    @if($mo->projectRelation && $mo->projectRelation->po_number)
+                                        <span class="font-mono text-[11px] text-amber-600 dark:text-amber-400 font-semibold">
+                                            PO: {{ $mo->projectRelation->po_number }}
+                                        </span>
+                                    @endif
+                                </div>
+                            </td>
+
+                            <!-- TANGGAL -->
+                            <td class="px-4 py-3.5 whitespace-nowrap">
+                                <div class="font-semibold text-gray-800 dark:text-gray-200">{{ format_date($mo->date) }}</div>
+                                <span class="font-mono text-[10px] text-gray-400">{{ $mo->reference_number }}</span>
+                            </td>
+
+                            <!-- KODE MATERIAL -->
+                            <td class="px-4 py-3.5 whitespace-nowrap">
+                                <span class="inline-flex items-center px-2 py-0.5 rounded-md text-xs font-mono font-bold bg-gray-100 dark:bg-gray-800 text-gray-800 dark:text-gray-200 border border-gray-200 dark:border-gray-700">
+                                    {{ $mo->item->code_item ?? '-' }}
+                                </span>
+                            </td>
+
+                            <!-- NAMA BARANG -->
+                            <td class="px-4 py-3.5">
+                                <span class="font-bold text-gray-900 dark:text-white block">{{ $mo->item->name ?? '-' }}</span>
+                                <span class="text-[10px] text-gray-400">{{ $mo->item->category->name ?? 'Material' }}</span>
+                            </td>
+
+                            <!-- KUANTITAS FISIK -->
+                            <td class="px-4 py-3.5 text-center whitespace-nowrap">
+                                <span class="inline-block px-2.5 py-1 rounded-lg bg-emerald-50 text-emerald-700 dark:bg-emerald-950/60 dark:text-emerald-300 font-mono font-bold text-xs">
+                                    -{{ format_quantity($mo->quantity) }} {{ $mo->unit }}
+                                </span>
+                            </td>
+
+                            <!-- MANPOWER (JAM) -->
+                            <td class="px-4 py-3.5 text-center whitespace-nowrap">
+                                @if($mo->manpower_hours > 0)
+                                    <span class="inline-flex items-center gap-1 font-mono text-xs font-bold text-rose-700 dark:text-rose-300 bg-rose-50 dark:bg-rose-950/50 px-2 py-0.5 rounded-md border border-rose-200 dark:border-rose-800">
+                                        {{ (float)$mo->manpower_hours }} Jam
+                                    </span>
+                                @else
+                                    <span class="text-gray-400 text-xs italic">-</span>
+                                @endif
+                            </td>
+
+                            <!-- BIAYA MANPOWER -->
+                            <td class="px-4 py-3.5 text-right whitespace-nowrap">
+                                @if($mo->manpower_cost > 0)
+                                    <span class="font-mono font-bold text-xs text-rose-600 dark:text-rose-400">
+                                        Rp {{ number_format($mo->manpower_cost, 0, ',', '.') }}
+                                    </span>
+                                @else
+                                    <span class="text-gray-400 text-xs">-</span>
+                                @endif
+                            </td>
+
+                            <!-- PIC -->
+                            <td class="px-4 py-3.5 whitespace-nowrap">
+                                <span class="font-semibold text-gray-800 dark:text-gray-200">{{ $mo->pic ?: '-' }}</span>
+                            </td>
+
+                            <!-- CATATAN -->
+                            <td class="px-4 py-3.5">
+                                <span class="text-xs text-gray-600 dark:text-gray-400">{{ $mo->notes ?: '-' }}</span>
+                            </td>
+                        </tr>
+                    @empty
+                        <tr>
+                            <td colspan="10" class="px-4 py-12 text-center">
+                                <div class="flex flex-col items-center justify-center space-y-2">
+                                    <div class="h-12 w-12 rounded-full bg-amber-50 dark:bg-amber-950/60 flex items-center justify-center text-amber-500">
+                                        <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/></svg>
+                                    </div>
+                                    <span class="text-sm font-bold text-gray-700 dark:text-gray-300">Belum Ada Pengeluaran Material untuk Tahap {{ $stageKey }}</span>
+                                    <p class="text-xs text-gray-400 max-w-sm">Klik tombol di bawah untuk mencatat pemakaian material dan upah tenaga kerja pada proses {{ $stageKey }}.</p>
+                                    @if(auth()->user() && auth()->user()->canManageWarehouse())
+                                        <button type="button" @click="openWipModal('{{ $stageKey }}')" class="mt-2 inline-flex items-center gap-1.5 rounded-xl bg-amber-600 px-3.5 py-2 text-xs font-bold text-white hover:bg-amber-700 transition cursor-pointer">
+                                            <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+                                            <span>+ Input WIP {{ $stageKey }}</span>
+                                        </button>
+                                    @endif
+                                </div>
+                            </td>
+                        </tr>
+                    @endforelse
+                </tbody>
+            </table>
+        </div>
+
+        @if($wipRecords->hasPages())
+            <div class="p-4 border-t border-gray-100 dark:border-gray-800">
+                {{ $wipRecords->links() }}
+            </div>
+        @endif
+    </div>
+    @endif
+    
     <!-- Modal Catat Barang Jadi Baru -->
     <template x-teleport="body">
         <div x-show="openCreateModal" x-cloak @click.self="openCreateModal = false" @keydown.escape.window="openCreateModal = false" class="fixed inset-0 z-[999999] flex items-center justify-center p-3 sm:p-4 bg-gray-950/80 backdrop-blur-xs overflow-y-auto animate-fadeIn">
@@ -1289,4 +1553,131 @@
         </div>
     </template>
 </div>
+    <!-- MODAL INPUT MATERIAL & MANPOWER WIP PER PROSES -->
+    <template x-teleport="body">
+        <div x-show="openWipModalState" x-cloak @click.self="openWipModalState = false" @keydown.escape.window="openWipModalState = false"
+             class="fixed inset-0 z-[999999] flex items-center justify-center p-3 sm:p-4 bg-gray-950/80 backdrop-blur-xs overflow-y-auto animate-fadeIn">
+            <div class="w-full max-w-2xl rounded-2xl bg-white p-6 shadow-2xl dark:bg-gray-900 dark:border dark:border-gray-800 space-y-4 max-h-[92vh] overflow-y-auto custom-scrollbar my-auto">
+                <div class="flex items-center justify-between border-b border-gray-100 dark:border-gray-800 pb-3">
+                    <div class="flex items-center gap-3">
+                        <div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-amber-50 text-amber-600 dark:bg-amber-950/80 dark:text-amber-400">
+                            <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/></svg>
+                        </div>
+                        <div>
+                            <h3 class="text-base font-black text-gray-900 dark:text-white">
+                                Catat WIP: <span x-text="'Tahap ' + wipData.wip_stage"></span>
+                            </h3>
+                            <p class="text-xs text-gray-500 dark:text-gray-400">Alokasikan material dari stok gudang dan catat upah jam kerja manpower.</p>
+                        </div>
+                    </div>
+                    <button type="button" @click="openWipModalState = false" class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 cursor-pointer">
+                        <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+                    </button>
+                </div>
+
+                <form action="{{ route('finish-goods.store-wip') }}" method="POST" class="space-y-4">
+                    @csrf
+                    <input type="hidden" name="wip_stage" :value="wipData.wip_stage">
+
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                        <!-- Project -->
+                        <div>
+                            <label class="block text-xs font-bold text-gray-700 dark:text-gray-300 mb-1">Pilih Project <span class="text-rose-500">*</span></label>
+                            <select name="project_id" x-model="wipData.project_id" required class="w-full rounded-xl border border-gray-200 bg-gray-50 px-3 py-2 text-xs font-semibold text-gray-800 outline-none focus:border-brand-500 focus:bg-white dark:border-gray-700 dark:bg-gray-800 dark:text-white">
+                                <option value="">-- Pilih Project Tujuan --</option>
+                                @foreach($projects as $p)
+                                    <option value="{{ $p->id }}">{{ $p->name }} {{ $p->po_number ? '(PO: ' . $p->po_number . ')' : '' }}</option>
+                                @endforeach
+                            </select>
+                        </div>
+
+                        <!-- Tanggal -->
+                        <div>
+                            <label class="block text-xs font-bold text-gray-700 dark:text-gray-300 mb-1">Tanggal Pengeluaran <span class="text-rose-500">*</span></label>
+                            <input type="date" name="date" x-model="wipData.date" required class="w-full rounded-xl border border-gray-200 bg-gray-50 px-3 py-2 text-xs text-gray-800 outline-none focus:border-brand-500 focus:bg-white dark:border-gray-700 dark:bg-gray-800 dark:text-white cursor-pointer">
+                        </div>
+                    </div>
+
+                    <!-- Material Picker -->
+                    <div>
+                        <label class="block text-xs font-bold text-gray-700 dark:text-gray-300 mb-1">Material dari Stok Gudang <span class="text-rose-500">*</span></label>
+                        <select name="item_id" x-model="wipData.item_id" @change="
+                            const itm = @js($itemsList).find(i => String(i.id) === String($event.target.value));
+                            if (itm) { wipData.unit = itm.unit; }
+                        " required class="w-full rounded-xl border border-gray-200 bg-gray-50 px-3 py-2 text-xs text-gray-800 outline-none focus:border-brand-500 focus:bg-white dark:border-gray-700 dark:bg-gray-800 dark:text-white">
+                            <option value="">-- Pilih Material Gudang --</option>
+                            @foreach($itemsList as $itm)
+                                <option value="{{ $itm->id }}">
+                                    {{ $itm->code_item ? '[' . $itm->code_item . '] ' : '' }}{{ $itm->name }} (Stok: {{ format_quantity($itm->stock) }} {{ $itm->unit }})
+                                </option>
+                            @endforeach
+                        </select>
+                    </div>
+
+                    <div class="grid grid-cols-2 gap-3">
+                        <!-- Kuantitas -->
+                        <div>
+                            <label class="block text-xs font-bold text-gray-700 dark:text-gray-300 mb-1">Kuantitas Terpakai <span class="text-rose-500">*</span></label>
+                            <input type="number" step="any" min="0.0001" name="quantity" x-model="wipData.quantity" required class="w-full rounded-xl border border-gray-200 bg-gray-50 px-3 py-2 text-xs text-gray-800 outline-none focus:border-brand-500 focus:bg-white dark:border-gray-700 dark:bg-gray-800 dark:text-white font-mono">
+                        </div>
+
+                        <!-- Satuan -->
+                        <div>
+                            <label class="block text-xs font-bold text-gray-700 dark:text-gray-300 mb-1">Satuan <span class="text-rose-500">*</span></label>
+                            <select name="unit" x-model="wipData.unit" required class="w-full rounded-xl border border-gray-200 bg-gray-50 px-3 py-2 text-xs text-gray-800 outline-none focus:border-brand-500 focus:bg-white dark:border-gray-700 dark:bg-gray-800 dark:text-white">
+                                @foreach($units as $u)
+                                    <option value="{{ $u->symbol }}">{{ $u->symbol }} ({{ $u->name }})</option>
+                                @endforeach
+                            </select>
+                        </div>
+                    </div>
+
+                    <!-- Tenaga Kerja / Manpower -->
+                    <div class="rounded-xl border border-amber-200 bg-amber-50/60 p-3.5 dark:border-amber-800/60 dark:bg-amber-950/30 space-y-3">
+                        <div class="flex items-center gap-2">
+                            <svg class="w-4 h-4 text-amber-600 dark:text-amber-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                            <span class="text-xs font-bold text-amber-900 dark:text-amber-200">Perhitungan Upah Tenaga Kerja (Manpower WIP)</span>
+                        </div>
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                            <div>
+                                <label class="block text-[11px] font-bold text-gray-700 dark:text-gray-300 mb-1">Jam Kerja Tenaga Kerja (Hours)</label>
+                                <input type="number" step="0.1" min="0" name="manpower_hours" x-model.number="wipData.manpower_hours" placeholder="0" class="w-full rounded-xl border border-gray-200 bg-white px-3 py-2 text-xs text-gray-800 outline-none focus:border-brand-500 dark:border-gray-700 dark:bg-gray-800 dark:text-white font-mono">
+                            </div>
+                            <div>
+                                <label class="block text-[11px] font-bold text-gray-700 dark:text-gray-300 mb-1">Tarif Upah per Jam (Rp / Jam)</label>
+                                <input type="number" step="1000" min="0" name="manpower_rate_per_hour" x-model.number="wipData.manpower_rate_per_hour" placeholder="25000" class="w-full rounded-xl border border-gray-200 bg-white px-3 py-2 text-xs text-gray-800 outline-none focus:border-brand-500 dark:border-gray-700 dark:bg-gray-800 dark:text-white font-mono">
+                            </div>
+                        </div>
+                        <div class="flex items-center justify-between text-xs pt-1 border-t border-amber-200/60 dark:border-amber-800/60">
+                            <span class="text-gray-600 dark:text-gray-400">Total Biaya Tenaga Kerja:</span>
+                            <span class="font-extrabold text-amber-700 dark:text-amber-300 font-mono"
+                                  x-text="'Rp ' + ((wipData.manpower_hours || 0) * (wipData.manpower_rate_per_hour || 0)).toLocaleString('id-ID')"></span>
+                        </div>
+                    </div>
+
+                    <!-- PIC & Catatan -->
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                        <div>
+                            <label class="block text-xs font-bold text-gray-700 dark:text-gray-300 mb-1">PIC Pelaksana / Mandor <span class="text-rose-500">*</span></label>
+                            <input type="text" name="pic" x-model="wipData.pic" required placeholder="Nama operator / PIC..." class="w-full rounded-xl border border-gray-200 bg-gray-50 px-3 py-2 text-xs text-gray-800 outline-none focus:border-brand-500 focus:bg-white dark:border-gray-700 dark:bg-gray-800 dark:text-white">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold text-gray-700 dark:text-gray-300 mb-1">Catatan Proses WIP</label>
+                            <input type="text" name="notes" x-model="wipData.notes" placeholder="Contoh: Potong plat shell tangki..." class="w-full rounded-xl border border-gray-200 bg-gray-50 px-3 py-2 text-xs text-gray-800 outline-none focus:border-brand-500 focus:bg-white dark:border-gray-700 dark:bg-gray-800 dark:text-white">
+                        </div>
+                    </div>
+
+                    <div class="flex items-center justify-end gap-3 pt-3 border-t border-gray-100 dark:border-gray-800">
+                        <button type="button" @click="openWipModalState = false" class="rounded-xl border border-gray-200 bg-white px-4 py-2 text-xs font-semibold text-gray-700 hover:bg-gray-50 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-300 cursor-pointer">
+                            Batal
+                        </button>
+                        <button type="submit" class="rounded-xl bg-amber-600 px-5 py-2 text-xs font-bold text-white hover:bg-amber-700 shadow-xs cursor-pointer">
+                            Simpan WIP & Potong Stok
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </template>
+
 @endsection

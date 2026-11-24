@@ -5,11 +5,15 @@ namespace App\Http\Controllers;
 use App\Models\ActivityLog;
 use App\Models\CompanyProfile;
 use App\Models\FinishGood;
+use App\Models\Item;
+use App\Models\MaterialOut;
 use App\Models\Project;
+use App\Models\StockLog;
 use App\Models\Unit;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 use PhpOffice\PhpSpreadsheet\Spreadsheet;
 use PhpOffice\PhpSpreadsheet\Style\Alignment;
 use PhpOffice\PhpSpreadsheet\Style\Border;
@@ -21,44 +25,124 @@ class FinishGoodController extends Controller
 {
     public function index(Request $request)
     {
-        $query = FinishGood::with(['project', 'creator', 'materialOuts.item', 'materialOuts.user']);
-
-        if ($request->filled('search')) {
-            $s = trim($request->search);
-            $query->where(function ($q) use ($s) {
-                $q->where('item_name', 'like', "%{$s}%")
-                    ->orWhere('item_code', 'like', "%{$s}%")
-                    ->orWhere('delivery_order_number', 'like', "%{$s}%")
-                    ->orWhere('notes', 'like', "%{$s}%")
-                    ->orWhereHas('project', function ($pq) use ($s) {
-                        $pq->where('name', 'like', "%{$s}%")
-                            ->orWhere('po_number', 'like', "%{$s}%")
-                            ->orWhere('client', 'like', "%{$s}%");
-                    });
-            });
+        $currentTab = $request->get('tab', 'finish_goods');
+        if (!in_array($currentTab, ['finish_goods', 'cutting', 'vendor', 'welding', 'painting'])) {
+            $currentTab = 'finish_goods';
         }
 
-        if ($request->filled('project_id')) {
-            $query->where('project_id', $request->project_id);
-        }
+        $stageKey = match($currentTab) {
+            'cutting' => 'Cutting',
+            'welding' => 'Welding',
+            'painting' => 'Painting',
+            'vendor' => 'Vendor Eksternal',
+            default => null,
+        };
 
-        if ($request->filled('status')) {
-            $query->where('status', $request->status);
-        }
+        // Tab counts for badge notifications
+        $wipCounts = [
+            'finish_goods' => FinishGood::count(),
+            'cutting' => MaterialOut::where('wip_stage', 'Cutting')->count(),
+            'vendor' => MaterialOut::whereIn('wip_stage', ['Vendor Eksternal', 'Vendor'])->count(),
+            'welding' => MaterialOut::where('wip_stage', 'Welding')->count(),
+            'painting' => MaterialOut::where('wip_stage', 'Painting')->count(),
+        ];
 
-        if ($request->filled('qc_status')) {
-            $query->where('qc_status', $request->qc_status);
-        }
+        $projects = Project::orderBy('name')->get();
+        $units = Unit::where('is_active', true)->orderBy('name')->get();
+        $itemsList = Item::select(['id', 'name', 'code_item', 'stock', 'unit'])
+            ->where('stock', '>', 0)
+            ->orderBy('name')
+            ->get();
 
-        if ($request->filled('date_from')) {
-            $query->whereDate('production_date', '>=', $request->date_from);
-        }
+        $finishGoods = collect();
+        $wipRecords = collect();
+        $stageStats = [];
 
-        if ($request->filled('date_to')) {
-            $query->whereDate('production_date', '<=', $request->date_to);
-        }
+        if ($currentTab === 'finish_goods') {
+            $query = FinishGood::with(['project', 'creator', 'materialOuts.item', 'materialOuts.user']);
 
-        $finishGoods = $query->latest('production_date')->latest('id')->paginate(15)->withQueryString();
+            if ($request->filled('search')) {
+                $s = trim($request->search);
+                $query->where(function ($q) use ($s) {
+                    $q->where('item_name', 'like', "%{$s}%")
+                        ->orWhere('item_code', 'like', "%{$s}%")
+                        ->orWhere('delivery_order_number', 'like', "%{$s}%")
+                        ->orWhere('notes', 'like', "%{$s}%")
+                        ->orWhereHas('project', function ($pq) use ($s) {
+                            $pq->where('name', 'like', "%{$s}%")
+                                ->orWhere('po_number', 'like', "%{$s}%")
+                                ->orWhere('client', 'like', "%{$s}%");
+                        });
+                });
+            }
+
+            if ($request->filled('project_id')) {
+                $query->where('project_id', $request->project_id);
+            }
+
+            if ($request->filled('status')) {
+                $query->where('status', $request->status);
+            }
+
+            if ($request->filled('qc_status')) {
+                $query->where('qc_status', $request->qc_status);
+            }
+
+            if ($request->filled('date_from')) {
+                $query->whereDate('production_date', '>=', $request->date_from);
+            }
+
+            if ($request->filled('date_to')) {
+                $query->whereDate('production_date', '<=', $request->date_to);
+            }
+
+            $finishGoods = $query->latest('production_date')->latest('id')->paginate(15)->withQueryString();
+        } else {
+            $wQuery = MaterialOut::with(['item.category', 'projectRelation', 'user']);
+            if ($currentTab === 'vendor') {
+                $wQuery->whereIn('wip_stage', ['Vendor Eksternal', 'Vendor']);
+            } else {
+                $wQuery->where('wip_stage', $stageKey);
+            }
+
+            if ($request->filled('search')) {
+                $s = trim($request->search);
+                $wQuery->where(function ($q) use ($s) {
+                    $q->where('reference_number', 'like', "%{$s}%")
+                        ->orWhere('pic', 'like', "%{$s}%")
+                        ->orWhere('notes', 'like', "%{$s}%")
+                        ->orWhereHas('item', function ($iq) use ($s) {
+                            $iq->where('name', 'like', "%{$s}%")
+                                ->orWhere('code_item', 'like', "%{$s}%");
+                        })
+                        ->orWhereHas('projectRelation', function ($pq) use ($s) {
+                            $pq->where('name', 'like', "%{$s}%")
+                                ->orWhere('po_number', 'like', "%{$s}%");
+                        });
+                });
+            }
+
+            if ($request->filled('project_id')) {
+                $wQuery->where('project_id', $request->project_id);
+            }
+
+            if ($request->filled('date_from')) {
+                $wQuery->whereDate('date', '>=', $request->date_from);
+            }
+
+            if ($request->filled('date_to')) {
+                $wQuery->whereDate('date', '<=', $request->date_to);
+            }
+
+            $wipRecords = $wQuery->latest('date')->latest('id')->paginate(15)->withQueryString();
+
+            $stageStats = [
+                'total_items' => (clone $wQuery)->count(),
+                'total_qty' => (clone $wQuery)->sum('quantity'),
+                'total_manpower_hours' => (clone $wQuery)->sum('manpower_hours'),
+                'total_manpower_cost' => (clone $wQuery)->sum('manpower_cost'),
+            ];
+        }
 
         $stats = [
             'total_items' => FinishGood::count(),
@@ -69,10 +153,10 @@ class FinishGoodController extends Controller
             'total_hpp' => FinishGood::sum('total_hpp'),
         ];
 
-        $projects = Project::orderBy('name')->get();
-        $units = Unit::where('is_active', true)->orderBy('name')->get();
-
-        return view('pages.finish-goods.index', compact('finishGoods', 'stats', 'projects', 'units'));
+        return view('pages.finish-goods.index', compact(
+            'finishGoods', 'stats', 'projects', 'units',
+            'currentTab', 'stageKey', 'wipCounts', 'wipRecords', 'stageStats', 'itemsList'
+        ));
     }
 
     public function store(Request $request)
@@ -150,6 +234,87 @@ class FinishGoodController extends Controller
         );
 
         return redirect()->back()->with('success', "Barang Jadi '{$fg->item_name}' berhasil dicatat!");
+    }
+
+    public function storeWip(Request $request)
+    {
+        $validated = $request->validate([
+            'project_id' => ['required', 'exists:projects,id'],
+            'wip_stage' => ['required', 'in:Cutting,Welding,Painting,Packing,Vendor,Vendor Eksternal'],
+            'date' => ['required', 'date'],
+            'item_id' => ['required', 'exists:items,id'],
+            'quantity' => ['required', 'numeric', 'min:0.0001'],
+            'unit' => ['required', 'string', 'max:50'],
+            'manpower_hours' => ['nullable', 'numeric', 'min:0'],
+            'manpower_rate_per_hour' => ['nullable', 'numeric', 'min:0'],
+            'pic' => ['required', 'string', 'max:255'],
+            'notes' => ['nullable', 'string', 'max:500'],
+        ], [
+            'project_id.required' => 'Silakan pilih project tujuan.',
+            'item_id.required' => 'Silakan pilih material yang digunakan.',
+            'quantity.required' => 'Jumlah material wajib diisi.',
+            'pic.required' => 'Nama PIC pelaksana wajib diisi.',
+        ]);
+
+        $item = Item::findOrFail($validated['item_id']);
+        if ((float) $item->stock < (float) $validated['quantity']) {
+            return redirect()->back()->with('error', "Stok barang '{$item->name}' tidak mencukupi! Sisa stok saat ini: " . format_quantity($item->stock) . " {$item->unit}.");
+        }
+
+        $project = Project::findOrFail($validated['project_id']);
+        $hours = (float) ($validated['manpower_hours'] ?? 0);
+        $rate = (float) ($validated['manpower_rate_per_hour'] ?? 0);
+        $manpowerCost = $hours * $rate;
+
+        DB::transaction(function() use ($validated, $item, $project, $hours, $rate, $manpowerCost) {
+            $refNo = 'OUT-WIP-' . date('Ymd') . '-' . sprintf('%04d', rand(1000, 9999));
+
+            MaterialOut::create([
+                'reference_number' => $refNo,
+                'date' => $validated['date'],
+                'item_id' => $item->id,
+                'quantity' => $validated['quantity'],
+                'unit' => strtoupper(trim($validated['unit'])),
+                'project' => $project->name,
+                'project_id' => $project->id,
+                'pic' => trim($validated['pic']),
+                'wip_stage' => $validated['wip_stage'],
+                'manpower_hours' => $hours,
+                'manpower_rate' => $rate,
+                'manpower_cost' => $manpowerCost,
+                'notes' => $validated['notes'] ?? "Material & Manpower WIP Tahap {$validated['wip_stage']} Proyek {$project->name}",
+                'user_id' => Auth::id(),
+            ]);
+
+            $item->decrement('stock', $validated['quantity']);
+
+            StockLog::create([
+                'item_id' => $item->id,
+                'user_id' => Auth::id(),
+                'type' => 'out',
+                'quantity' => $validated['quantity'],
+                'recipient_or_provider' => trim($validated['pic']),
+                'reference_number' => $refNo,
+                'notes' => "Pengeluaran WIP [Tahap: {$validated['wip_stage']}] Proyek {$project->name}",
+            ]);
+        });
+
+        $formattedQty = format_quantity($validated['quantity']);
+        ActivityLog::record(
+            activity: 'Catat WIP ' . $validated['wip_stage'],
+            description: "Mencatat {$formattedQty} {$validated['unit']} {$item->name} dan {$hours} jam manpower untuk WIP {$validated['wip_stage']} Proyek {$project->name}",
+            module: 'WIP & Finish Goods'
+        );
+
+        $tab = match(strtolower($validated['wip_stage'])) {
+            'cutting' => 'cutting',
+            'welding' => 'welding',
+            'painting' => 'painting',
+            'vendor eksternal', 'vendor' => 'vendor',
+            default => 'finish_goods',
+        };
+        return redirect()->route('finish-goods.index', ['tab' => $tab, 'project_id' => $project->id])
+            ->with('success', "Berhasil mencatat material & manpower untuk WIP Tahap {$validated['wip_stage']} Proyek {$project->name}! Stok '{$item->name}' otomatis terpotong {$formattedQty} {$validated['unit']}.");
     }
 
     public function update(Request $request, FinishGood $finishGood)

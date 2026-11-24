@@ -473,20 +473,20 @@
                     <span class="w-1.5 h-1.5 rounded-full bg-amber-400"></span>
                     Tahap 1: Cutting
                 </a>
+                <a href="{{ route('projects.show', ['project' => $project->id, 'wip_stage' => 'Vendor Eksternal']) }}" 
+                   class="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-bold transition {{ $curWip === 'Vendor Eksternal' ? 'bg-blue-600 text-white shadow-xs' : 'bg-blue-50 text-blue-800 hover:bg-blue-100 dark:bg-blue-950/60 dark:text-blue-300' }}">
+                    <span class="w-1.5 h-1.5 rounded-full bg-blue-400"></span>
+                    Tahap 2: Vendor
+                </a>
                 <a href="{{ route('projects.show', ['project' => $project->id, 'wip_stage' => 'Welding']) }}" 
                    class="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-bold transition {{ $curWip === 'Welding' ? 'bg-rose-600 text-white shadow-xs' : 'bg-rose-50 text-rose-800 hover:bg-rose-100 dark:bg-rose-950/60 dark:text-rose-300' }}">
                     <span class="w-1.5 h-1.5 rounded-full bg-rose-400"></span>
                     Tahap 3: Welding
                 </a>
                 <a href="{{ route('projects.show', ['project' => $project->id, 'wip_stage' => 'Painting']) }}" 
-                   class="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-bold transition {{ $curWip === 'Painting' ? 'bg-sky-600 text-white shadow-xs' : 'bg-sky-50 text-sky-800 hover:bg-sky-100 dark:bg-sky-950/60 dark:text-sky-300' }}">
-                    <span class="w-1.5 h-1.5 rounded-full bg-sky-400"></span>
-                    Tahap 3: Painting
-                </a>
-                <a href="{{ route('projects.show', ['project' => $project->id, 'wip_stage' => 'Packing']) }}" 
-                   class="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-bold transition {{ $curWip === 'Packing' ? 'bg-emerald-600 text-white shadow-xs' : 'bg-emerald-50 text-emerald-800 hover:bg-emerald-100 dark:bg-emerald-950/60 dark:text-emerald-300' }}">
-                    <span class="w-1.5 h-1.5 rounded-full bg-emerald-400"></span>
-                    Tahap 4: Packing
+                   class="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-bold transition {{ $curWip === 'Painting' ? 'bg-purple-600 text-white shadow-xs' : 'bg-purple-50 text-purple-800 hover:bg-purple-100 dark:bg-purple-950/60 dark:text-purple-300' }}">
+                    <span class="w-1.5 h-1.5 rounded-full bg-purple-400"></span>
+                    Tahap 4: Painting
                 </a>
             </div>
         </div>
@@ -502,6 +502,8 @@
                         <th class="px-4 py-3.5">NAMA BARANG</th>
                         <th class="px-4 py-3.5 text-center">JUMLAH TERPAKAI</th>
                         <th class="px-4 py-3.5 text-center">SATUAN</th>
+                        <th class="px-4 py-3.5 text-center">MANPOWER (JAM)</th>
+                        <th class="px-4 py-3.5 text-right">BIAYA MANPOWER</th>
                         @if($canViewPrices)
                             <th class="px-4 py-3.5 text-right">HARGA SATUAN</th>
                             <th class="px-4 py-3.5 text-right">TOTAL NILAI</th>
@@ -522,9 +524,9 @@
                                     @php
                                         $wipBadgeStyle = match($mo->wip_stage) {
                                             'Cutting' => 'bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-950/50 dark:text-amber-300 dark:border-amber-800',
+                                            'Vendor Eksternal' => 'bg-blue-50 text-blue-700 border-blue-200 dark:bg-blue-950/50 dark:text-blue-300 dark:border-blue-800',
                                             'Welding' => 'bg-rose-50 text-rose-700 border-rose-200 dark:bg-rose-950/50 dark:text-rose-300 dark:border-rose-800',
-                                            'Painting' => 'bg-sky-50 text-sky-700 border-sky-200 dark:bg-sky-950/50 dark:text-sky-300 dark:border-sky-800',
-                                            'Packing' => 'bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-950/50 dark:text-emerald-300 dark:border-emerald-800',
+                                            'Painting' => 'bg-purple-50 text-purple-700 border-purple-200 dark:bg-purple-950/50 dark:text-purple-300 dark:border-purple-800',
                                             default => 'bg-gray-100 text-gray-700 border-gray-200 dark:bg-gray-800 dark:text-gray-300 dark:border-gray-700',
                                         };
                                     @endphp
@@ -553,6 +555,24 @@
                                 <span class="rounded-md bg-gray-100 dark:bg-gray-800 px-2 py-0.5 font-bold text-gray-700 dark:text-gray-300">
                                     {{ strtoupper($mo->unit) }}
                                 </span>
+                            </td>
+                            <td class="px-4 py-3 text-center whitespace-nowrap">
+                                @if($mo->manpower_hours > 0)
+                                    <span class="inline-flex items-center gap-1 font-mono text-xs font-bold text-rose-700 dark:text-rose-300 bg-rose-50 dark:bg-rose-950/50 px-2 py-0.5 rounded-md border border-rose-200 dark:border-rose-800">
+                                        {{ (float)$mo->manpower_hours }} Jam
+                                    </span>
+                                @else
+                                    <span class="text-gray-400 text-xs italic">-</span>
+                                @endif
+                            </td>
+                            <td class="px-4 py-3 text-right whitespace-nowrap">
+                                @if($mo->manpower_cost > 0)
+                                    <span class="font-mono font-bold text-xs text-rose-600 dark:text-rose-400">
+                                        Rp {{ number_format($mo->manpower_cost, 0, ',', '.') }}
+                                    </span>
+                                @else
+                                    <span class="text-gray-400 text-xs">-</span>
+                                @endif
                             </td>
                             @if($canViewPrices)
                                 <td class="px-4 py-3 text-right font-mono font-bold text-gray-700 dark:text-gray-300 whitespace-nowrap">
@@ -763,6 +783,18 @@
                         </div>
                     </div>
 
+                    <!-- Tahap WIP -->
+                    <div>
+                        <label class="block text-xs font-bold text-gray-700 dark:text-gray-300 mb-1">Tahapan Proses Fabrikasi (WIP)</label>
+                        <select name="wip_stage" class="w-full rounded-xl border border-gray-200 bg-gray-50 px-3 py-2 text-xs text-gray-800 outline-none focus:border-brand-500 focus:bg-white dark:border-gray-700 dark:bg-gray-800 dark:text-white">
+                            <option value="">-- Umum / Tanpa Tahapan --</option>
+                            <option value="Cutting" {{ request('wip_stage') === 'Cutting' ? 'selected' : '' }}>Tahap 1: Cutting & Profiling</option>
+                            <option value="Vendor Eksternal" {{ request('wip_stage') === 'Vendor Eksternal' ? 'selected' : '' }}>Tahap 2: Vendor Eksternal (Subkon)</option>
+                            <option value="Welding" {{ request('wip_stage') === 'Welding' ? 'selected' : '' }}>Tahap 3: Welding & Assembling</option>
+                            <option value="Painting" {{ request('wip_stage') === 'Painting' ? 'selected' : '' }}>Tahap 4: Painting & Finishing</option>
+                        </select>
+                    </div>
+
                     <div>
                         <label class="block text-xs font-bold text-gray-700 dark:text-gray-300 mb-1">Pilih Barang dari Stok Gudang <span class="text-rose-500">*</span></label>
                         <select name="item_id" required class="w-full rounded-xl border border-gray-200 bg-gray-50 px-3 py-2 text-xs text-gray-800 outline-none focus:border-emerald-500 focus:bg-white dark:border-gray-700 dark:bg-gray-800 dark:text-white">
@@ -787,6 +819,29 @@
                                     <option value="{{ $u }}">{{ $u }}</option>
                                 @endforeach
                             </select>
+                        </div>
+                    </div>
+
+                    <!-- Upah Tenaga Kerja / Manpower -->
+                    <div x-data="{ mpHours: 0, mpRate: 25000 }" class="rounded-xl border border-amber-200 bg-amber-50/60 p-3.5 dark:border-amber-800/60 dark:bg-amber-950/30 space-y-3">
+                        <div class="flex items-center gap-2">
+                            <svg class="w-4 h-4 text-amber-600 dark:text-amber-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                            <span class="text-xs font-bold text-amber-900 dark:text-amber-200">Perhitungan Upah Tenaga Kerja (Manpower WIP)</span>
+                        </div>
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                            <div>
+                                <label class="block text-[11px] font-bold text-gray-700 dark:text-gray-300 mb-1">Jam Kerja Tenaga Kerja (Hours)</label>
+                                <input type="number" step="0.1" min="0" name="manpower_hours" x-model.number="mpHours" placeholder="0" class="w-full rounded-xl border border-gray-200 bg-white px-3 py-2 text-xs text-gray-800 outline-none focus:border-brand-500 dark:border-gray-700 dark:bg-gray-800 dark:text-white font-mono">
+                            </div>
+                            <div>
+                                <label class="block text-[11px] font-bold text-gray-700 dark:text-gray-300 mb-1">Tarif Upah per Jam (Rp / Jam)</label>
+                                <input type="number" step="1000" min="0" name="manpower_rate_per_hour" x-model.number="mpRate" placeholder="25000" class="w-full rounded-xl border border-gray-200 bg-white px-3 py-2 text-xs text-gray-800 outline-none focus:border-brand-500 dark:border-gray-700 dark:bg-gray-800 dark:text-white font-mono">
+                            </div>
+                        </div>
+                        <div class="flex items-center justify-between text-xs pt-1 border-t border-amber-200/60 dark:border-amber-800/60">
+                            <span class="text-gray-600 dark:text-gray-400">Total Biaya Tenaga Kerja:</span>
+                            <span class="font-extrabold text-amber-700 dark:text-amber-300 font-mono"
+                                  x-text="'Rp ' + ((mpHours || 0) * (mpRate || 0)).toLocaleString('id-ID')"></span>
                         </div>
                     </div>
 

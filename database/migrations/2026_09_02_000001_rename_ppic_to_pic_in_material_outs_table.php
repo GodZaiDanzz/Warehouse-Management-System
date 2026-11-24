@@ -11,9 +11,11 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::table('material_outs', function (Blueprint $table) {
-            $table->renameColumn('ppic', 'pic');
-        });
+        if (Schema::hasColumn('material_outs', 'ppic')) {
+            Schema::table('material_outs', function (Blueprint $table) {
+                $table->renameColumn('ppic', 'pic');
+            });
+        }
     }
 
     /**

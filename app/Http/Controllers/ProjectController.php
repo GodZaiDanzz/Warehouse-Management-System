@@ -305,6 +305,9 @@ class ProjectController extends Controller
             'unit' => ['required', 'string', 'max:50'],
             'pic' => ['required', 'string', 'max:255'],
             'notes' => ['nullable', 'string'],
+            'wip_stage' => ['nullable', 'string', 'in:Cutting,Vendor Eksternal,Welding,Painting'],
+            'manpower_hours' => ['nullable', 'numeric', 'min:0'],
+            'manpower_rate_per_hour' => ['nullable', 'numeric', 'min:0'],
         ], [
             'item_id.required' => 'Pilih barang yang akan digunakan.',
             'quantity.gt' => 'Jumlah barang harus lebih dari 0.',
@@ -317,7 +320,11 @@ class ProjectController extends Controller
             return redirect()->back()->with('error', "Stok barang '{$item->name}' tidak mencukupi! Stok saat ini: " . format_quantity($item->stock) . " {$item->unit}.");
         }
 
-        DB::transaction(function() use ($validated, $item, $project) {
+        $manpowerHours = !empty($validated['manpower_hours']) ? (float)$validated['manpower_hours'] : 0;
+        $manpowerRate = !empty($validated['manpower_rate_per_hour']) ? (float)$validated['manpower_rate_per_hour'] : 0;
+        $manpowerCost = $manpowerHours * $manpowerRate;
+
+        DB::transaction(function() use ($validated, $item, $project, $manpowerHours, $manpowerRate, $manpowerCost) {
             $refNo = 'OUT-PRJ-' . date('Ymd') . '-' . sprintf('%04d', rand(1000, 9999));
 
             // Create Material Out linked to Project
@@ -329,6 +336,10 @@ class ProjectController extends Controller
                 'unit' => strtoupper(trim($validated['unit'])),
                 'project' => $project->name,
                 'project_id' => $project->id,
+                'wip_stage' => $validated['wip_stage'] ?? null,
+                'manpower_hours' => $manpowerHours,
+                'manpower_rate' => $manpowerRate,
+                'manpower_cost' => $manpowerCost,
                 'pic' => trim($validated['pic']),
                 'notes' => $validated['notes'] ?? "Penggunaan Material Project {$project->name}",
                 'user_id' => Auth::id(),

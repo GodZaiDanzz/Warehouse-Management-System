@@ -129,7 +129,7 @@ class MenuHelper
                     ],
                     [
                         'icon' => 'finish-goods',
-                        'name' => 'Barang Jadi (Finish Good)',
+                        'name' => 'Barang Jadi & WIP',
                         'path' => '/finish-goods',
                     ],
                 ]

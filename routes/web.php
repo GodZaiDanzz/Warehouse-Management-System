@@ -104,6 +104,7 @@ Route::middleware(['auth'])->group(function () {
     // Manajemen Barang Jadi / Finish Good (Menu WMS)
     Route::get('/finish-goods', [FinishGoodController::class, 'index'])->name('finish-goods.index');
     Route::post('/finish-goods', [FinishGoodController::class, 'store'])->name('finish-goods.store');
+    Route::post('/finish-goods/wip', [FinishGoodController::class, 'storeWip'])->name('finish-goods.store-wip');
     Route::put('/finish-goods/{finishGood}', [FinishGoodController::class, 'update'])->name('finish-goods.update');
     Route::patch('/finish-goods/{finishGood}/delivery', [FinishGoodController::class, 'updateDelivery'])->name('finish-goods.delivery');
     Route::delete('/finish-goods/{finishGood}', [FinishGoodController::class, 'destroy'])->name('finish-goods.destroy');
