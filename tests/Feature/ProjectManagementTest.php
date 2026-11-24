@@ -20,7 +20,7 @@ class ProjectManagementTest extends TestCase
             'status' => 'Ongoing',
         ]);
 
-        $response = $this->actingAs($user)->get(route('projects.index'));
+        $response = $this->actingAs($user)->get(route('projects.index', ['search' => 'Display Kode']));
 
         $response->assertStatus(200);
         $response->assertSee('Proyek Uji Coba Display Kode');
