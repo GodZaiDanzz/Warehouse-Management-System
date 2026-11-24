@@ -112,24 +112,51 @@ class ProjectController extends Controller
 
         $itemsList = Item::orderBy('name')->get();
 
-        // Calculate discrete and decimal totals, and total material cost
+        // Calculate discrete and decimal totals, total material cost, and WIP Manpower breakdown
         $allProjectOuts = (clone $baseQuery)
             ->leftJoin('items', 'material_outs.item_id', '=', 'items.id')
             ->select(
                 'material_outs.quantity',
+                'material_outs.wip_stage',
+                'material_outs.manpower_hours',
+                'material_outs.manpower_cost',
                 'items.unit_price',
                 DB::raw("UPPER(TRIM(COALESCE(material_outs.unit, items.unit, 'PCS'))) as item_unit")
             )
             ->get();
 
+        $wipStages = [
+            MaterialOut::STAGE_CUTTING => ['label' => 'Cutting (Potong & Offcut)', 'material_cost' => 0, 'manpower_cost' => 0, 'manpower_hours' => 0, 'total' => 0],
+            MaterialOut::STAGE_WELDING => ['label' => 'Welding (Las & Consumable)', 'material_cost' => 0, 'manpower_cost' => 0, 'manpower_hours' => 0, 'total' => 0],
+            MaterialOut::STAGE_PAINTING => ['label' => 'Painting & Blasting', 'material_cost' => 0, 'manpower_cost' => 0, 'manpower_hours' => 0, 'total' => 0],
+            MaterialOut::STAGE_PACKING => ['label' => 'Packing & Finishing', 'material_cost' => 0, 'manpower_cost' => 0, 'manpower_hours' => 0, 'total' => 0],
+        ];
+
         $projectDiscreteQty = 0;
         $projectDecimalTotals = [];
         $totalMaterialCost = 0;
+        $totalManpowerCost = 0;
+        $totalManpowerHours = 0;
+
         foreach ($allProjectOuts as $apo) {
             $u = $apo->item_unit;
             $q = (float) $apo->quantity;
             $price = (float) ($apo->unit_price ?? 0);
-            $totalMaterialCost += ($q * $price);
+            $matCost = ($q * $price);
+            $totalMaterialCost += $matCost;
+
+            $manCost = (float) ($apo->manpower_cost ?? 0);
+            $manHours = (float) ($apo->manpower_hours ?? 0);
+            $totalManpowerCost += $manCost;
+            $totalManpowerHours += $manHours;
+
+            $stage = $apo->wip_stage;
+            if ($stage && isset($wipStages[$stage])) {
+                $wipStages[$stage]['material_cost'] += $matCost;
+                $wipStages[$stage]['manpower_cost'] += $manCost;
+                $wipStages[$stage]['manpower_hours'] += $manHours;
+                $wipStages[$stage]['total'] += ($matCost + $manCost);
+            }
 
             if (is_decimal_unit($u)) {
                 $projectDecimalTotals[$u] = ($projectDecimalTotals[$u] ?? 0) + $q;
@@ -148,6 +175,15 @@ class ProjectController extends Controller
             'total_cost' => $totalMaterialCost,
         ];
 
+        $wipSummary = [
+            'stages' => $wipStages,
+            'total_material_cost' => $totalMaterialCost,
+            'total_manpower_cost' => $totalManpowerCost,
+            'total_manpower_hours' => $totalManpowerHours,
+            'total_wip_cost' => $totalMaterialCost + $totalManpowerCost,
+            'total_finish_good_hpp' => (float) $project->finishGoods->sum('total_hpp'),
+        ];
+
         $materialSummaryPerItem = (clone $baseQuery)
             ->select(
                 'material_outs.item_id',
@@ -164,7 +200,7 @@ class ProjectController extends Controller
         $currentUser = Auth::user();
         $canViewPrices = $currentUser && $currentUser->canViewPrices();
 
-        return view('pages.projects.show', compact('project', 'materialOuts', 'itemsList', 'summary', 'materialSummaryPerItem', 'canViewPrices'));
+        return view('pages.projects.show', compact('project', 'materialOuts', 'itemsList', 'summary', 'wipSummary', 'materialSummaryPerItem', 'canViewPrices'));
     }
 
     public function update(Request $request, Project $project)

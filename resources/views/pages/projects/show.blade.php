@@ -201,6 +201,140 @@
         </div>
     </div>
 
+    <!-- RINGKASAN BIAYA WIP & HPP (FINANCE & PRODUKSI) -->
+    @if($canViewPrices && isset($wipSummary))
+    <div class="rounded-2xl border border-gray-100 bg-white p-5 shadow-xs dark:border-gray-800 dark:bg-gray-900 space-y-4">
+        <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 border-b border-gray-100 dark:border-gray-800 pb-3">
+            <div>
+                <h3 class="text-base font-extrabold text-gray-900 dark:text-white flex items-center gap-2">
+                    <svg class="w-5 h-5 text-indigo-600 dark:text-indigo-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
+                    </svg>
+                    <span>Ringkasan Biaya WIP & Akumulasi HPP (Finance)</span>
+                    <span class="text-xs font-bold text-indigo-600 bg-indigo-50 dark:bg-indigo-950/60 dark:text-indigo-400 px-2.5 py-0.5 rounded-full border border-indigo-200 dark:border-indigo-800">
+                        Work In Process
+                    </span>
+                </h3>
+                <p class="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
+                    Pelacakan penyerapan biaya material dan upah tenaga kerja (manpower) per tahapan proses fabrikasi internal.
+                </p>
+            </div>
+            <div class="flex items-center gap-3">
+                <div class="text-right">
+                    <span class="text-[10px] font-bold text-gray-400 uppercase tracking-wider block">Total Akumulasi WIP</span>
+                    <span class="text-base font-black text-indigo-600 dark:text-indigo-400 font-mono">
+                        Rp {{ number_format($wipSummary['total_wip_cost'] ?? 0, 0, ',', '.') }}
+                    </span>
+                </div>
+            </div>
+        </div>
+
+        <!-- 4 Tahapan WIP Grid -->
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+            @php
+                $stageMeta = [
+                    'Cutting' => [
+                        'desc' => 'Potong Raw Material & Offcut',
+                        'dot' => 'bg-amber-500',
+                        'text' => 'text-amber-600 dark:text-amber-400',
+                    ],
+                    'Welding' => [
+                        'desc' => 'Kawat Las, Gas CO2/Argon & Welder',
+                        'dot' => 'bg-rose-500',
+                        'text' => 'text-rose-600 dark:text-rose-400',
+                    ],
+                    'Painting' => [
+                        'desc' => 'Blasting, Primer, Top Coat & Painter',
+                        'dot' => 'bg-sky-500',
+                        'text' => 'text-sky-600 dark:text-sky-400',
+                    ],
+                    'Packing' => [
+                        'desc' => 'Pallet, Wrapping & Packer',
+                        'dot' => 'bg-emerald-500',
+                        'text' => 'text-emerald-600 dark:text-emerald-400',
+                    ],
+                ];
+            @endphp
+
+            @foreach($wipSummary['stages'] as $stageKey => $sData)
+                @php
+                    $meta = $stageMeta[$stageKey] ?? ['desc' => '', 'dot' => 'bg-gray-400', 'text' => 'text-gray-600'];
+                @endphp
+                <div class="rounded-xl border border-gray-100 bg-gray-50/70 p-4 dark:border-gray-800 dark:bg-gray-800/40 flex flex-col justify-between space-y-3">
+                    <div>
+                        <div class="flex items-center justify-between">
+                            <span class="text-xs font-black uppercase tracking-wider text-gray-900 dark:text-white flex items-center gap-1.5">
+                                <span class="w-2 h-2 rounded-full {{ $meta['dot'] }}"></span>
+                                {{ $stageKey }}
+                            </span>
+                            <span class="text-[11px] font-mono font-bold text-gray-500 dark:text-gray-400 bg-white dark:bg-gray-900 px-2 py-0.5 rounded-lg border border-gray-100 dark:border-gray-800">
+                                {{ number_format($sData['manpower_hours'], 1) }} Jam
+                            </span>
+                        </div>
+                        <p class="text-[10px] text-gray-400 mt-0.5">{{ $meta['desc'] }}</p>
+
+                        <div class="mt-3 space-y-1.5 text-xs">
+                            <div class="flex items-center justify-between">
+                                <span class="text-gray-500 dark:text-gray-400">Biaya Material:</span>
+                                <span class="font-mono font-semibold text-gray-800 dark:text-gray-200">
+                                    Rp {{ number_format($sData['material_cost'], 0, ',', '.') }}
+                                </span>
+                            </div>
+                            <div class="flex items-center justify-between">
+                                <span class="text-gray-500 dark:text-gray-400">Biaya Manpower:</span>
+                                <span class="font-mono font-semibold text-gray-800 dark:text-gray-200">
+                                    Rp {{ number_format($sData['manpower_cost'], 0, ',', '.') }}
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="pt-2.5 border-t border-gray-200/60 dark:border-gray-700/60 flex items-center justify-between">
+                        <span class="text-[11px] font-bold text-gray-600 dark:text-gray-300">Subtotal WIP:</span>
+                        <span class="text-xs font-extrabold {{ $meta['text'] }} font-mono">
+                            Rp {{ number_format($sData['total'], 0, ',', '.') }}
+                        </span>
+                    </div>
+                </div>
+            @endforeach
+        </div>
+
+        <!-- Catatan Vendor Eksternal & Valuasi HPP Finish Good -->
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-3 pt-2">
+            <!-- Info Tahap 2 External -->
+            <div class="lg:col-span-7 rounded-xl border border-sky-100 bg-sky-50/50 p-3.5 dark:border-sky-900/40 dark:bg-sky-950/20 text-xs flex items-start gap-3">
+                <div class="p-1 rounded-lg bg-sky-100 text-sky-700 dark:bg-sky-900 dark:text-sky-300 shrink-0 mt-0.5">
+                    <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                </div>
+                <div>
+                    <span class="font-bold text-sky-900 dark:text-sky-200">Tahap 2 (Subcont Eksternal)</span>
+                    <p class="text-[11px] text-sky-800/80 dark:text-sky-300/80 mt-0.5 leading-relaxed">
+                        Pekerjaan eksternal (Galvanis, Hot-dip, Bending khusus) dilakukan oleh vendor luar dan biaya tidak dibebankan pada WIP internal gudang ini sesuai instruksi Finance.
+                    </p>
+                </div>
+            </div>
+
+            <!-- Total HPP Finish Goods -->
+            <div class="lg:col-span-5 rounded-xl border border-emerald-100 bg-emerald-50/50 p-3.5 dark:border-emerald-900/40 dark:bg-emerald-950/20 text-xs flex items-center justify-between">
+                <div>
+                    <span class="font-bold text-emerald-900 dark:text-emerald-200">Total HPP Barang Jadi</span>
+                    <p class="text-[11px] text-emerald-800/80 dark:text-emerald-300/80 mt-0.5">
+                        Akumulasi HPP produk yang sudah dibukukan ke Finish Goods.
+                    </p>
+                </div>
+                <div class="text-right shrink-0 pl-2">
+                    <span class="text-base font-black text-emerald-700 dark:text-emerald-400 font-mono block">
+                        Rp {{ number_format($wipSummary['total_finish_good_hpp'] ?? 0, 0, ',', '.') }}
+                    </span>
+                    <span class="text-[10px] font-semibold text-emerald-600 dark:text-emerald-400">
+                        {{ $project->finishGoods->count() }} Produk Jadi
+                    </span>
+                </div>
+            </div>
+        </div>
+    </div>
+    @endif
+
     <!-- AKUMULASI MATERIAL TERPAKAI (SUBTOTAL QTY PER JENIS BARANG) -->
     <div x-data="{ searchSummary: '' }" class="rounded-2xl border border-gray-100 bg-white p-5 shadow-xs dark:border-gray-800 dark:bg-gray-900 space-y-4">
         <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 border-b border-gray-100 dark:border-gray-800 pb-3">
