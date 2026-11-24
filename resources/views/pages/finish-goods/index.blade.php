@@ -65,20 +65,20 @@
     },
     openWipModalState: false,
     wipData: {
-        project_id: '{{ request('project_id') }}',
-        wip_stage: '{{ $stageKey ?? 'Cutting' }}',
-        date: '{{ date('Y-m-d') }}',
+        project_id: @js(request('project_id') ?? ''),
+        wip_stage: @js($stageKey ?? 'Cutting'),
+        date: @js(date('Y-m-d')),
         item_id: '',
         quantity: 1,
         unit: 'PCS',
         manpower_hours: 0,
         manpower_rate_per_hour: 25000,
-        pic: '{{ auth()->user()->name ?? 'Operator Fabrikasi' }}',
+        pic: @js(auth()->user()->name ?? 'Operator Fabrikasi'),
         notes: ''
     },
     openWipModal(stage) {
         this.wipData.wip_stage = stage;
-        this.wipData.project_id = '{{ request('project_id') }}';
+        this.wipData.project_id = @js(request('project_id') ?? '');
         this.openWipModalState = true;
     }
 }" class="p-4 sm:p-6 space-y-6">
@@ -1552,7 +1552,7 @@
             </div>
         </div>
     </template>
-</div>
+
     <!-- MODAL INPUT MATERIAL & MANPOWER WIP PER PROSES -->
     <template x-teleport="body">
         <div x-show="openWipModalState" x-cloak @click.self="openWipModalState = false" @keydown.escape.window="openWipModalState = false"
@@ -1679,5 +1679,6 @@
             </div>
         </div>
     </template>
+</div>
 
 @endsection
