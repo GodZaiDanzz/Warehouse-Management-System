@@ -21,7 +21,7 @@ class FinishGoodController extends Controller
 {
     public function index(Request $request)
     {
-        $query = FinishGood::with(['project', 'creator']);
+        $query = FinishGood::with(['project', 'creator', 'materialOuts.item', 'materialOuts.user']);
 
         if ($request->filled('search')) {
             $s = trim($request->search);

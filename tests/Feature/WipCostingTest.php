@@ -188,4 +188,17 @@ class WipCostingTest extends TestCase
         $response->assertSee('Painting');
         $response->assertSee('Packing');
     }
+
+    public function test_finish_goods_index_has_traceability_features(): void
+    {
+        $user = User::first() ?? User::factory()->create();
+        $user->role = 'admin';
+        $user->save();
+
+        $response = $this->actingAs($user)->get(route('finish-goods.index'));
+
+        $response->assertStatus(200);
+        $response->assertSee('Traceability Alur Produksi');
+        $response->assertSee('setTrace');
+    }
 }

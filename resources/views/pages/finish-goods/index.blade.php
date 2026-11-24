@@ -5,6 +5,8 @@
     openCreateModal: false,
     openEditModal: false,
     openDeliveryModal: false,
+    openTraceModal: false,
+    traceItem: null,
     editData: {
         id: '',
         project_id: '',
@@ -56,6 +58,10 @@
             notes: ''
         };
         this.openDeliveryModal = true;
+    },
+    setTrace(item) {
+        this.traceItem = item;
+        this.openTraceModal = true;
     }
 }" class="p-4 sm:p-6 space-y-6">
 
@@ -347,6 +353,12 @@
                             <!-- AKSI -->
                             <td class="px-4 py-3.5 text-center whitespace-nowrap">
                                 <div class="flex items-center justify-center gap-1">
+                                    <button type="button" @click="setTrace({{ json_encode($fg) }})" class="rounded-lg p-1.5 text-indigo-600 hover:bg-indigo-50 dark:text-indigo-400 dark:hover:bg-indigo-950/40 transition cursor-pointer" title="Lacak Alur WIP & Rincian Material/Manpower (Traceability)">
+                                        <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"/>
+                                        </svg>
+                                    </button>
+
                                     @if($fg->status !== 'Delivered')
                                         <button type="button" @click="setDelivery({{ json_encode($fg) }})" class="rounded-lg p-1.5 text-gray-500 hover:bg-blue-50 hover:text-blue-600 dark:text-gray-400 dark:hover:bg-blue-950/40 dark:hover:text-blue-300 transition cursor-pointer" title="Catat Pengiriman / Delivery Order">
                                             <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4"/></svg>
@@ -1068,5 +1080,177 @@
         </div>
     </template>
 
+    <!-- Modal Traceability Alur WIP & Rincian HPP -->
+    <template x-teleport="body">
+        <div x-show="openTraceModal" x-cloak @click.self="openTraceModal = false" @keydown.escape.window="openTraceModal = false" class="fixed inset-0 z-[999999] flex items-center justify-center p-3 sm:p-4 bg-gray-950/80 backdrop-blur-xs overflow-y-auto animate-fadeIn">
+            <div class="w-full max-w-4xl rounded-2xl bg-white p-6 shadow-2xl dark:bg-gray-900 dark:border dark:border-gray-800 space-y-5 max-h-[92vh] overflow-y-auto custom-scrollbar my-auto" x-show="traceItem">
+                <!-- Modal Header -->
+                <div class="flex items-center justify-between border-b border-gray-100 pb-3.5 dark:border-gray-800">
+                    <div class="flex items-center gap-3">
+                        <div class="flex h-10 w-10 items-center justify-center rounded-xl bg-indigo-50 text-indigo-700 dark:bg-indigo-950/80 dark:text-indigo-400">
+                            <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"/>
+                            </svg>
+                        </div>
+                        <div>
+                            <h3 class="text-base font-extrabold text-gray-900 dark:text-white flex items-center gap-2">
+                                <span>Traceability Alur Produksi & Biaya WIP</span>
+                                <span class="text-xs font-bold text-indigo-600 bg-indigo-50 dark:bg-indigo-950/60 dark:text-indigo-400 px-2 py-0.5 rounded-full border border-indigo-200 dark:border-indigo-800">
+                                    Finish Good Audit
+                                </span>
+                            </h3>
+                            <p class="text-xs text-gray-500 dark:text-gray-400">Rincian pemakaian material dan jam kerja manpower yang membentuk barang jadi ini.</p>
+                        </div>
+                    </div>
+                    <button type="button" @click="openTraceModal = false" class="p-1 rounded-lg text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 cursor-pointer">
+                        <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+                    </button>
+                </div>
+
+                <!-- Product & Project Info Card -->
+                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 text-xs">
+                    <div class="rounded-xl bg-gray-50 dark:bg-gray-800/50 p-3 border border-gray-100 dark:border-gray-800">
+                        <span class="text-gray-400 font-bold block text-[10px] uppercase">Nama Barang Jadi</span>
+                        <p class="font-extrabold text-gray-900 dark:text-white mt-0.5 text-sm" x-text="traceItem?.item_name || '-'"></p>
+                        <span class="font-mono text-gray-500 dark:text-gray-400 text-[11px]" x-text="'Tag: ' + (traceItem?.item_code || '-')"></span>
+                    </div>
+                    <div class="rounded-xl bg-gray-50 dark:bg-gray-800/50 p-3 border border-gray-100 dark:border-gray-800">
+                        <span class="text-gray-400 font-bold block text-[10px] uppercase">Project / Klien</span>
+                        <p class="font-extrabold text-indigo-700 dark:text-indigo-300 mt-0.5 text-sm truncate" x-text="traceItem?.project?.name || '-'"></p>
+                        <span class="font-mono text-gray-500 dark:text-gray-400 text-[11px]" x-text="'PO: ' + (traceItem?.project?.po_number || '-')"></span>
+                    </div>
+                    <div class="rounded-xl bg-gray-50 dark:bg-gray-800/50 p-3 border border-gray-100 dark:border-gray-800">
+                        <span class="text-gray-400 font-bold block text-[10px] uppercase">Hasil Produksi</span>
+                        <p class="font-extrabold text-emerald-600 dark:text-emerald-400 mt-0.5 text-sm font-mono" x-text="(Number(traceItem?.quantity || 0).toLocaleString('id-ID')) + ' ' + (traceItem?.unit || 'PCS')"></p>
+                        <span class="text-gray-500 dark:text-gray-400 text-[11px]" x-text="'Tgl: ' + (traceItem?.production_date ? traceItem.production_date.substring(0, 10) : '-')"></span>
+                    </div>
+                    <div class="rounded-xl bg-gray-50 dark:bg-gray-800/50 p-3 border border-gray-100 dark:border-gray-800">
+                        <span class="text-gray-400 font-bold block text-[10px] uppercase">Status QC & Gudang</span>
+                        <div class="flex items-center gap-1.5 mt-1 flex-wrap">
+                            <span class="px-2 py-0.5 rounded-full text-[10px] font-bold"
+                                  :class="traceItem?.qc_status === 'Passed' ? 'bg-emerald-50 text-emerald-700 dark:bg-emerald-950/60 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800' : 'bg-amber-50 text-amber-700 border border-amber-200'"
+                                  x-text="'QC: ' + (traceItem?.qc_status || 'Pending')"></span>
+                            <span class="px-2 py-0.5 rounded-full text-[10px] font-bold"
+                                  :class="traceItem?.status === 'Delivered' ? 'bg-sky-50 text-sky-700 dark:bg-sky-950/60 dark:text-sky-300 border border-sky-200 dark:border-sky-800' : 'bg-gray-100 text-gray-700 border border-gray-200'"
+                                  x-text="traceItem?.status || 'In Storage'"></span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Financial HPP Breakdown Card -->
+                @if(auth()->user() && auth()->user()->canViewPrices())
+                <div class="rounded-xl border border-indigo-100 bg-indigo-50/40 p-4 dark:border-indigo-900/50 dark:bg-indigo-950/20">
+                    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                        <div>
+                            <span class="text-[10px] font-bold uppercase text-gray-500 dark:text-gray-400">Total Biaya Material</span>
+                            <p class="font-mono text-base font-extrabold text-gray-900 dark:text-white mt-0.5" x-text="'Rp ' + Number(traceItem?.material_cost || 0).toLocaleString('id-ID')"></p>
+                            <span class="text-[10px] text-gray-400">Akumulasi bahan baku & consumable</span>
+                        </div>
+                        <div>
+                            <span class="text-[10px] font-bold uppercase text-gray-500 dark:text-gray-400">Total Upah Manpower</span>
+                            <p class="font-mono text-base font-extrabold text-gray-900 dark:text-white mt-0.5" x-text="'Rp ' + Number(traceItem?.manpower_cost || 0).toLocaleString('id-ID')"></p>
+                            <span class="text-[10px] text-gray-400">Upah langsung operator & teknisi</span>
+                        </div>
+                        <div>
+                            <span class="text-[10px] font-bold uppercase text-indigo-700 dark:text-indigo-300">Total HPP Barang Jadi</span>
+                            <p class="font-mono text-lg font-black text-indigo-700 dark:text-indigo-400 mt-0.5" x-text="'Rp ' + Number(traceItem?.total_hpp || 0).toLocaleString('id-ID')"></p>
+                            <span class="text-[10px] text-indigo-500 dark:text-indigo-400">Material + Manpower</span>
+                        </div>
+                        <div>
+                            <span class="text-[10px] font-bold uppercase text-emerald-700 dark:text-emerald-300">HPP per Satuan Unit</span>
+                            <p class="font-mono text-lg font-black text-emerald-700 dark:text-emerald-400 mt-0.5" x-text="'Rp ' + Number(traceItem?.hpp_per_unit || 0).toLocaleString('id-ID')"></p>
+                            <span class="text-[10px] text-emerald-600 dark:text-emerald-400" x-text="'Per 1 ' + (traceItem?.unit || 'PCS')"></span>
+                        </div>
+                    </div>
+                </div>
+                @endif
+
+                <!-- Linked Material Outs & WIP Details Table -->
+                <div class="space-y-2">
+                    <div class="flex items-center justify-between">
+                        <h4 class="text-xs font-black uppercase tracking-wider text-gray-900 dark:text-white flex items-center gap-2">
+                            <span>Material & Manpower Terpakai (WIP Breakdown)</span>
+                            <span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-300"
+                                  x-text="(traceItem?.material_outs?.length || 0) + ' Transaksi Keluar'"></span>
+                        </h4>
+                    </div>
+
+                    <div class="overflow-x-auto max-h-72 overflow-y-auto custom-scrollbar rounded-xl border border-gray-100 dark:border-gray-800">
+                        <table class="w-full text-left text-xs">
+                            <thead class="theme-table-header font-bold uppercase text-white sticky top-0 z-10 text-[11px]">
+                                <tr>
+                                    <th class="px-3 py-2.5 text-center w-10">NO</th>
+                                    <th class="px-3 py-2.5">TANGGAL</th>
+                                    <th class="px-3 py-2.5">TAHAP WIP</th>
+                                    <th class="px-3 py-2.5">MATERIAL / BARANG</th>
+                                    <th class="px-3 py-2.5 text-right">QTY KELUAR</th>
+                                    @if(auth()->user() && auth()->user()->canViewPrices())
+                                    <th class="px-3 py-2.5 text-right">BIAYA MATERIAL</th>
+                                    <th class="px-3 py-2.5 text-right">MAN-HOURS & UPAH</th>
+                                    @endif
+                                    <th class="px-3 py-2.5">PIC / OPERATOR</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-gray-100 dark:divide-gray-800 font-medium">
+                                <template x-for="(mo, idx) in (traceItem?.material_outs || [])" :key="mo.id">
+                                    <tr class="hover:bg-gray-50/80 dark:hover:bg-gray-800/50 transition">
+                                        <td class="px-3 py-2.5 text-center text-gray-400 font-mono" x-text="idx + 1"></td>
+                                        <td class="px-3 py-2.5 font-mono text-gray-600 dark:text-gray-300 whitespace-nowrap" x-text="mo.date ? mo.date.substring(0, 10) : '-'"></td>
+                                        <td class="px-3 py-2.5 whitespace-nowrap">
+                                            <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold"
+                                                  :class="{
+                                                      'bg-amber-50 text-amber-700 border border-amber-200 dark:bg-amber-950/50 dark:text-amber-300 dark:border-amber-800': mo.wip_stage === 'Cutting',
+                                                      'bg-rose-50 text-rose-700 border border-rose-200 dark:bg-rose-950/50 dark:text-rose-300 dark:border-rose-800': mo.wip_stage === 'Welding',
+                                                      'bg-sky-50 text-sky-700 border border-sky-200 dark:bg-sky-950/50 dark:text-sky-300 dark:border-sky-800': mo.wip_stage === 'Painting',
+                                                      'bg-emerald-50 text-emerald-700 border border-emerald-200 dark:bg-emerald-950/50 dark:text-emerald-300 dark:border-emerald-800': mo.wip_stage === 'Packing',
+                                                      'bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-400': !mo.wip_stage
+                                                  }"
+                                                  x-text="mo.wip_stage || 'Umum'"></span>
+                                        </td>
+                                        <td class="px-3 py-2.5">
+                                            <span class="font-bold text-gray-900 dark:text-white block" x-text="mo.item?.name || mo.notes || 'Material'"></span>
+                                            <span class="font-mono text-[10px] text-gray-400" x-text="mo.item?.code || '-'"></span>
+                                        </td>
+                                        <td class="px-3 py-2.5 text-right font-mono font-bold text-gray-800 dark:text-gray-200 whitespace-nowrap"
+                                            x-text="(Number(mo.quantity).toLocaleString('id-ID')) + ' ' + (mo.unit || 'PCS')"></td>
+                                        @if(auth()->user() && auth()->user()->canViewPrices())
+                                        <td class="px-3 py-2.5 text-right font-mono text-gray-800 dark:text-gray-200 whitespace-nowrap"
+                                            x-text="'Rp ' + Number(Number(mo.quantity) * Number(mo.item?.unit_price || 0)).toLocaleString('id-ID')"></td>
+                                        <td class="px-3 py-2.5 text-right font-mono text-gray-800 dark:text-gray-200 whitespace-nowrap">
+                                            <span class="font-bold" x-text="(mo.manpower_hours || 0) + ' Jam'"></span>
+                                            <span class="text-[10px] text-gray-400 block" x-text="'(Rp ' + Number(mo.manpower_cost || 0).toLocaleString('id-ID') + ')'"></span>
+                                        </td>
+                                        @endif
+                                        <td class="px-3 py-2.5 text-gray-600 dark:text-gray-300 whitespace-nowrap" x-text="mo.pic || '-'"></td>
+                                    </tr>
+                                </template>
+                                <tr x-show="!traceItem?.material_outs || traceItem?.material_outs?.length === 0">
+                                    <td colspan="8" class="px-4 py-8 text-center text-gray-400">
+                                        <div class="flex flex-col items-center justify-center space-y-1">
+                                            <svg class="w-6 h-6 text-gray-300 dark:text-gray-600" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                                            <span class="text-xs font-semibold">Tidak ada transaksi material keluar yang tertaut langsung ke barang jadi ini.</span>
+                                            <span class="text-[11px] text-gray-400">Data ini dibuat sebelum fitur penautan otomatis aktif atau nominal HPP diisi secara manual.</span>
+                                        </div>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Modal Footer -->
+                <div class="flex items-center justify-between pt-3 border-t border-gray-100 dark:border-gray-800 text-xs">
+                    <a :href="'/projects/' + traceItem?.project_id"
+                       class="inline-flex items-center gap-1.5 font-bold text-indigo-600 hover:text-indigo-700 dark:text-indigo-400 dark:hover:text-indigo-300 transition">
+                        <span>Buka Detail Project di Modul Project</span>
+                        <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"/></svg>
+                    </a>
+                    <button type="button" @click="openTraceModal = false" class="rounded-xl border border-gray-200 bg-white px-4 py-2 font-semibold text-gray-700 hover:bg-gray-50 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-300 cursor-pointer">
+                        Tutup
+                    </button>
+                </div>
+            </div>
+        </div>
+    </template>
 </div>
 @endsection
