@@ -57,6 +57,7 @@ class CompanyProfile extends Model
         'slow_moving_days',
         'dead_stock_days',
         'default_per_page',
+        'default_manpower_rate',
         'signer_1_name',
         'signer_1_title',
         'signer_2_name',
@@ -202,6 +203,15 @@ class CompanyProfile extends Model
         $profile = self::getProfile();
         $val = (int) ($profile->cat_fefo_alert_days ?? 60);
         return $val > 0 ? $val : 60;
+    }
+
+    /**
+     * Get default standard manpower rate per hour.
+     */
+    public static function getDefaultHourlyRate(): float
+    {
+        $profile = self::getProfile();
+        return (float) ($profile->default_manpower_rate ?: 45000);
     }
 
     /**

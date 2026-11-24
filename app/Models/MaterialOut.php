@@ -10,6 +10,21 @@ class MaterialOut extends Model
 {
     use HasFactory, SoftDeletes;
 
+    public const STAGE_CUTTING = 'Cutting';
+    public const STAGE_WELDING = 'Welding';
+    public const STAGE_PAINTING = 'Painting';
+    public const STAGE_PACKING = 'Packing';
+
+    public static function getWipStages(): array
+    {
+        return [
+            self::STAGE_CUTTING => 'Cutting (Pemotongan Bahan)',
+            self::STAGE_WELDING => 'Welding & Assembling (Pengelasan)',
+            self::STAGE_PAINTING => 'Blasting & Painting (Pengecatan)',
+            self::STAGE_PACKING => 'Packing & Wrapping (Pengemasan)',
+        ];
+    }
+
     protected $fillable = [
         'reference_number',
         'date',
@@ -24,12 +39,20 @@ class MaterialOut extends Model
         'user_id',
         'wholesale_qty',
         'wholesale_unit',
+        'wip_stage',
+        'manpower_hours',
+        'manpower_rate',
+        'manpower_cost',
+        'finish_good_id',
     ];
 
     protected $casts = [
         'date' => 'date',
         'quantity' => 'float',
         'wholesale_qty' => 'float',
+        'manpower_hours' => 'float',
+        'manpower_rate' => 'float',
+        'manpower_cost' => 'float',
     ];
 
     protected static function booted()
@@ -93,5 +116,29 @@ class MaterialOut extends Model
             return $this->item->unitRelation->symbol;
         }
         return $value ?? 'PCS';
+    }
+
+    /**
+     * Relationship to FinishGood (if linked).
+     */
+    public function finishGood()
+    {
+        return $this->belongsTo(FinishGood::class, 'finish_good_id');
+    }
+
+    /**
+     * Computed Material Part Cost for this transaction.
+     */
+    public function getMaterialCostAttribute(): float
+    {
+        return (float) $this->quantity * (float) ($this->item?->unit_price ?? 0);
+    }
+
+    /**
+     * Computed Total WIP Cost (Material + Manpower).
+     */
+    public function getTotalWipCostAttribute(): float
+    {
+        return $this->material_cost + (float) ($this->manpower_cost ?? 0);
     }
 }

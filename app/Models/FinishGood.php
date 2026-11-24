@@ -16,6 +16,10 @@ class FinishGood extends Model
         'item_code',
         'quantity',
         'unit',
+        'material_cost',
+        'manpower_cost',
+        'total_hpp',
+        'hpp_per_unit',
         'production_date',
         'qc_status',
         'status',
@@ -29,6 +33,10 @@ class FinishGood extends Model
         'production_date' => 'date',
         'delivery_date' => 'date',
         'quantity' => 'decimal:2',
+        'material_cost' => 'float',
+        'manpower_cost' => 'float',
+        'total_hpp' => 'float',
+        'hpp_per_unit' => 'float',
     ];
 
     public function project()
@@ -39,6 +47,21 @@ class FinishGood extends Model
     public function creator()
     {
         return $this->belongsTo(User::class, 'created_by');
+    }
+
+    public function materialOuts()
+    {
+        return $this->hasMany(MaterialOut::class, 'finish_good_id');
+    }
+
+    public function getFormattedTotalHppAttribute(): string
+    {
+        return format_currency($this->total_hpp ?? 0);
+    }
+
+    public function getFormattedHppPerUnitAttribute(): string
+    {
+        return format_currency($this->hpp_per_unit ?? 0);
     }
 
     public function scopeInStorage($query)
