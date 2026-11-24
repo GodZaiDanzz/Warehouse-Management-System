@@ -1387,7 +1387,15 @@
                             </td>
                             <!-- PROJECT -->
                             <td class="px-4 py-3.5 font-medium text-gray-800 dark:text-gray-200">
-                                {{ $row->project }}
+                                <div>{{ $row->project }}</div>
+                                @if($row->wip_stage)
+                                    <div class="mt-0.5 inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[9px] font-bold bg-indigo-50 text-indigo-700 dark:bg-indigo-950/60 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-800">
+                                        <span>Tahap: {{ $row->wip_stage }}</span>
+                                        @if($row->manpower_hours > 0)
+                                            <span>• {{ (float)$row->manpower_hours }} Jam</span>
+                                        @endif
+                                    </div>
+                                @endif
                             </td>
                             <!-- PIC -->
                             <td class="px-4 py-3.5 font-medium text-gray-800 dark:text-gray-200">
@@ -2400,6 +2408,38 @@
                                     </div>
                                 </div>
                             @endif
+
+                            <!-- Bagian Alur WIP & Manpower (Sesuai Kebutuhan Finance) -->
+                            <div class="rounded-xl border border-indigo-100 bg-indigo-50/50 p-3 text-xs dark:border-indigo-900/40 dark:bg-indigo-950/20 space-y-2.5">
+                                <div class="flex items-center justify-between">
+                                    <span class="font-bold text-indigo-950 dark:text-indigo-200 flex items-center gap-1.5 text-xs">
+                                        <svg class="w-4 h-4 text-indigo-600 dark:text-indigo-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z"/></svg>
+                                        <span>Alokasi Tahapan WIP & Tenaga Kerja (Manpower)</span>
+                                    </span>
+                                    <span class="text-[10px] font-semibold text-indigo-600 dark:text-indigo-400">Opsional untuk Proyek</span>
+                                </div>
+
+                                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                                    <div>
+                                        <label class="block text-[11px] font-semibold text-gray-700 dark:text-gray-300 mb-1">Tahapan WIP / Alur Produksi</label>
+                                        <select wire:model="wip_stage" class="w-full rounded-xl border border-gray-200 bg-white px-3 py-2 text-xs text-gray-800 outline-none focus:border-indigo-500 dark:border-gray-700 dark:bg-gray-800 dark:text-white">
+                                            <option value="">-- Bukan WIP / Pengeluaran Umum --</option>
+                                            <option value="Cutting">Cutting (Pemotongan Bahan Baku)</option>
+                                            <option value="Welding">Welding & Assembling (Pengelasan)</option>
+                                            <option value="Painting">Blasting & Painting (Pengecatan)</option>
+                                            <option value="Packing">Packing & Wrapping (Pengemasan)</option>
+                                        </select>
+                                    </div>
+
+                                    <div>
+                                        <label class="block text-[11px] font-semibold text-gray-700 dark:text-gray-300 mb-1">Alokasi Manpower (Total Jam Kerja)</label>
+                                        <div class="relative flex items-center">
+                                            <input type="number" step="0.25" min="0" wire:model="manpower_hours" placeholder="0 (Contoh: 8 Jam)" class="w-full rounded-xl border border-gray-200 bg-white pl-3 pr-16 py-2 text-xs text-gray-800 outline-none focus:border-indigo-500 dark:border-gray-700 dark:bg-gray-800 dark:text-white font-medium">
+                                            <span class="absolute right-2.5 text-[10px] font-bold text-gray-400">Jam Kerja</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
 
                             <div>
                                 <label class="block text-xs font-bold text-gray-700 dark:text-gray-300 mb-1">Catatan Tambahan (Opsional)</label>

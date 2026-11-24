@@ -56,6 +56,11 @@ class MaterialOutComponent extends Component
     public $pic = '';
     public $notes = '';
 
+    // WIP Stage & Manpower Costing fields (Finance Hasan Basri)
+    public $wip_stage = '';
+    public $manpower_hours = null;
+    public $manpower_rate = null;
+
     // Wholesale UOM Conversion states
     public $input_mode = 'base'; // 'base' or 'wholesale'
     public $wholesale_qty = null;
@@ -79,6 +84,9 @@ class MaterialOutComponent extends Component
         'project' => 'required|string|max:255',
         'pic' => 'required|string|max:255',
         'notes' => 'nullable|string|max:500',
+        'wip_stage' => 'nullable|string|max:50',
+        'manpower_hours' => 'nullable|numeric|min:0',
+        'manpower_rate' => 'nullable|numeric|min:0',
     ];
 
     protected $messages = [
@@ -478,6 +486,9 @@ class MaterialOutComponent extends Component
         $this->project = $record->project;
         $this->pic = $record->pic;
         $this->notes = $record->notes;
+        $this->wip_stage = $record->wip_stage ?? '';
+        $this->manpower_hours = $record->manpower_hours > 0 ? (float) $record->manpower_hours : null;
+        $this->manpower_rate = $record->manpower_rate > 0 ? (float) $record->manpower_rate : null;
 
         $item = Item::with(['category', 'parentItem'])->find($record->item_id);
         if ($item) {
@@ -519,6 +530,9 @@ class MaterialOutComponent extends Component
         $this->project = '';
         $this->pic = '';
         $this->notes = '';
+        $this->wip_stage = '';
+        $this->manpower_hours = null;
+        $this->manpower_rate = null;
         $this->bulkRows = [];
         $this->resetItemPreview();
     }
@@ -619,6 +633,10 @@ class MaterialOutComponent extends Component
                         $rowProject = !empty($row['project']) ? trim($row['project']) : trim($this->project);
                         $rowPic = !empty($row['pic']) ? trim($row['pic']) : trim($this->pic);
                         $rowNotes = !empty($row['notes']) ? trim($row['notes']) : $this->notes;
+                        $rowWipStage = !empty($row['wip_stage']) ? $row['wip_stage'] : (!empty($this->wip_stage) ? $this->wip_stage : null);
+                        $rowHours = !empty($row['manpower_hours']) ? (float) $row['manpower_hours'] : 0;
+                        $defRate = \App\Models\CompanyProfile::getDefaultHourlyRate();
+                        $rowCost = $rowHours * $defRate;
                         $refNo = 'OUT-' . date('Ymd') . '-' . strtoupper(substr(uniqid(), -4));
 
                         $projectObj = \App\Models\Project::firstOrCreate(
@@ -642,6 +660,10 @@ class MaterialOutComponent extends Component
                             'project_id' => $projectObj->id,
                             'pic' => $rowPic,
                             'notes' => $rowNotes,
+                            'wip_stage' => $rowWipStage,
+                            'manpower_hours' => $rowHours,
+                            'manpower_rate' => $defRate,
+                            'manpower_cost' => $rowCost,
                             'user_id' => auth()->id(),
                         ]);
 
@@ -727,6 +749,10 @@ class MaterialOutComponent extends Component
                     ]
                 );
 
+                $hours = (float) ($this->manpower_hours ?? 0);
+                $rate = !empty($this->manpower_rate) ? (float) $this->manpower_rate : \App\Models\CompanyProfile::getDefaultHourlyRate();
+                $cost = $hours * $rate;
+
                 if (!$this->isEditMode) {
                     // Optimasi 3: Pessimistic locking (lockForUpdate)
                     $item = Item::where('id', $this->item_id)->lockForUpdate()->firstOrFail();
@@ -749,6 +775,10 @@ class MaterialOutComponent extends Component
                         'project_id' => $projectObj->id,
                         'pic' => $this->pic,
                         'notes' => $this->notes,
+                        'wip_stage' => !empty($this->wip_stage) ? $this->wip_stage : null,
+                        'manpower_hours' => $hours,
+                        'manpower_rate' => $rate,
+                        'manpower_cost' => $cost,
                         'user_id' => auth()->id(),
                     ]);
 
@@ -809,6 +839,10 @@ class MaterialOutComponent extends Component
                         'project_id' => $projectObj->id,
                         'pic' => $this->pic,
                         'notes' => $this->notes,
+                        'wip_stage' => !empty($this->wip_stage) ? $this->wip_stage : null,
+                        'manpower_hours' => $hours,
+                        'manpower_rate' => $rate,
+                        'manpower_cost' => $cost,
                     ]);
 
                     ActivityLog::record(
