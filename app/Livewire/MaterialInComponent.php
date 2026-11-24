@@ -50,6 +50,7 @@ class MaterialInComponent extends Component
     public $unit = 'PCS';
     public $supplier = '';
     public $received_by = '';
+    public $delivery_order_number = '';
     public $notes = '';
     public $manufacturing_date = '';
     public $expiry_date = '';
@@ -150,6 +151,7 @@ class MaterialInComponent extends Component
         'quantity' => 'required|numeric|min:0.001',
         'supplier' => 'required|string|max:255',
         'received_by' => 'required|string|max:255',
+        'delivery_order_number' => 'nullable|string|max:255',
         'notes' => 'nullable|string|max:500',
         'manufacturing_date' => 'nullable|date',
         'qc_status' => 'required|string|in:pending_qc,approved,rejected',
@@ -404,6 +406,7 @@ class MaterialInComponent extends Component
         $this->resetForm();
         $this->date = date('Y-m-d');
         $this->received_by = auth()->user()->name ?? 'Petugas Gudang';
+        $this->delivery_order_number = '';
         $this->qc_status = 'pending_qc';
         $this->isConsumableItem = false;
         $this->input_mode = 'base';
@@ -434,6 +437,7 @@ class MaterialInComponent extends Component
         $this->unit = $record->unit;
         $this->supplier = $record->supplier;
         $this->received_by = $record->received_by;
+        $this->delivery_order_number = $record->delivery_order_number ?? '';
         $this->notes = $record->notes;
         $this->qc_status = $record->qc_status ?: 'approved';
         $this->manufacturing_date = $record->manufacturing_date ? $record->manufacturing_date->format('Y-m-d') : '';
@@ -823,6 +827,7 @@ class MaterialInComponent extends Component
         $this->quantity = 1;
         $this->unit = 'PCS';
         $this->supplier = '';
+        $this->delivery_order_number = '';
         $this->notes = '';
         $this->manufacturing_date = '';
         $this->expiry_date = '';
@@ -876,6 +881,7 @@ class MaterialInComponent extends Component
 
                 $existing->update([
                     'date' => $this->date,
+                    'delivery_order_number' => !empty($this->delivery_order_number) ? trim($this->delivery_order_number) : null,
                     'quantity' => $this->quantity,
                     'unit_id' => $item->unit_id,
                     'unit' => $this->unit ?: $item->unit,
@@ -934,6 +940,7 @@ class MaterialInComponent extends Component
                 'date' => 'required|date',
                 'supplier' => 'required|string|max:255',
                 'received_by' => 'required|string|max:255',
+                'delivery_order_number' => 'nullable|string|max:255',
                 'qc_status' => 'required|string|in:pending_qc,approved',
                 'notes' => 'nullable|string|max:500',
                 'inboundItems' => 'required|array|min:1',
@@ -969,6 +976,7 @@ class MaterialInComponent extends Component
             $createdCount = 0;
             $supplierName = trim($this->supplier);
             $receivedByName = trim($this->received_by);
+            $deliveryOrderNumber = !empty($this->delivery_order_number) ? trim($this->delivery_order_number) : null;
             $globalNotes = trim($this->notes);
             $isDirect = (bool) $this->directToProject;
             $targetProject = null;
@@ -997,7 +1005,7 @@ class MaterialInComponent extends Component
             $defaultQcStatus = $isDirect ? 'approved' : $this->qc_status;
 
             DB::transaction(function () use (
-                &$createdCount, $supplierName, $receivedByName, $globalNotes, $defaultQcStatus,
+                &$createdCount, $supplierName, $receivedByName, $deliveryOrderNumber, $globalNotes, $defaultQcStatus,
                 $isDirect, $targetProject, $targetProjectName, $targetPic, $directNotesText
             ) {
                 foreach ($this->inboundItems as $row) {
@@ -1021,6 +1029,7 @@ class MaterialInComponent extends Component
 
                     MaterialIn::create([
                         'reference_number' => $refNo,
+                        'delivery_order_number' => $deliveryOrderNumber,
                         'date' => $this->date,
                         'item_id' => $item->id,
                         'unit_id' => $item->unit_id,
@@ -1217,6 +1226,7 @@ class MaterialInComponent extends Component
 
             $materialIn = MaterialIn::create([
                 'reference_number' => $refNo,
+                'delivery_order_number' => !empty($this->delivery_order_number) ? trim($this->delivery_order_number) : null,
                 'date' => $this->date,
                 'item_id' => $this->item_id,
                 'unit_id' => $item->unit_id,
@@ -1528,7 +1538,7 @@ class MaterialInComponent extends Component
 
             return response()->stream(function () use ($records) {
                 $handle = fopen('php://output', 'w');
-                fputcsv($handle, ['No', 'Tanggal', 'Kode Barang', 'Nama Barang', 'Jumlah Masuk', 'Satuan', 'Status QC', 'Tgl Pembuatan (Cat)', 'Supplier / Vendor', 'Diterima Oleh', 'Catatan Penerimaan', 'Catatan QC / Inspeksi']);
+                fputcsv($handle, ['No', 'Tanggal', 'No. Surat Jalan / DO', 'No. Referensi', 'Kode Barang', 'Nama Barang', 'Jumlah Masuk', 'Satuan', 'Status QC', 'Tgl Pembuatan (Cat)', 'Supplier / Vendor', 'Diterima Oleh', 'Catatan Penerimaan', 'Catatan QC / Inspeksi']);
 
                 $no = 1;
                 foreach ($records as $row) {
@@ -1540,6 +1550,8 @@ class MaterialInComponent extends Component
                     fputcsv($handle, [
                         $no++,
                         format_date($row->date),
+                        $row->delivery_order_number ?? '-',
+                        $row->reference_number ?? '-',
                         $row->item->code_item ?? '-',
                         $row->item->name ?? '-',
                         $row->quantity,
@@ -1928,11 +1940,16 @@ class MaterialInComponent extends Component
             $query->where(function ($q) use ($s) {
                 $q->where('supplier', 'like', "%{$s}%")
                     ->orWhere('received_by', 'like', "%{$s}%")
+                    ->orWhere('po_number', 'like', "%{$s}%")
+                    ->orWhere('reference_number', 'like', "%{$s}%")
                     ->orWhere('notes', 'like', "%{$s}%")
                     ->orWhere('qc_notes', 'like', "%{$s}%")
                     ->orWhereHas('item', function ($iq) use ($s) {
                         $iq->where('name', 'like', "%{$s}%")
                             ->orWhere('code_item', 'like', "%{$s}%");
+                    })
+                    ->orWhereHas('purchaseOrder', function ($pq) use ($s) {
+                        $pq->where('po_number', 'like', "%{$s}%");
                     });
             });
         }

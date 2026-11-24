@@ -197,7 +197,7 @@
                     <span class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none text-gray-400">
                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
                     </span>
-                    <input type="text" wire:model.live.debounce.300ms="search" placeholder="Cari no. ref, supplier, PO, barang, penerima..." class="w-full pl-9 pr-3 py-2 text-xs rounded-xl border border-gray-200 bg-gray-50 dark:bg-gray-800 dark:border-gray-700 text-gray-800 dark:text-gray-200 outline-none focus:border-brand-500">
+                    <input type="text" wire:model.live.debounce.300ms="search" placeholder="Cari surat jalan, no. ref, supplier, PO, barang, penerima..." class="w-full pl-9 pr-3 py-2 text-xs rounded-xl border border-gray-200 bg-gray-50 dark:bg-gray-800 dark:border-gray-700 text-gray-800 dark:text-gray-200 outline-none focus:border-brand-500">
                 </div>
             </div>
 
@@ -358,6 +358,7 @@
                 <thead class="theme-table-header text-[11px] uppercase font-bold text-white">
                     <tr>
                         <th class="px-4 py-3">TANGGAL</th>
+                        <th class="px-4 py-3">NO. SURAT JALAN</th>
                         <th class="px-4 py-3">KODE MATERIAL</th>
                         <th class="px-4 py-3">Barang Diterima</th>
                         <th class="px-4 py-3 text-center">Jumlah Fisik</th>
@@ -373,6 +374,22 @@
                         <tr class="hover:bg-gray-50/60 dark:hover:bg-gray-800/40 transition">
                             <td class="px-4 py-3 font-medium whitespace-nowrap text-gray-800 dark:text-gray-200">
                                 {{ format_date($row->date) }}
+                            </td>
+                            <!-- NO. SURAT JALAN -->
+                            <td class="px-4 py-3 whitespace-nowrap">
+                                @if($row->delivery_order_number)
+                                    <div class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-mono font-bold bg-sky-50 text-sky-700 dark:bg-sky-950/60 dark:text-sky-300 border border-sky-200 dark:border-sky-800/60" title="Nomor Surat Jalan / Delivery Order">
+                                        <svg class="w-3.5 h-3.5 text-sky-600 dark:text-sky-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                                        </svg>
+                                        <span>{{ $row->delivery_order_number }}</span>
+                                    </div>
+                                @else
+                                    <span class="text-xs text-gray-400 dark:text-gray-500 font-mono italic">-</span>
+                                @endif
+                                @if($row->reference_number)
+                                    <span class="block text-[10px] text-gray-400 dark:text-gray-500 font-mono mt-0.5" title="No. Referensi Sistem">{{ $row->reference_number }}</span>
+                                @endif
                             </td>
                             <!-- KODE MATERIAL -->
                             <td class="px-4 py-3 whitespace-nowrap">
@@ -460,9 +477,7 @@
                                         PO: {{ $row->purchaseOrder->po_number }}
                                     </span>
                                 @endif
-                                @if($row->delivery_order_number)
-                                    <span class="text-[10px] text-gray-400 block font-mono">SJ: {{ $row->delivery_order_number }}</span>
-                                @endif
+
                             </td>
                             <td class="px-4 py-3 whitespace-nowrap">
                                 <span class="block font-semibold">{{ $row->received_by }}</span>
@@ -528,7 +543,7 @@
                             $hasActiveFiltersIn = !empty($search) || !empty($selectedCategory) || !empty($selectedQcStatus) || !empty($selectedSupplier) || !empty($dateFrom) || !empty($dateTo);
                         @endphp
                         <tr>
-                            <td colspan="8" class="px-6 py-14 text-center">
+                            <td colspan="10" class="px-6 py-14 text-center">
                                 <div class="max-w-md mx-auto flex flex-col items-center justify-center text-center">
                                     <div class="flex h-12 w-12 items-center justify-center rounded-2xl bg-gray-100 text-gray-400 dark:bg-gray-800 dark:text-gray-500 mb-3">
                                         @if($hasActiveFiltersIn)
@@ -1098,10 +1113,17 @@
                             </div>
                         @endif
 
-                        <div>
-                            <label class="block text-xs font-bold text-gray-700 dark:text-gray-300 mb-1">Supplier / Vendor Penyedia <span class="text-rose-500">*</span></label>
-                            <input type="text" wire:model="supplier" placeholder="PT Schneider / CV Jaya" class="w-full rounded-xl border border-gray-200 bg-gray-50 px-3.5 py-2.5 text-xs text-gray-800 outline-none focus:border-brand-500 focus:bg-white dark:border-gray-700 dark:bg-gray-800 dark:text-white">
-                            @error('supplier') <span class="text-[10px] text-rose-500 mt-1 block">{{ $message }}</span> @enderror
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                            <div>
+                                <label class="block text-xs font-bold text-gray-700 dark:text-gray-300 mb-1">No. Surat Jalan / DO</label>
+                                <input type="text" wire:model="delivery_order_number" placeholder="Contoh: SJ-2026/01/008" class="w-full rounded-xl border border-gray-200 bg-gray-50 px-3.5 py-2.5 text-xs font-mono text-gray-800 outline-none focus:border-brand-500 focus:bg-white dark:border-gray-700 dark:bg-gray-800 dark:text-white">
+                                @error('delivery_order_number') <span class="text-[10px] text-rose-500 mt-1 block">{{ $message }}</span> @enderror
+                            </div>
+                            <div>
+                                <label class="block text-xs font-bold text-gray-700 dark:text-gray-300 mb-1">Supplier / Vendor Penyedia <span class="text-rose-500">*</span></label>
+                                <input type="text" wire:model="supplier" placeholder="PT Schneider / CV Jaya" class="w-full rounded-xl border border-gray-200 bg-gray-50 px-3.5 py-2.5 text-xs text-gray-800 outline-none focus:border-brand-500 focus:bg-white dark:border-gray-700 dark:bg-gray-800 dark:text-white">
+                                @error('supplier') <span class="text-[10px] text-rose-500 mt-1 block">{{ $message }}</span> @enderror
+                            </div>
                         </div>
 
                         <div>
@@ -1148,13 +1170,20 @@
                                 <span>Informasi Pengiriman & Supplier (Header Bersama)</span>
                             </div>
 
-                            <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
                                 <div>
                                     <label class="block text-[11px] font-bold text-gray-700 dark:text-gray-300 mb-1">
                                         Tanggal Penerimaan <span class="text-rose-500">*</span>
                                     </label>
                                     <input type="date" wire:model="date" class="w-full rounded-xl border border-gray-200 bg-white px-3 py-2 text-xs text-gray-800 outline-none focus:border-brand-500 dark:border-gray-700 dark:bg-gray-800 dark:text-white cursor-pointer">
                                     @error('date') <span class="text-[10px] text-rose-500 mt-1 block">{{ $message }}</span> @enderror
+                                </div>
+                                <div>
+                                    <label class="block text-[11px] font-bold text-gray-700 dark:text-gray-300 mb-1">
+                                        No. Surat Jalan / DO
+                                    </label>
+                                    <input type="text" wire:model="delivery_order_number" placeholder="Contoh: SJ-2026/01/008" class="w-full rounded-xl border border-gray-200 bg-white px-3 py-2 text-xs font-mono text-gray-800 outline-none focus:border-brand-500 dark:border-gray-700 dark:bg-gray-800 dark:text-white">
+                                    @error('delivery_order_number') <span class="text-[10px] text-rose-500 mt-1 block">{{ $message }}</span> @enderror
                                 </div>
 
                                 <div>
@@ -1716,6 +1745,12 @@
                             <span class="text-gray-500">Supplier / Vendor:</span>
                             <span class="font-semibold text-gray-800 dark:text-gray-200">{{ $qcSelectedRecord->supplier }}</span>
                         </div>
+                        @if($qcSelectedRecord->delivery_order_number)
+                            <div class="flex justify-between">
+                                <span class="text-gray-500">No. Surat Jalan / DO:</span>
+                                <span class="font-mono font-bold text-sky-700 dark:text-sky-300">{{ $qcSelectedRecord->delivery_order_number }}</span>
+                            </div>
+                        @endif
                         @if($qcSelectedRecord->manufacturing_date)
                             <div class="flex justify-between pt-1 border-t border-gray-200 dark:border-gray-700">
                                 <span class="text-purple-600 font-bold">Tanggal Pembuatan (Cat):</span>

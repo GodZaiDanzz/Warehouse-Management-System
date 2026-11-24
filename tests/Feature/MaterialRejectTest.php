@@ -75,7 +75,7 @@ class MaterialRejectTest extends TestCase
         $reject = MaterialReject::create([
             'reference_number' => $refNo,
             'item_id' => $item->id,
-            'date' => '2026-09-15',
+            'date' => now()->format('Y-m-d'),
             'supplier' => 'PT Fastenerindo Steel',
             'quantity' => 15,
             'unit' => 'PCS',
@@ -110,7 +110,7 @@ class MaterialRejectTest extends TestCase
         $reject = MaterialReject::create([
             'reference_number' => $refNo,
             'item_id' => $item->id,
-            'date' => '2026-09-15',
+            'date' => now()->format('Y-m-d'),
             'supplier' => 'CV Logam Perkasa',
             'quantity' => 5,
             'unit' => 'PCS',
@@ -184,7 +184,7 @@ class MaterialRejectTest extends TestCase
         $reject = MaterialReject::create([
             'reference_number' => $refNo,
             'item_id' => $item->id,
-            'date' => '2026-09-15',
+            'date' => now()->format('Y-m-d'),
             'supplier' => 'PT Testindo Metal',
             'quantity' => 10,
             'unit' => 'PCS',
@@ -229,7 +229,7 @@ class MaterialRejectTest extends TestCase
         $reject = MaterialReject::create([
             'reference_number' => $refNo,
             'item_id' => $item->id,
-            'date' => '2026-09-15',
+            'date' => now()->format('Y-m-d'),
             'supplier' => 'PT Test Delete Supplier',
             'quantity' => 2,
             'unit' => 'PCS',
@@ -272,7 +272,7 @@ class MaterialRejectTest extends TestCase
         $reject = MaterialReject::create([
             'reference_number' => $refNo,
             'item_id' => $item->id,
-            'date' => '2026-09-15',
+            'date' => now()->format('Y-m-d'),
             'supplier' => 'PT PPIC Block Test',
             'quantity' => 3,
             'unit' => 'PCS',
