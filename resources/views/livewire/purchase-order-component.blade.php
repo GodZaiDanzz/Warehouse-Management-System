@@ -1,4 +1,4 @@
-<div class="space-y-6">
+<div class="space-y-6" x-init="window.warehouseItemsList = @js($itemsJsonList ?? []); window.warehouseProjectsList = @js($projectsJsonList ?? []);">
 
     <!-- Flash Notifications -->
     @if(session()->has('success'))
@@ -135,7 +135,7 @@
                     <button
                         type="button"
                         wire:click="openCreateModal"
-                        class="w-full sm:w-auto inline-flex items-center justify-center gap-2 rounded-xl bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 text-xs font-bold shadow-sm transition cursor-pointer"
+                        class="btn-add-theme w-full sm:w-auto inline-flex items-center justify-center gap-2 rounded-xl bg-brand-600 hover:bg-brand-700 text-white px-4 py-2 text-xs font-bold shadow-sm transition cursor-pointer"
                     >
                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
                         <span>Buat Purchase Order Baru</span>
@@ -172,7 +172,7 @@
 
                             <!-- PO Number -->
                             <td class="px-4 py-3.5">
-                                <button type="button" wire:click="openDetailModal({{ $po->id }})" class="font-bold text-gray-900 hover:text-purple-600 dark:text-white dark:hover:text-purple-400 text-left cursor-pointer flex items-center gap-1.5 font-mono">
+                                <button type="button" wire:click="openDetailModal({{ $po->id }})" class="font-bold text-gray-900 hover:text-brand-600 dark:text-white dark:hover:text-brand-400 text-left cursor-pointer flex items-center gap-1.5 font-mono">
                                     {{ $po->po_number }}
                                 </button>
                                 <span class="text-[10px] text-gray-400 block mt-0.5">Dibuat: {{ $po->creator ? $po->creator->name : '-' }}</span>
@@ -211,13 +211,13 @@
                                     <span class="font-semibold text-gray-700 dark:text-gray-300">
                                         {{ $po->items_count }} Item Barang
                                     </span>
-                                    <span class="font-bold {{ $po->isCompleted() ? 'text-emerald-600 dark:text-emerald-400' : 'text-purple-600 dark:text-purple-400' }}">
+                                    <span class="font-bold {{ $po->isCompleted() ? 'text-emerald-600 dark:text-emerald-400' : 'text-brand-600 dark:text-brand-400' }}">
                                         {{ $po->progress_percentage }}%
                                     </span>
                                 </div>
                                 <!-- Progress Bar -->
                                 <div class="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-1.5 overflow-hidden">
-                                    <div class="h-1.5 rounded-full transition-all duration-300 {{ $po->isCompleted() ? 'bg-emerald-500' : ($po->isPartial() ? 'bg-amber-500' : 'bg-purple-600') }}" style="width: {{ $po->progress_percentage }}%"></div>
+                                    <div class="h-1.5 rounded-full transition-all duration-300 {{ $po->isCompleted() ? 'bg-emerald-500' : ($po->isPartial() ? 'bg-amber-500' : 'bg-brand-600') }}" style="width: {{ $po->progress_percentage }}%"></div>
                                 </div>
                             </td>
 
@@ -253,7 +253,7 @@
                                     <button
                                         type="button"
                                         wire:click="openDetailModal({{ $po->id }})"
-                                        class="p-1.5 rounded-lg text-purple-600 hover:bg-purple-50 dark:hover:bg-purple-950/40 transition cursor-pointer"
+                                        class="p-1.5 rounded-lg text-brand-600 hover:bg-brand-50 dark:hover:bg-brand-950/40 transition cursor-pointer"
                                         title="Lihat Rincian & Riwayat"
                                     >
                                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
@@ -301,7 +301,7 @@
                         <tr>
                             <td colspan="8" class="px-6 py-12 text-center">
                                 <div class="flex flex-col items-center justify-center">
-                                    <div class="flex h-12 w-12 items-center justify-center rounded-full bg-purple-50 text-purple-600 dark:bg-purple-950/60 dark:text-purple-400 mb-3">
+                                    <div class="flex h-12 w-12 items-center justify-center rounded-full bg-brand-50 text-brand-600 dark:bg-brand-950/60 dark:text-brand-400 mb-3">
                                         <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg>
                                     </div>
                                     <p class="text-sm font-bold text-gray-900 dark:text-white">Tidak ada Purchase Order yang ditemukan</p>
@@ -328,14 +328,15 @@
     <!-- MODAL 1: BUAT PURCHASE ORDER BARU -->
     <!-- ========================================================================= -->
     @if($isCreateModalOpen)
-        <div class="fixed inset-0 z-50 overflow-y-auto bg-gray-950/80 backdrop-blur-xs animate-fadeIn" role="dialog" aria-modal="true">
+        <div class="fixed inset-0 z-[999999] overflow-y-auto bg-gray-950/80 backdrop-blur-xs animate-fadeIn" role="dialog" aria-modal="true"
+             x-init="window.warehouseItemsList = @js($itemsJsonList ?? []); window.warehouseProjectsList = @js($projectsJsonList ?? []);">
             <div class="flex min-h-full items-center justify-center p-3 sm:p-4 md:p-6 text-center">
                 <div class="relative w-full max-w-4xl lg:max-w-5xl rounded-2xl border border-gray-200 bg-white text-left shadow-2xl transition-all dark:border-gray-700 dark:bg-gray-900 my-auto max-h-[90vh] flex flex-col overflow-hidden">
                 
                 <!-- Modal Header -->
                 <div class="flex items-center justify-between p-4 sm:p-5 border-b border-gray-200 dark:border-gray-800 shrink-0">
                     <div class="flex items-center gap-3">
-                        <div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-purple-50 text-purple-700 dark:bg-purple-950/80 dark:text-purple-300">
+                        <div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-brand-50 text-brand-700 dark:bg-brand-950/80 dark:text-brand-300">
                             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
                         </div>
                         <div>
@@ -371,11 +372,45 @@
                             <label class="block text-xs font-bold text-gray-700 dark:text-gray-300 mb-1">
                                 Tanggal PO <span class="text-rose-500">*</span>
                             </label>
-                            <input
-                                type="date"
-                                wire:model="po_date"
-                                class="w-full rounded-xl border border-gray-300 bg-white px-3 py-2 text-xs text-gray-900 focus:border-brand-500 dark:border-gray-700 dark:bg-gray-800 dark:text-white"
-                            />
+                            <div wire:ignore class="relative" x-data="{
+                                fp: null,
+                                init() {
+                                    const initPicker = () => {
+                                        if (typeof flatpickr === 'undefined') { setTimeout(initPicker, 50); return; }
+                                        this.fp = flatpickr(this.$refs.picker, {
+                                            dateFormat: 'Y-m-d',
+                                            altInput: true,
+                                            altFormat: 'd/m/Y',
+                                            altInputClass: 'w-full rounded-xl border border-gray-300 bg-white pl-3 pr-9 py-2 text-xs text-gray-900 outline-none focus:border-brand-500 dark:border-gray-700 dark:bg-gray-800 dark:text-white cursor-pointer transition',
+                                            defaultDate: @js($po_date) || null,
+                                            placeholder: 'Pilih Tanggal PO...',
+                                            onChange: (dates, dateStr) => {
+                                                if (dateStr !== $wire.po_date) {
+                                                    $wire.set('po_date', dateStr);
+                                                }
+                                            }
+                                        });
+                                    };
+                                    this.$nextTick(() => initPicker());
+                                    this.$watch('$wire.po_date', val => {
+                                        if (this.fp && val !== this.fp.input.value) {
+                                            if (val) {
+                                                this.fp.setDate(val, false);
+                                            } else {
+                                                this.fp.clear();
+                                            }
+                                        }
+                                    });
+                                },
+                                destroy() { if (this.fp) { this.fp.destroy(); this.fp = null; } }
+                            }">
+                                <input x-ref="picker" type="text" class="hidden" value="{{ $po_date }}">
+                                <div @click="if (fp) fp.open()" class="absolute right-3 top-2.5 text-gray-400 hover:text-gray-600 dark:text-gray-500 dark:hover:text-gray-300 cursor-pointer">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+                                    </svg>
+                                </div>
+                            </div>
                             @error('po_date') <span class="text-[11px] text-rose-500 block mt-1">{{ $message }}</span> @enderror
                         </div>
 
@@ -384,11 +419,58 @@
                             <label class="block text-xs font-bold text-gray-700 dark:text-gray-300 mb-1">
                                 Estimasi Tiba (ETA)
                             </label>
-                            <input
-                                type="date"
-                                wire:model="eta_date"
-                                class="w-full rounded-xl border border-gray-300 bg-white px-3 py-2 text-xs text-gray-900 focus:border-brand-500 dark:border-gray-700 dark:bg-gray-800 dark:text-white"
-                            />
+                            <div wire:ignore class="relative" x-data="{
+                                fp: null,
+                                hasValue: Boolean(@js($eta_date)),
+                                init() {
+                                    const initPicker = () => {
+                                        if (typeof flatpickr === 'undefined') { setTimeout(initPicker, 50); return; }
+                                        this.fp = flatpickr(this.$refs.picker, {
+                                            dateFormat: 'Y-m-d',
+                                            altInput: true,
+                                            altFormat: 'd/m/Y',
+                                            altInputClass: 'w-full rounded-xl border border-gray-300 bg-white pl-3 pr-9 py-2 text-xs text-gray-900 outline-none focus:border-brand-500 dark:border-gray-700 dark:bg-gray-800 dark:text-white cursor-pointer transition',
+                                            defaultDate: @js($eta_date) || null,
+                                            placeholder: 'Pilih Estimasi Tiba...',
+                                            onChange: (dates, dateStr) => {
+                                                this.hasValue = Boolean(dateStr);
+                                                if (dateStr !== $wire.eta_date) {
+                                                    $wire.set('eta_date', dateStr || null);
+                                                }
+                                            }
+                                        });
+                                    };
+                                    this.$nextTick(() => initPicker());
+                                    this.$watch('$wire.eta_date', val => {
+                                        this.hasValue = Boolean(val);
+                                        if (this.fp && val !== this.fp.input.value) {
+                                            if (val) {
+                                                this.fp.setDate(val, false);
+                                            } else {
+                                                this.fp.clear();
+                                            }
+                                        }
+                                    });
+                                },
+                                clear() {
+                                    if (this.fp) this.fp.clear();
+                                    this.hasValue = false;
+                                    $wire.set('eta_date', null);
+                                },
+                                destroy() { if (this.fp) { this.fp.destroy(); this.fp = null; } }
+                            }">
+                                <input x-ref="picker" type="text" class="hidden" value="{{ $eta_date }}">
+                                <div class="absolute right-3 top-2.5 flex items-center gap-1.5">
+                                    <button type="button" x-show="hasValue" @click.stop="clear()" class="text-gray-400 hover:text-rose-500 cursor-pointer p-0.5" title="Hapus Tanggal ETA">
+                                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+                                    </button>
+                                    <div @click="if (fp) fp.open()" class="text-gray-400 hover:text-gray-600 dark:text-gray-500 dark:hover:text-gray-300 cursor-pointer">
+                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+                                        </svg>
+                                    </div>
+                                </div>
+                            </div>
                             @error('eta_date') <span class="text-[11px] text-rose-500 block mt-1">{{ $message }}</span> @enderror
                         </div>
                     </div>
@@ -408,17 +490,132 @@
                             @error('supplier') <span class="text-[11px] text-rose-500 block mt-1">{{ $message }}</span> @enderror
                         </div>
 
-                        <!-- Peruntukan Proyek -->
+                        <!-- Peruntukan Proyek with Searchable Combobox -->
                         <div>
                             <label class="block text-xs font-bold text-gray-700 dark:text-gray-300 mb-1">
                                 Peruntukan Proyek (Opsional)
                             </label>
-                            <select wire:model="project_id" class="w-full rounded-xl border border-gray-300 bg-white pl-3 pr-8 py-2 text-xs text-gray-900 focus:border-brand-500 dark:border-gray-700 dark:bg-gray-800 dark:text-white cursor-pointer truncate">
-                                <option value="">Persediaan Umum Gudang (Non-Project)</option>
-                                @foreach($projects as $p)
-                                    <option value="{{ $p->id }}">{{ $p->name }}</option>
-                                @endforeach
-                            </select>
+                            <div class="relative" 
+                                 wire:key="po-create-project-combobox-{{ $project_id ?? 'empty' }}"
+                                 x-data="poProjectSearchCombobox(@js($project_id ? (string)$project_id : ''), @js($projects->firstWhere('id', $project_id)?->name ?? ''), @js($projects->firstWhere('id', $project_id)?->code ?? ''), @js($projectsJsonList ?? []))"
+                                 @scroll.window="if(open) updatePosition()"
+                                 @resize.window="if(open) updatePosition()">
+                                
+                                <input type="hidden" 
+                                       x-ref="hiddenInput"
+                                       wire:model="project_id" 
+                                       :value="selectedId">
+
+                                <!-- Trigger Box -->
+                                <div x-ref="triggerWrap" 
+                                     @click="toggle()"
+                                     style="min-height: 38px;"
+                                     class="relative flex items-center justify-between w-full min-h-[38px] px-3 py-2 rounded-xl border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 cursor-pointer hover:border-brand-400 dark:hover:border-brand-500 transition shadow-2xs">
+                                    
+                                    <div class="flex-1 min-w-0 pr-1">
+                                        <template x-if="selectedId && displayName">
+                                            <div class="flex items-center gap-1.5 truncate">
+                                                <span x-show="displayCode" class="px-1.5 py-0.5 rounded text-[10px] font-mono font-bold bg-amber-50 text-amber-700 dark:bg-amber-950/60 dark:text-amber-300 shrink-0 border border-amber-200/60 dark:border-amber-800" x-text="displayCode"></span>
+                                                <span class="font-bold text-gray-900 dark:text-white truncate block text-xs" :title="displayName" x-text="displayName"></span>
+                                            </div>
+                                        </template>
+                                        <template x-if="!selectedId || !displayName">
+                                            <div class="flex items-center gap-1.5 text-gray-500 dark:text-gray-400 text-xs">
+                                                <span class="truncate">Persediaan Umum Gudang (Non-Project)</span>
+                                            </div>
+                                        </template>
+                                    </div>
+
+                                    <div class="flex items-center gap-0.5 shrink-0">
+                                        <button type="button" 
+                                                x-show="selectedId" 
+                                                @click.stop="clearSelection()" 
+                                                class="p-0.5 text-gray-400 hover:text-rose-500 rounded text-[10px] transition cursor-pointer"
+                                                title="Kembalikan ke Non-Project">
+                                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+                                        </button>
+                                        <div class="p-0.5 text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 transition">
+                                            <svg class="w-4 h-4 transition-transform duration-200" :class="open ? 'rotate-180 text-brand-600' : ''" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+                                            </svg>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Teleported Floating Dropdown Menu -->
+                                <div wire:ignore>
+                                    <template x-teleport="body">
+                                        <div x-show="open" 
+                                             x-cloak 
+                                             x-transition:enter="transition ease-out duration-150"
+                                             x-transition:enter-start="opacity-0 scale-95"
+                                             x-transition:enter-end="opacity-100 scale-100"
+                                             x-transition:leave="transition ease-in duration-100"
+                                             x-transition:leave-start="opacity-100 scale-100"
+                                             x-transition:leave-end="opacity-0 scale-95"
+                                             @click.outside="if (!getTriggerEl()?.contains($event.target)) close()"
+                                             :style="'position: fixed; top: ' + fixedTop + 'px; left: ' + fixedLeft + 'px; width: ' + fixedWidth + 'px; z-index: 99999999;'"
+                                             class="rounded-2xl border border-gray-200 bg-white p-3 shadow-2xl dark:border-gray-700 dark:bg-gray-900 space-y-2">
+                                            
+                                            <div class="flex items-center justify-between pb-2 border-b border-gray-100 dark:border-gray-800 text-xs">
+                                                <span class="font-bold text-gray-900 dark:text-white flex items-center gap-1.5">
+                                                    <svg class="w-4 h-4 text-brand-600 dark:text-brand-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/></svg> Cari & Pilih Proyek
+                                                </span>
+                                                <span class="text-[10px] font-extrabold px-2 py-0.5 rounded-full bg-brand-50 text-brand-700 dark:bg-brand-950/60 dark:text-brand-300 font-mono" x-text="filteredProjects.length + ' Proyek'"></span>
+                                            </div>
+
+                                            <div class="relative">
+                                                <input type="text" 
+                                                       x-ref="searchField" 
+                                                       x-model="search" 
+                                                       placeholder="Ketik nama atau kode proyek..." 
+                                                       class="w-full pl-8 pr-7 py-2 rounded-xl border border-gray-300 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 text-xs text-gray-900 dark:text-white placeholder-gray-400 focus:border-brand-500 focus:bg-white dark:focus:bg-gray-800 outline-none transition">
+                                                <div class="absolute left-2.5 top-2.5 text-gray-400 pointer-events-none">
+                                                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+                                                </div>
+                                                <button type="button" 
+                                                        x-show="search" 
+                                                        @click="search = ''; $refs.searchField.focus()" 
+                                                        class="absolute right-2.5 top-2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-200">
+                                                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+                                                </button>
+                                            </div>
+
+                                            <!-- Opsi Non-Project (Persediaan Umum) -->
+                                            <div class="pt-0.5">
+                                                <div @click="selectProject(null)" 
+                                                     :class="!selectedId ? 'bg-brand-50 dark:bg-brand-950/50 border-brand-300 dark:border-brand-800 font-bold' : 'hover:bg-gray-50 dark:hover:bg-gray-800/70 border-dashed border-gray-200 dark:border-gray-700'"
+                                                     class="p-2 rounded-xl border cursor-pointer transition flex items-center justify-between text-xs">
+                                                    <div class="flex items-center gap-2">
+                                                        <div class="w-2 h-2 rounded-full" :class="!selectedId ? 'bg-brand-600' : 'bg-gray-300 dark:bg-gray-600'"></div>
+                                                        <span class="text-gray-800 dark:text-gray-200">Persediaan Umum Gudang (Non-Project)</span>
+                                                    </div>
+                                                    <span x-show="!selectedId" class="text-[10px] text-brand-600 dark:text-brand-400 font-bold">Terpilih</span>
+                                                </div>
+                                            </div>
+
+                                            <!-- List Proyek -->
+                                            <div class="max-h-56 overflow-y-auto space-y-1 custom-scrollbar pr-0.5">
+                                                <template x-for="p in filteredProjects" :key="p.id">
+                                                    <div @click="selectProject(p)" 
+                                                         :class="String(selectedId) === String(p.id) ? 'bg-brand-50 dark:bg-brand-950/60 border-brand-400 dark:border-brand-700 text-brand-900 dark:text-brand-100 font-bold' : 'hover:bg-gray-50 dark:hover:bg-gray-800/80 border-transparent text-gray-700 dark:text-gray-300 font-medium'"
+                                                         class="p-2 rounded-xl border cursor-pointer transition flex items-center justify-between gap-2 text-xs">
+                                                        <div class="flex items-center gap-2 min-w-0 flex-1">
+                                                            <span x-show="p.code" class="px-1.5 py-0.5 rounded text-[10px] font-mono font-bold bg-amber-50 text-amber-700 dark:bg-amber-950/60 dark:text-amber-300 shrink-0 border border-amber-200/60 dark:border-amber-800" x-text="p.code"></span>
+                                                            <span class="truncate block" :title="p.name" x-text="p.name"></span>
+                                                        </div>
+                                                        <span x-show="String(selectedId) === String(p.id)" class="text-[10px] text-brand-600 dark:text-brand-400 font-bold shrink-0">Terpilih</span>
+                                                    </div>
+                                                </template>
+
+                                                <div x-show="filteredProjects.length === 0" class="py-6 text-center text-xs text-gray-400 dark:text-gray-500">
+                                                    Tidak ada proyek yang sesuai kata kunci pencarian.
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </template>
+                                </div>
+                            </div>
                             @error('project_id') <span class="text-[11px] text-rose-500 block mt-1">{{ $message }}</span> @enderror
                         </div>
                     </div>
@@ -436,21 +633,42 @@
 
                     <!-- Dynamic Items Section -->
                     <div class="pt-3 border-t border-gray-200 dark:border-gray-800">
-                        <div class="flex items-center justify-between mb-2">
+                        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-2">
                             <div>
                                 <h4 class="text-xs font-bold uppercase tracking-wider text-gray-800 dark:text-gray-200">
                                     Daftar Item Barang Pesanan <span class="text-rose-500">*</span>
                                 </h4>
                                 <p class="text-[11px] text-gray-500">Pilih item katalog, masukkan quantity dan estimasi harga per unit</p>
                             </div>
-                            <button
-                                type="button"
-                                wire:click="addItemRow"
-                                class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-purple-50 text-purple-700 hover:bg-purple-100 text-xs font-bold dark:bg-purple-950/60 dark:text-purple-300 transition cursor-pointer"
-                            >
-                                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
-                                Tambah Baris Item
-                            </button>
+                            <div class="flex items-center gap-1.5 shrink-0">
+                                <button
+                                    type="button"
+                                    wire:click="addItemRow(1)"
+                                    class="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-brand-50 text-brand-700 hover:bg-brand-100 text-xs font-bold dark:bg-brand-950/60 dark:text-brand-300 transition cursor-pointer shadow-2xs border border-brand-200/50 dark:border-brand-800/40"
+                                    title="Tambah 1 baris item"
+                                >
+                                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+                                    +1 Baris
+                                </button>
+                                <button
+                                    type="button"
+                                    wire:click="addItemRows(3)"
+                                    class="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-brand-50 text-brand-700 hover:bg-brand-100 text-xs font-bold dark:bg-brand-950/60 dark:text-brand-300 transition cursor-pointer shadow-2xs border border-brand-200/50 dark:border-brand-800/40"
+                                    title="Tambah 3 baris item sekaligus"
+                                >
+                                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+                                    +3 Baris
+                                </button>
+                                <button
+                                    type="button"
+                                    wire:click="addItemRows(5)"
+                                    class="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-brand-100/80 text-brand-800 hover:bg-brand-200 text-xs font-bold dark:bg-brand-900/60 dark:text-brand-200 transition cursor-pointer shadow-2xs border border-brand-300/60 dark:border-brand-700"
+                                    title="Tambah 5 baris item sekaligus"
+                                >
+                                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+                                    +5 Baris
+                                </button>
+                            </div>
                         </div>
 
                         @error('items') <span class="text-[11px] text-rose-500 block mb-2">{{ $message }}</span> @enderror
@@ -458,7 +676,7 @@
                         <!-- Items Table in Modal -->
                         <div class="space-y-2">
                             @foreach($items as $i => $itemRow)
-                                <div class="p-3 rounded-xl border border-gray-200 bg-gray-50/50 dark:border-gray-800 dark:bg-gray-800/40 space-y-2">
+                                <div wire:key="po-create-row-{{ $i }}" class="p-3 rounded-xl border border-gray-200 bg-gray-50/50 dark:border-gray-800 dark:bg-gray-800/40 space-y-2">
                                     <div class="flex items-center justify-between">
                                         <span class="text-xs font-bold text-gray-600 dark:text-gray-400">Item #{{ $i + 1 }}</span>
                                         @if(count($items) > 1)
@@ -474,18 +692,130 @@
                                     </div>
 
                                     <div class="grid grid-cols-1 sm:grid-cols-12 gap-2">
-                                        <!-- Item Dropdown -->
+                                        <!-- Item Dropdown with Searchable Combobox -->
                                         <div class="sm:col-span-5">
                                             <label class="block text-[11px] font-semibold text-gray-600 dark:text-gray-400 mb-0.5">Barang</label>
-                                            <select
-                                                wire:model.live="items.{{ $i }}.item_id"
-                                                class="w-full rounded-lg border border-gray-300 bg-white pl-2.5 pr-8 py-1.5 text-xs text-gray-900 focus:border-brand-500 dark:border-gray-700 dark:bg-gray-800 dark:text-white cursor-pointer truncate"
-                                            >
-                                                <option value="">-- Pilih Barang dari Master --</option>
-                                                @foreach($availableItems as $ai)
-                                                    <option value="{{ $ai->id }}">{{ $ai->code_item }} - {{ $ai->name }} (Stok: {{ format_number($ai->stock) }} {{ $ai->unit }})</option>
-                                                @endforeach
-                                            </select>
+                                            <div class="relative" 
+                                                 wire:key="po-create-combobox-{{ $i }}-{{ $itemRow['item_id'] ?? 'empty' }}"
+                                                 x-data="poItemSearchCombobox(@js($itemRow['item_id'] ?? ''), {{ $i }}, @js($itemRow['item_name'] ?? ''), @js($itemRow['item_code'] ?? ''))"
+                                                 @scroll.window="if(open) updatePosition()"
+                                                 @resize.window="if(open) updatePosition()">
+                                                
+                                                <input type="hidden" 
+                                                       x-ref="hiddenInput"
+                                                       wire:model.live="items.{{ $i }}.item_id" 
+                                                       :value="selectedId">
+
+                                                <!-- Trigger Button -->
+                                                <div x-ref="triggerWrap" 
+                                                     @click="toggle()"
+                                                     style="min-height: 34px;"
+                                                     class="relative flex items-center justify-between w-full min-h-[34px] px-2.5 py-1.5 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 cursor-pointer hover:border-brand-400 dark:hover:border-brand-500 transition shadow-2xs">
+                                                    
+                                                    <div class="flex-1 min-w-0 pr-1">
+                                                        <template x-if="displayInfo">
+                                                            <div class="flex items-center gap-1.5 truncate">
+                                                                <span x-show="displayInfo.code" class="px-1.5 py-0.5 rounded text-[10px] font-mono font-bold bg-brand-50 text-brand-700 dark:bg-brand-950/60 dark:text-brand-300 shrink-0 border border-brand-200/60 dark:border-brand-800" x-text="displayInfo.code"></span>
+                                                                <span class="font-bold text-gray-900 dark:text-white truncate block text-xs" :title="displayInfo.name" x-text="displayInfo.name"></span>
+                                                                <span x-show="displayInfo.stock !== undefined" class="text-[10px] text-gray-400 dark:text-gray-500 shrink-0 font-medium" x-text="'(Stok: ' + displayInfo.stock + ' ' + (displayInfo.unit || 'PCS') + ')'"></span>
+                                                            </div>
+                                                        </template>
+                                                        <template x-if="!displayInfo">
+                                                            <div class="flex items-center gap-1.5 text-gray-400 dark:text-gray-500 text-xs">
+                                                                <svg class="w-3.5 h-3.5 shrink-0 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+                                                                <span class="truncate">-- Cari & Pilih Barang dari Master --</span>
+                                                            </div>
+                                                        </template>
+                                                    </div>
+
+                                                    <div class="flex items-center gap-0.5 shrink-0">
+                                                        <button type="button" 
+                                                                x-show="selectedId" 
+                                                                @click.stop="clearSelection()" 
+                                                                class="p-0.5 text-gray-400 hover:text-rose-500 rounded text-[10px] transition cursor-pointer"
+                                                                title="Hapus pilihan barang">
+                                                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+                                                        </button>
+                                                        <button type="button" 
+                                                                @click.stop="toggle()" 
+                                                                class="p-0.5 text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 rounded transition cursor-pointer"
+                                                                title="Buka daftar barang">
+                                                            <svg class="w-4 h-4 transition-transform duration-200" :class="open ? 'rotate-180 text-brand-600' : ''" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+                                                            </svg>
+                                                        </button>
+                                                    </div>
+                                                </div>
+
+                                                <!-- Teleported Floating Dropdown Menu -->
+                                                <div wire:ignore>
+                                                    <template x-teleport="body">
+                                                        <div x-show="open" 
+                                                             x-cloak 
+                                                             x-transition:enter="transition ease-out duration-150"
+                                                             x-transition:enter-start="opacity-0 scale-95"
+                                                             x-transition:enter-end="opacity-100 scale-100"
+                                                             x-transition:leave="transition ease-in duration-100"
+                                                             x-transition:leave-start="opacity-100 scale-100"
+                                                             x-transition:leave-end="opacity-0 scale-95"
+                                                             @click.outside="if (!getTriggerEl()?.contains($event.target)) close()"
+                                                             :style="'position: fixed; top: ' + fixedTop + 'px; left: ' + fixedLeft + 'px; width: ' + fixedWidth + 'px; z-index: 99999999;'"
+                                                             class="rounded-2xl border border-gray-200 bg-white p-3 shadow-2xl dark:border-gray-700 dark:bg-gray-900 space-y-2">
+                                                            
+                                                            <div class="flex items-center justify-between pb-2 border-b border-gray-100 dark:border-gray-800 text-xs">
+                                                                <span class="font-bold text-gray-900 dark:text-white flex items-center gap-1.5">
+                                                                    <svg class="w-4 h-4 text-brand-600 dark:text-brand-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/></svg> Cari Barang Katalog
+                                                                </span>
+                                                                <span class="text-[10px] font-extrabold px-2 py-0.5 rounded-full bg-brand-50 text-brand-700 dark:bg-brand-950/60 dark:text-brand-300 font-mono" x-text="filteredItems.length + ' Barang'"></span>
+                                                            </div>
+
+                                                            <div class="relative">
+                                                                <input type="text" 
+                                                                       x-ref="searchField" 
+                                                                       x-model="search" 
+                                                                       @keydown.enter.prevent="if (filteredItems.length > 0) { selectItem(filteredItems[0]); }"
+                                                                       @keydown.escape="close()"
+                                                                       placeholder="Ketik nama, kode, atau kategori barang..." 
+                                                                       class="w-full pl-3 pr-7 py-1.5 text-xs rounded-xl border border-gray-200 bg-gray-50 dark:border-gray-700 dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-400 focus:outline-none focus:border-brand-500 focus:bg-white dark:focus:bg-gray-800 shadow-xs">
+                                                                <button x-show="search.length > 0" @click="search = ''" type="button" class="absolute right-2 top-2 text-gray-400 hover:text-gray-600 cursor-pointer">
+                                                                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+                                                                </button>
+                                                            </div>
+
+                                                            <div class="max-h-60 overflow-y-auto space-y-1 pr-1 custom-scrollbar">
+                                                                <template x-for="item in filteredItems" :key="item.id">
+                                                                    <div @click="selectItem(item)"
+                                                                         class="p-2 rounded-xl hover:bg-brand-50/90 dark:hover:bg-brand-950/50 cursor-pointer transition flex items-center justify-between gap-2 border border-transparent hover:border-brand-200 dark:hover:border-brand-800"
+                                                                         :class="String(selectedId) === String(item.id) ? 'bg-brand-50 dark:bg-brand-950/60 border-brand-300 dark:border-brand-700' : ''">
+                                                                        <div class="min-w-0 flex-1">
+                                                                            <div class="flex items-center gap-1.5 flex-wrap">
+                                                                                <span x-show="item.category" class="inline-flex items-center px-1.5 py-0.2 rounded text-[9px] font-extrabold uppercase shrink-0 bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-300" x-text="item.category"></span>
+                                                                                <span class="font-bold text-xs text-gray-900 dark:text-white truncate" x-text="item.name"></span>
+                                                                            </div>
+                                                                            <div class="flex items-center gap-2 mt-0.5 text-[10px] flex-wrap">
+                                                                                <span x-show="item.code" class="font-mono text-gray-500 dark:text-gray-400 bg-gray-100 dark:bg-gray-800 px-1 py-0.2 rounded" x-text="item.code"></span>
+                                                                                <span class="font-semibold text-emerald-600 dark:text-emerald-400">
+                                                                                    Stok: <strong x-text="item.stock"></strong> <span x-text="item.unit"></span>
+                                                                                </span>
+                                                                                <span x-show="item.unit_price > 0" class="text-gray-500 dark:text-gray-400 font-mono">
+                                                                                    Rp <span x-text="new Intl.NumberFormat('id-ID').format(item.unit_price)"></span>/<span x-text="item.unit"></span>
+                                                                                </span>
+                                                                            </div>
+                                                                        </div>
+                                                                        <div x-show="String(selectedId) === String(item.id)" class="text-brand-600 dark:text-brand-400 shrink-0">
+                                                                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/></svg>
+                                                                        </div>
+                                                                    </div>
+                                                                </template>
+
+                                                                <div x-show="filteredItems.length === 0" class="py-4 text-center text-xs text-gray-400">
+                                                                    Tidak ada barang yang cocok dengan pencarian.
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    </template>
+                                                </div>
+                                            </div>
                                             @error("items.{$i}.item_id") <span class="text-[10px] text-rose-500 block">{{ $message }}</span> @enderror
                                         </div>
 
@@ -535,7 +865,7 @@
                                             />
                                         </div>
                                         <div class="text-[11px] text-gray-600 dark:text-gray-300 shrink-0 text-right font-medium">
-                                            Subtotal: <span class="font-bold font-mono text-purple-700 dark:text-purple-300">Rp {{ number_format((float)($itemRow['quantity_ordered'] ?? 0) * (float)($itemRow['unit_price'] ?? 0), 0, ',', '.') }}</span>
+                                            Subtotal: <span class="font-bold font-mono text-brand-700 dark:text-brand-300">Rp {{ number_format((float)($itemRow['quantity_ordered'] ?? 0) * (float)($itemRow['unit_price'] ?? 0), 0, ',', '.') }}</span>
                                         </div>
                                     </div>
                                 </div>
@@ -543,12 +873,12 @@
                         </div>
 
                         <!-- Summary Banner Total PO -->
-                        <div class="mt-3 p-3.5 rounded-xl bg-purple-50/70 dark:bg-purple-950/40 border border-purple-100 dark:border-purple-900/40 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+                        <div class="mt-3 p-3.5 rounded-xl bg-brand-50/70 dark:bg-brand-950/40 border border-brand-100 dark:border-brand-900/40 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
                             <div>
-                                <span class="text-xs font-semibold text-purple-950 dark:text-purple-200">Total Estimasi Nilai Purchase Order:</span>
-                                <span class="block text-[11px] text-purple-600 dark:text-purple-400">Akumulasi otomatis dari {{ count($items) }} item pesanan</span>
+                                <span class="text-xs font-semibold text-brand-950 dark:text-brand-200">Total Estimasi Nilai Purchase Order:</span>
+                                <span class="block text-[11px] text-brand-600 dark:text-brand-400">Akumulasi otomatis dari {{ count($items) }} item pesanan</span>
                             </div>
-                            <div class="text-base sm:text-lg font-bold font-mono text-purple-700 dark:text-purple-300">
+                            <div class="text-base sm:text-lg font-bold font-mono text-brand-700 dark:text-brand-300">
                                 Rp {{ number_format($this->totalEstimatedAmount, 0, ',', '.') }}
                             </div>
                         </div>
@@ -559,7 +889,7 @@
                 <!-- Modal Footer -->
                 <div class="p-4 bg-gray-50 dark:bg-gray-800/80 border-t border-gray-200 dark:border-gray-800 flex flex-col sm:flex-row items-center justify-between gap-3 rounded-b-2xl shrink-0">
                     <div class="text-xs text-gray-500 hidden sm:block">
-                        <span class="font-semibold text-gray-700 dark:text-gray-300">{{ count($items) }} Item</span> dipesan • Estimasi: <strong class="font-mono text-purple-700 dark:text-purple-400">Rp {{ number_format($this->totalEstimatedAmount, 0, ',', '.') }}</strong>
+                        <span class="font-semibold text-gray-700 dark:text-gray-300">{{ count($items) }} Item</span> dipesan • Estimasi: <strong class="font-mono text-brand-700 dark:text-brand-400">Rp {{ number_format($this->totalEstimatedAmount, 0, ',', '.') }}</strong>
                     </div>
                     <div class="flex items-center gap-2.5 w-full sm:w-auto justify-end">
                         <button
@@ -573,7 +903,7 @@
                             type="button"
                             wire:click="saveCreate"
                             wire:loading.attr="disabled"
-                            class="px-5 py-2 text-xs font-bold rounded-xl bg-purple-600 hover:bg-purple-700 text-white shadow-sm transition flex items-center gap-2 cursor-pointer disabled:opacity-50"
+                            class="btn-save-theme px-5 py-2 text-xs font-bold rounded-xl bg-brand-600 hover:bg-brand-700 text-white shadow-sm transition flex items-center gap-2 cursor-pointer disabled:opacity-50"
                         >
                             <span wire:loading.remove wire:target="saveCreate">Terbitkan Purchase Order</span>
                             <span wire:loading wire:target="saveCreate">Memproses...</span>
@@ -590,14 +920,14 @@
     <!-- MODAL 2: DETAIL PURCHASE ORDER & RIWAYAT PENERIMAAN GUDANG -->
     <!-- ========================================================================= -->
     @if($isDetailModalOpen && $detailPo)
-        <div class="fixed inset-0 z-50 overflow-y-auto bg-gray-950/80 backdrop-blur-xs animate-fadeIn" role="dialog" aria-modal="true">
+        <div class="fixed inset-0 z-[999999] overflow-y-auto bg-gray-950/80 backdrop-blur-xs animate-fadeIn" role="dialog" aria-modal="true">
             <div class="flex min-h-full items-center justify-center p-3 sm:p-4 md:p-6 text-center">
                 <div class="relative w-full max-w-4xl lg:max-w-5xl rounded-2xl border border-gray-200 bg-white text-left shadow-2xl transition-all dark:border-gray-700 dark:bg-gray-900 my-auto max-h-[90vh] flex flex-col overflow-hidden">
                 
                 <!-- Modal Header -->
                 <div class="flex items-center justify-between p-4 sm:p-5 border-b border-gray-200 dark:border-gray-800 shrink-0">
                     <div class="flex items-center gap-3">
-                        <div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-purple-50 text-purple-700 dark:bg-purple-950/80 dark:text-purple-300">
+                        <div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-brand-50 text-brand-700 dark:bg-brand-950/80 dark:text-brand-300">
                             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
                         </div>
                         <div>
@@ -775,14 +1105,15 @@
     <!-- MODAL 3: EDIT PURCHASE ORDER -->
     <!-- ========================================================================= -->
     @if($isEditModalOpen)
-        <div class="fixed inset-0 z-50 overflow-y-auto bg-gray-950/80 backdrop-blur-xs animate-fadeIn" role="dialog" aria-modal="true">
+        <div class="fixed inset-0 z-[999999] overflow-y-auto bg-gray-950/80 backdrop-blur-xs animate-fadeIn" role="dialog" aria-modal="true"
+             x-init="window.warehouseItemsList = @js($itemsJsonList ?? []); window.warehouseProjectsList = @js($projectsJsonList ?? []);">
             <div class="flex min-h-full items-center justify-center p-3 sm:p-4 md:p-6 text-center">
                 <div class="relative w-full max-w-4xl lg:max-w-5xl rounded-2xl border border-gray-200 bg-white text-left shadow-2xl transition-all dark:border-gray-700 dark:bg-gray-900 my-auto max-h-[90vh] flex flex-col overflow-hidden">
                 
                 <!-- Modal Header -->
                 <div class="flex items-center justify-between p-4 sm:p-5 border-b border-gray-200 dark:border-gray-800 shrink-0">
                     <div class="flex items-center gap-3">
-                        <div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-amber-50 text-amber-700 dark:bg-amber-950/80 dark:text-amber-300">
+                        <div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-brand-50 text-brand-700 dark:bg-brand-950/80 dark:text-brand-300">
                             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
                         </div>
                         <div>
@@ -808,22 +1139,111 @@
                             />
                             @error('po_number') <span class="text-[11px] text-rose-500 block mt-1">{{ $message }}</span> @enderror
                         </div>
+                        <!-- Tanggal PO -->
                         <div>
-                            <label class="block text-xs font-bold text-gray-700 dark:text-gray-300 mb-1">Tanggal PO</label>
-                            <input
-                                type="date"
-                                wire:model="po_date"
-                                class="w-full rounded-xl border border-gray-300 bg-white px-3 py-2 text-xs text-gray-900 focus:border-brand-500 dark:border-gray-700 dark:bg-gray-800 dark:text-white"
-                            />
+                            <label class="block text-xs font-bold text-gray-700 dark:text-gray-300 mb-1">
+                                Tanggal PO <span class="text-rose-500">*</span>
+                            </label>
+                            <div wire:ignore class="relative" x-data="{
+                                fp: null,
+                                init() {
+                                    const initPicker = () => {
+                                        if (typeof flatpickr === 'undefined') { setTimeout(initPicker, 50); return; }
+                                        this.fp = flatpickr(this.$refs.picker, {
+                                            dateFormat: 'Y-m-d',
+                                            altInput: true,
+                                            altFormat: 'd/m/Y',
+                                            altInputClass: 'w-full rounded-xl border border-gray-300 bg-white pl-3 pr-9 py-2 text-xs text-gray-900 outline-none focus:border-brand-500 dark:border-gray-700 dark:bg-gray-800 dark:text-white cursor-pointer transition',
+                                            defaultDate: @js($po_date) || null,
+                                            placeholder: 'Pilih Tanggal PO...',
+                                            onChange: (dates, dateStr) => {
+                                                if (dateStr !== $wire.po_date) {
+                                                    $wire.set('po_date', dateStr);
+                                                }
+                                            }
+                                        });
+                                    };
+                                    this.$nextTick(() => initPicker());
+                                    this.$watch('$wire.po_date', val => {
+                                        if (this.fp && val !== this.fp.input.value) {
+                                            if (val) {
+                                                this.fp.setDate(val, false);
+                                            } else {
+                                                this.fp.clear();
+                                            }
+                                        }
+                                    });
+                                },
+                                destroy() { if (this.fp) { this.fp.destroy(); this.fp = null; } }
+                            }">
+                                <input x-ref="picker" type="text" class="hidden" value="{{ $po_date }}">
+                                <div @click="if (fp) fp.open()" class="absolute right-3 top-2.5 text-gray-400 hover:text-gray-600 dark:text-gray-500 dark:hover:text-gray-300 cursor-pointer">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+                                    </svg>
+                                </div>
+                            </div>
                             @error('po_date') <span class="text-[11px] text-rose-500 block mt-1">{{ $message }}</span> @enderror
                         </div>
+
+                        <!-- Estimasi Kedatangan (ETA) -->
                         <div>
-                            <label class="block text-xs font-bold text-gray-700 dark:text-gray-300 mb-1">Estimasi Tiba (ETA)</label>
-                            <input
-                                type="date"
-                                wire:model="eta_date"
-                                class="w-full rounded-xl border border-gray-300 bg-white px-3 py-2 text-xs text-gray-900 focus:border-brand-500 dark:border-gray-700 dark:bg-gray-800 dark:text-white"
-                            />
+                            <label class="block text-xs font-bold text-gray-700 dark:text-gray-300 mb-1">
+                                Estimasi Tiba (ETA)
+                            </label>
+                            <div wire:ignore class="relative" x-data="{
+                                fp: null,
+                                hasValue: Boolean(@js($eta_date)),
+                                init() {
+                                    const initPicker = () => {
+                                        if (typeof flatpickr === 'undefined') { setTimeout(initPicker, 50); return; }
+                                        this.fp = flatpickr(this.$refs.picker, {
+                                            dateFormat: 'Y-m-d',
+                                            altInput: true,
+                                            altFormat: 'd/m/Y',
+                                            altInputClass: 'w-full rounded-xl border border-gray-300 bg-white pl-3 pr-9 py-2 text-xs text-gray-900 outline-none focus:border-brand-500 dark:border-gray-700 dark:bg-gray-800 dark:text-white cursor-pointer transition',
+                                            defaultDate: @js($eta_date) || null,
+                                            placeholder: 'Pilih Estimasi Tiba...',
+                                            onChange: (dates, dateStr) => {
+                                                this.hasValue = Boolean(dateStr);
+                                                if (dateStr !== $wire.eta_date) {
+                                                    $wire.set('eta_date', dateStr || null);
+                                                }
+                                            }
+                                        });
+                                    };
+                                    this.$nextTick(() => initPicker());
+                                    this.$watch('$wire.eta_date', val => {
+                                        this.hasValue = Boolean(val);
+                                        if (this.fp && val !== this.fp.input.value) {
+                                            if (val) {
+                                                this.fp.setDate(val, false);
+                                            } else {
+                                                this.fp.clear();
+                                            }
+                                        }
+                                    });
+                                },
+                                clear() {
+                                    if (this.fp) this.fp.clear();
+                                    this.hasValue = false;
+                                    $wire.set('eta_date', null);
+                                },
+                                destroy() { if (this.fp) { this.fp.destroy(); this.fp = null; } }
+                            }">
+                                <input x-ref="picker" type="text" class="hidden" value="{{ $eta_date }}">
+                                <div class="absolute right-3 top-2.5 flex items-center gap-1.5">
+                                    <button type="button" x-show="hasValue" @click.stop="clear()" class="text-gray-400 hover:text-rose-500 cursor-pointer p-0.5" title="Hapus Tanggal ETA">
+                                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+                                    </button>
+                                    <div @click="if (fp) fp.open()" class="text-gray-400 hover:text-gray-600 dark:text-gray-500 dark:hover:text-gray-300 cursor-pointer">
+                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+                                        </svg>
+                                    </div>
+                                </div>
+                            </div>
+                            @error('eta_date') <span class="text-[11px] text-rose-500 block mt-1">{{ $message }}</span> @enderror
                         </div>
                     </div>
 
@@ -838,13 +1258,131 @@
                             @error('supplier') <span class="text-[11px] text-rose-500 block mt-1">{{ $message }}</span> @enderror
                         </div>
                         <div>
-                            <label class="block text-xs font-bold text-gray-700 dark:text-gray-300 mb-1">Peruntukan Proyek</label>
-                            <select wire:model="project_id" class="w-full rounded-xl border border-gray-300 bg-white pl-3 pr-8 py-2 text-xs text-gray-900 focus:border-brand-500 dark:border-gray-700 dark:bg-gray-800 dark:text-white cursor-pointer truncate">
-                                <option value="">Persediaan Umum Gudang</option>
-                                @foreach($projects as $p)
-                                    <option value="{{ $p->id }}">{{ $p->name }}</option>
-                                @endforeach
-                            </select>
+                            <label class="block text-xs font-bold text-gray-700 dark:text-gray-300 mb-1">
+                                Peruntukan Proyek (Opsional)
+                            </label>
+                            <div class="relative" 
+                                 wire:key="po-edit-project-combobox-{{ $project_id ?? 'empty' }}"
+                                 x-data="poProjectSearchCombobox(@js($project_id ? (string)$project_id : ''), @js($projects->firstWhere('id', $project_id)?->name ?? ''), @js($projects->firstWhere('id', $project_id)?->code ?? ''), @js($projectsJsonList ?? []))"
+                                 @scroll.window="if(open) updatePosition()"
+                                 @resize.window="if(open) updatePosition()">
+                                
+                                <input type="hidden" 
+                                       x-ref="hiddenInput"
+                                       wire:model="project_id" 
+                                       :value="selectedId">
+
+                                <!-- Trigger Box -->
+                                <div x-ref="triggerWrap" 
+                                     @click="toggle()"
+                                     style="min-height: 38px;"
+                                     class="relative flex items-center justify-between w-full min-h-[38px] px-3 py-2 rounded-xl border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 cursor-pointer hover:border-brand-400 dark:hover:border-brand-500 transition shadow-2xs">
+                                    
+                                    <div class="flex-1 min-w-0 pr-1">
+                                        <template x-if="selectedId && displayName">
+                                            <div class="flex items-center gap-1.5 truncate">
+                                                <span x-show="displayCode" class="px-1.5 py-0.5 rounded text-[10px] font-mono font-bold bg-amber-50 text-amber-700 dark:bg-amber-950/60 dark:text-amber-300 shrink-0 border border-amber-200/60 dark:border-amber-800" x-text="displayCode"></span>
+                                                <span class="font-bold text-gray-900 dark:text-white truncate block text-xs" :title="displayName" x-text="displayName"></span>
+                                            </div>
+                                        </template>
+                                        <template x-if="!selectedId || !displayName">
+                                            <div class="flex items-center gap-1.5 text-gray-500 dark:text-gray-400 text-xs">
+                                                <span class="truncate">Persediaan Umum Gudang (Non-Project)</span>
+                                            </div>
+                                        </template>
+                                    </div>
+
+                                    <div class="flex items-center gap-0.5 shrink-0">
+                                        <button type="button" 
+                                                x-show="selectedId" 
+                                                @click.stop="clearSelection()" 
+                                                class="p-0.5 text-gray-400 hover:text-rose-500 rounded text-[10px] transition cursor-pointer"
+                                                title="Kembalikan ke Non-Project">
+                                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+                                        </button>
+                                        <div class="p-0.5 text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 transition">
+                                            <svg class="w-4 h-4 transition-transform duration-200" :class="open ? 'rotate-180 text-brand-600' : ''" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+                                            </svg>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Teleported Floating Dropdown Menu -->
+                                <div wire:ignore>
+                                    <template x-teleport="body">
+                                        <div x-show="open" 
+                                             x-cloak 
+                                             x-transition:enter="transition ease-out duration-150"
+                                             x-transition:enter-start="opacity-0 scale-95"
+                                             x-transition:enter-end="opacity-100 scale-100"
+                                             x-transition:leave="transition ease-in duration-100"
+                                             x-transition:leave-start="opacity-100 scale-100"
+                                             x-transition:leave-end="opacity-0 scale-95"
+                                             @click.outside="if (!getTriggerEl()?.contains($event.target)) close()"
+                                             :style="'position: fixed; top: ' + fixedTop + 'px; left: ' + fixedLeft + 'px; width: ' + fixedWidth + 'px; z-index: 99999999;'"
+                                             class="rounded-2xl border border-gray-200 bg-white p-3 shadow-2xl dark:border-gray-700 dark:bg-gray-900 space-y-2">
+                                            
+                                            <div class="flex items-center justify-between pb-2 border-b border-gray-100 dark:border-gray-800 text-xs">
+                                                <span class="font-bold text-gray-900 dark:text-white flex items-center gap-1.5">
+                                                    <svg class="w-4 h-4 text-brand-600 dark:text-brand-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/></svg> Cari & Pilih Proyek
+                                                </span>
+                                                <span class="text-[10px] font-extrabold px-2 py-0.5 rounded-full bg-brand-50 text-brand-700 dark:bg-brand-950/60 dark:text-brand-300 font-mono" x-text="filteredProjects.length + ' Proyek'"></span>
+                                            </div>
+
+                                            <div class="relative">
+                                                <input type="text" 
+                                                       x-ref="searchField" 
+                                                       x-model="search" 
+                                                       placeholder="Ketik nama atau kode proyek..." 
+                                                       class="w-full pl-8 pr-7 py-2 rounded-xl border border-gray-300 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 text-xs text-gray-900 dark:text-white placeholder-gray-400 focus:border-brand-500 focus:bg-white dark:focus:bg-gray-800 outline-none transition">
+                                                <div class="absolute left-2.5 top-2.5 text-gray-400 pointer-events-none">
+                                                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+                                                </div>
+                                                <button type="button" 
+                                                        x-show="search" 
+                                                        @click="search = ''; $refs.searchField.focus()" 
+                                                        class="absolute right-2.5 top-2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-200">
+                                                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+                                                </button>
+                                            </div>
+
+                                            <!-- Opsi Non-Project (Persediaan Umum) -->
+                                            <div class="pt-0.5">
+                                                <div @click="selectProject(null)" 
+                                                     :class="!selectedId ? 'bg-brand-50 dark:bg-brand-950/50 border-brand-300 dark:border-brand-800 font-bold' : 'hover:bg-gray-50 dark:hover:bg-gray-800/70 border-dashed border-gray-200 dark:border-gray-700'"
+                                                     class="p-2 rounded-xl border cursor-pointer transition flex items-center justify-between text-xs">
+                                                    <div class="flex items-center gap-2">
+                                                        <div class="w-2 h-2 rounded-full" :class="!selectedId ? 'bg-brand-600' : 'bg-gray-300 dark:bg-gray-600'"></div>
+                                                        <span class="text-gray-800 dark:text-gray-200">Persediaan Umum Gudang (Non-Project)</span>
+                                                    </div>
+                                                    <span x-show="!selectedId" class="text-[10px] text-brand-600 dark:text-brand-400 font-bold">Terpilih</span>
+                                                </div>
+                                            </div>
+
+                                            <!-- List Proyek -->
+                                            <div class="max-h-56 overflow-y-auto space-y-1 custom-scrollbar pr-0.5">
+                                                <template x-for="p in filteredProjects" :key="p.id">
+                                                    <div @click="selectProject(p)" 
+                                                         :class="String(selectedId) === String(p.id) ? 'bg-brand-50 dark:bg-brand-950/60 border-brand-400 dark:border-brand-700 text-brand-900 dark:text-brand-100 font-bold' : 'hover:bg-gray-50 dark:hover:bg-gray-800/80 border-transparent text-gray-700 dark:text-gray-300 font-medium'"
+                                                         class="p-2 rounded-xl border cursor-pointer transition flex items-center justify-between gap-2 text-xs">
+                                                        <div class="flex items-center gap-2 min-w-0 flex-1">
+                                                            <span x-show="p.code" class="px-1.5 py-0.5 rounded text-[10px] font-mono font-bold bg-amber-50 text-amber-700 dark:bg-amber-950/60 dark:text-amber-300 shrink-0 border border-amber-200/60 dark:border-amber-800" x-text="p.code"></span>
+                                                            <span class="truncate block" :title="p.name" x-text="p.name"></span>
+                                                        </div>
+                                                        <span x-show="String(selectedId) === String(p.id)" class="text-[10px] text-brand-600 dark:text-brand-400 font-bold shrink-0">Terpilih</span>
+                                                    </div>
+                                                </template>
+
+                                                <div x-show="filteredProjects.length === 0" class="py-6 text-center text-xs text-gray-400 dark:text-gray-500">
+                                                    Tidak ada proyek yang sesuai kata kunci pencarian.
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </template>
+                                </div>
+                            </div>
+                            @error('project_id') <span class="text-[11px] text-rose-500 block mt-1">{{ $message }}</span> @enderror
                         </div>
                     </div>
 
@@ -859,23 +1397,47 @@
 
                     <!-- Items Editor in Edit Modal -->
                     <div class="pt-3 border-t border-gray-200 dark:border-gray-800">
-                        <div class="flex items-center justify-between mb-2">
-                            <h4 class="text-xs font-bold uppercase tracking-wider text-gray-800 dark:text-gray-200">
-                                Rincian Item Barang
-                            </h4>
-                            <button
-                                type="button"
-                                wire:click="addItemRow"
-                                class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-amber-50 text-amber-700 hover:bg-amber-100 text-xs font-bold dark:bg-amber-950/60 dark:text-amber-300 transition cursor-pointer"
-                            >
-                                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
-                                Tambah Item
-                            </button>
+                        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-2">
+                            <div>
+                                <h4 class="text-xs font-bold uppercase tracking-wider text-gray-800 dark:text-gray-200">
+                                    Rincian Item Barang <span class="text-rose-500">*</span>
+                                </h4>
+                                <p class="text-[11px] text-gray-500">Pilih item katalog, masukkan quantity dan estimasi harga per unit</p>
+                            </div>
+                            <div class="flex items-center gap-1.5 shrink-0">
+                                <button
+                                    type="button"
+                                    wire:click="addItemRow(1)"
+                                    class="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-brand-50 text-brand-700 hover:bg-brand-100 text-xs font-bold dark:bg-brand-950/60 dark:text-brand-300 transition cursor-pointer shadow-2xs border border-brand-200/50 dark:border-brand-800/40"
+                                    title="Tambah 1 baris item"
+                                >
+                                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+                                    +1 Baris
+                                </button>
+                                <button
+                                    type="button"
+                                    wire:click="addItemRows(3)"
+                                    class="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-brand-50 text-brand-700 hover:bg-brand-100 text-xs font-bold dark:bg-brand-950/60 dark:text-brand-300 transition cursor-pointer shadow-2xs border border-brand-200/50 dark:border-brand-800/40"
+                                    title="Tambah 3 baris item sekaligus"
+                                >
+                                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+                                    +3 Baris
+                                </button>
+                                <button
+                                    type="button"
+                                    wire:click="addItemRows(5)"
+                                    class="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-brand-100/80 text-brand-800 hover:bg-brand-200 text-xs font-bold dark:bg-brand-900/60 dark:text-brand-200 transition cursor-pointer shadow-2xs border border-brand-300/60 dark:border-brand-700"
+                                    title="Tambah 5 baris item sekaligus"
+                                >
+                                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+                                    +5 Baris
+                                </button>
+                            </div>
                         </div>
 
                         <div class="space-y-2">
                             @foreach($items as $i => $itemRow)
-                                <div class="p-3 rounded-xl border border-gray-200 bg-gray-50/50 dark:border-gray-800 dark:bg-gray-800/40 space-y-2">
+                                <div wire:key="po-edit-row-{{ $i }}" class="p-3 rounded-xl border border-gray-200 bg-gray-50/50 dark:border-gray-800 dark:bg-gray-800/40 space-y-2">
                                     <div class="flex items-center justify-between">
                                         <span class="text-xs font-bold text-gray-600 dark:text-gray-400">
                                             Item #{{ $i + 1 }}
@@ -891,7 +1453,7 @@
                                                     class="text-rose-500 hover:text-rose-700 text-xs flex items-center gap-1 cursor-pointer"
                                                 >
                                                     <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
-                                                    Hapus
+                                                    Hapus Baris
                                                 </button>
                                             @endif
                                         @endif
@@ -900,15 +1462,135 @@
                                     <div class="grid grid-cols-1 sm:grid-cols-12 gap-2">
                                         <div class="sm:col-span-5">
                                             <label class="block text-[11px] font-semibold text-gray-600 dark:text-gray-400 mb-0.5">Barang</label>
-                                            <select
-                                                wire:model.live="items.{{ $i }}.item_id"
-                                                class="w-full rounded-lg border border-gray-300 bg-white pl-2.5 pr-8 py-1.5 text-xs text-gray-900 focus:border-brand-500 dark:border-gray-700 dark:bg-gray-800 dark:text-white cursor-pointer truncate"
-                                            >
-                                                <option value="">-- Pilih Barang --</option>
-                                                @foreach($availableItems as $ai)
-                                                    <option value="{{ $ai->id }}">{{ $ai->code_item }} - {{ $ai->name }}</option>
-                                                @endforeach
-                                            </select>
+                                            @if(!empty($itemRow['quantity_received']) && $itemRow['quantity_received'] > 0)
+                                                <div class="flex items-center justify-between w-full min-h-[34px] px-2.5 py-1.5 rounded-lg border border-gray-200 bg-gray-100 text-xs text-gray-700 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-300">
+                                                    <span class="font-bold truncate">{{ $itemRow['item_code'] ? $itemRow['item_code'] . ' - ' : '' }}{{ $itemRow['item_name'] }}</span>
+                                                    <span class="text-[10px] text-amber-600 dark:text-amber-400 font-bold shrink-0 ml-1">(Terkunci: sebagian diterima)</span>
+                                                </div>
+                                            @else
+                                                <div class="relative" 
+                                                     wire:key="po-edit-combobox-{{ $i }}-{{ $itemRow['item_id'] ?? 'empty' }}"
+                                                     x-data="poItemSearchCombobox(@js($itemRow['item_id'] ?? ''), {{ $i }}, @js($itemRow['item_name'] ?? ''), @js($itemRow['item_code'] ?? ''))"
+                                                     @scroll.window="if(open) updatePosition()"
+                                                     @resize.window="if(open) updatePosition()">
+                                                    
+                                                    <input type="hidden" 
+                                                           x-ref="hiddenInput"
+                                                           wire:model.live="items.{{ $i }}.item_id" 
+                                                           :value="selectedId">
+
+                                                    <!-- Trigger Button -->
+                                                    <div x-ref="triggerWrap" 
+                                                         @click="toggle()"
+                                                         style="min-height: 34px;"
+                                                         class="relative flex items-center justify-between w-full min-h-[34px] px-2.5 py-1.5 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 cursor-pointer hover:border-brand-400 dark:hover:border-brand-500 transition shadow-2xs">
+                                                        
+                                                        <div class="flex-1 min-w-0 pr-1">
+                                                            <template x-if="displayInfo">
+                                                                <div class="flex items-center gap-1.5 truncate">
+                                                                    <span x-show="displayInfo.code" class="px-1.5 py-0.5 rounded text-[10px] font-mono font-bold bg-brand-50 text-brand-700 dark:bg-brand-950/60 dark:text-brand-300 shrink-0 border border-brand-200/60 dark:border-brand-800" x-text="displayInfo.code"></span>
+                                                                    <span class="font-bold text-gray-900 dark:text-white truncate block text-xs" :title="displayInfo.name" x-text="displayInfo.name"></span>
+                                                                    <span x-show="displayInfo.stock !== undefined" class="text-[10px] text-gray-400 dark:text-gray-500 shrink-0 font-medium" x-text="'(Stok: ' + displayInfo.stock + ' ' + (displayInfo.unit || 'PCS') + ')'"></span>
+                                                                </div>
+                                                            </template>
+                                                            <template x-if="!displayInfo">
+                                                                <div class="flex items-center gap-1.5 text-gray-400 dark:text-gray-500 text-xs">
+                                                                    <svg class="w-3.5 h-3.5 shrink-0 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+                                                                    <span class="truncate">-- Cari & Pilih Barang dari Master --</span>
+                                                                </div>
+                                                            </template>
+                                                        </div>
+
+                                                        <div class="flex items-center gap-0.5 shrink-0">
+                                                            <button type="button" 
+                                                                    x-show="selectedId" 
+                                                                    @click.stop="clearSelection()" 
+                                                                    class="p-0.5 text-gray-400 hover:text-rose-500 rounded text-[10px] transition cursor-pointer"
+                                                                    title="Hapus pilihan barang">
+                                                                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+                                                            </button>
+                                                            <button type="button" 
+                                                                    @click.stop="toggle()" 
+                                                                    class="p-0.5 text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 rounded transition cursor-pointer"
+                                                                    title="Buka daftar barang">
+                                                                <svg class="w-4 h-4 transition-transform duration-200" :class="open ? 'rotate-180 text-brand-600' : ''" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+                                                                </svg>
+                                                            </button>
+                                                        </div>
+                                                    </div>
+
+                                                    <!-- Teleported Floating Dropdown Menu -->
+                                                    <div wire:ignore>
+                                                        <template x-teleport="body">
+                                                            <div x-show="open" 
+                                                                 x-cloak 
+                                                                 x-transition:enter="transition ease-out duration-150"
+                                                                 x-transition:enter-start="opacity-0 scale-95"
+                                                                 x-transition:enter-end="opacity-100 scale-100"
+                                                                 x-transition:leave="transition ease-in duration-100"
+                                                                 x-transition:leave-start="opacity-100 scale-100"
+                                                                 x-transition:leave-end="opacity-0 scale-95"
+                                                                 @click.outside="if (!getTriggerEl()?.contains($event.target)) close()"
+                                                                 :style="'position: fixed; top: ' + fixedTop + 'px; left: ' + fixedLeft + 'px; width: ' + fixedWidth + 'px; z-index: 99999999;'"
+                                                                 class="rounded-2xl border border-gray-200 bg-white p-3 shadow-2xl dark:border-gray-700 dark:bg-gray-900 space-y-2">
+                                                                
+                                                                <div class="flex items-center justify-between pb-2 border-b border-gray-100 dark:border-gray-800 text-xs">
+                                                                    <span class="font-bold text-gray-900 dark:text-white flex items-center gap-1.5">
+                                                                        <svg class="w-4 h-4 text-brand-600 dark:text-brand-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/></svg> Cari Barang Katalog
+                                                                    </span>
+                                                                    <span class="text-[10px] font-extrabold px-2 py-0.5 rounded-full bg-brand-50 text-brand-700 dark:bg-brand-950/60 dark:text-brand-300 font-mono" x-text="filteredItems.length + ' Barang'"></span>
+                                                                </div>
+
+                                                                <div class="relative">
+                                                                    <input type="text" 
+                                                                           x-ref="searchField" 
+                                                                           x-model="search" 
+                                                                           @keydown.enter.prevent="if (filteredItems.length > 0) { selectItem(filteredItems[0]); }"
+                                                                           @keydown.escape="close()"
+                                                                           placeholder="Ketik nama, kode, atau kategori barang..." 
+                                                                           class="w-full pl-3 pr-7 py-1.5 text-xs rounded-xl border border-gray-200 bg-gray-50 dark:border-gray-700 dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-400 focus:outline-none focus:border-brand-500 focus:bg-white dark:focus:bg-gray-800 shadow-xs">
+                                                                    <button x-show="search.length > 0" @click="search = ''" type="button" class="absolute right-2 top-2 text-gray-400 hover:text-gray-600 cursor-pointer">
+                                                                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+                                                                    </button>
+                                                                </div>
+
+                                                                <div class="max-h-60 overflow-y-auto space-y-1 pr-1 custom-scrollbar">
+                                                                    <template x-for="item in filteredItems" :key="item.id">
+                                                                        <div @click="selectItem(item)"
+                                                                             class="p-2 rounded-xl hover:bg-brand-50/90 dark:hover:bg-brand-950/50 cursor-pointer transition flex items-center justify-between gap-2 border border-transparent hover:border-brand-200 dark:hover:border-brand-800"
+                                                                             :class="String(selectedId) === String(item.id) ? 'bg-brand-50 dark:bg-brand-950/60 border-brand-300 dark:border-brand-700' : ''">
+                                                                            <div class="min-w-0 flex-1">
+                                                                                <div class="flex items-center gap-1.5 flex-wrap">
+                                                                                    <span x-show="item.category" class="inline-flex items-center px-1.5 py-0.2 rounded text-[9px] font-extrabold uppercase shrink-0 bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-300" x-text="item.category"></span>
+                                                                                    <span class="font-bold text-xs text-gray-900 dark:text-white truncate" x-text="item.name"></span>
+                                                                                </div>
+                                                                                <div class="flex items-center gap-2 mt-0.5 text-[10px] flex-wrap">
+                                                                                    <span x-show="item.code" class="font-mono text-gray-500 dark:text-gray-400 bg-gray-100 dark:bg-gray-800 px-1 py-0.2 rounded" x-text="item.code"></span>
+                                                                                    <span class="font-semibold text-emerald-600 dark:text-emerald-400">
+                                                                                        Stok: <strong x-text="item.stock"></strong> <span x-text="item.unit"></span>
+                                                                                    </span>
+                                                                                    <span x-show="item.unit_price > 0" class="text-gray-500 dark:text-gray-400 font-mono">
+                                                                                        Rp <span x-text="new Intl.NumberFormat('id-ID').format(item.unit_price)"></span>/<span x-text="item.unit"></span>
+                                                                                    </span>
+                                                                                </div>
+                                                                            </div>
+                                                                            <div x-show="String(selectedId) === String(item.id)" class="text-brand-600 dark:text-brand-400 shrink-0">
+                                                                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/></svg>
+                                                                            </div>
+                                                                        </div>
+                                                                    </template>
+
+                                                                    <div x-show="filteredItems.length === 0" class="py-4 text-center text-xs text-gray-400">
+                                                                        Tidak ada barang yang cocok dengan pencarian.
+                                                                    </div>
+                                                                </div>
+                                                            </div>
+                                                        </template>
+                                                    </div>
+                                                </div>
+                                            @endif
+                                            @error("items.{$i}.item_id") <span class="text-[10px] text-rose-500 block">{{ $message }}</span> @enderror
                                         </div>
 
                                         <div class="sm:col-span-2">
@@ -952,7 +1634,7 @@
                                             />
                                         </div>
                                         <div class="text-[11px] text-gray-600 dark:text-gray-300 shrink-0 text-right font-medium">
-                                            Subtotal: <span class="font-bold font-mono text-amber-700 dark:text-amber-400">Rp {{ number_format((float)($itemRow['quantity_ordered'] ?? 0) * (float)($itemRow['unit_price'] ?? 0), 0, ',', '.') }}</span>
+                                            Subtotal: <span class="font-bold font-mono text-brand-700 dark:text-brand-300">Rp {{ number_format((float)($itemRow['quantity_ordered'] ?? 0) * (float)($itemRow['unit_price'] ?? 0), 0, ',', '.') }}</span>
                                         </div>
                                     </div>
                                 </div>
@@ -960,12 +1642,12 @@
                         </div>
 
                         <!-- Summary Banner Total PO Edit -->
-                        <div class="mt-3 p-3.5 rounded-xl bg-amber-50/70 dark:bg-amber-950/40 border border-amber-100 dark:border-amber-900/40 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+                        <div class="mt-3 p-3.5 rounded-xl bg-brand-50/70 dark:bg-brand-950/40 border border-brand-100 dark:border-brand-900/40 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
                             <div>
-                                <span class="text-xs font-semibold text-amber-950 dark:text-amber-200">Total Estimasi Nilai Purchase Order:</span>
-                                <span class="block text-[11px] text-amber-600 dark:text-amber-400">Akumulasi otomatis dari {{ count($items) }} item pesanan</span>
+                                <span class="text-xs font-semibold text-brand-950 dark:text-brand-200">Total Estimasi Nilai Purchase Order:</span>
+                                <span class="block text-[11px] text-brand-600 dark:text-brand-400">Akumulasi otomatis dari {{ count($items) }} item pesanan</span>
                             </div>
-                            <div class="text-base sm:text-lg font-bold font-mono text-amber-700 dark:text-amber-300">
+                            <div class="text-base sm:text-lg font-bold font-mono text-brand-700 dark:text-brand-300">
                                 Rp {{ number_format($this->totalEstimatedAmount, 0, ',', '.') }}
                             </div>
                         </div>
@@ -976,7 +1658,7 @@
                 <!-- Modal Footer -->
                 <div class="p-4 bg-gray-50 dark:bg-gray-800/80 border-t border-gray-200 dark:border-gray-800 flex flex-col sm:flex-row items-center justify-between gap-3 rounded-b-2xl shrink-0">
                     <div class="text-xs text-gray-500 hidden sm:block">
-                        <span class="font-semibold text-gray-700 dark:text-gray-300">{{ count($items) }} Item</span> dipesan • Estimasi: <strong class="font-mono text-amber-700 dark:text-amber-400">Rp {{ number_format($this->totalEstimatedAmount, 0, ',', '.') }}</strong>
+                        <span class="font-semibold text-gray-700 dark:text-gray-300">{{ count($items) }} Item</span> dipesan • Estimasi: <strong class="font-mono text-brand-700 dark:text-brand-400">Rp {{ number_format($this->totalEstimatedAmount, 0, ',', '.') }}</strong>
                     </div>
                     <div class="flex items-center gap-2.5 w-full sm:w-auto justify-end">
                         <button
@@ -990,7 +1672,7 @@
                             type="button"
                             wire:click="saveEdit"
                             wire:loading.attr="disabled"
-                            class="px-5 py-2 text-xs font-bold rounded-xl bg-amber-600 hover:bg-amber-700 text-white shadow-sm transition flex items-center gap-2 cursor-pointer disabled:opacity-50"
+                            class="btn-save-theme px-5 py-2 text-xs font-bold rounded-xl bg-brand-600 hover:bg-brand-700 text-white shadow-sm transition flex items-center gap-2 cursor-pointer disabled:opacity-50"
                         >
                             <span wire:loading.remove wire:target="saveEdit">Simpan Perubahan</span>
                             <span wire:loading wire:target="saveEdit">Menyimpan...</span>
@@ -1007,7 +1689,7 @@
     <!-- MODAL 4: BATALKAN PURCHASE ORDER -->
     <!-- ========================================================================= -->
     @if($isCancelModalOpen)
-        <div class="fixed inset-0 z-50 overflow-y-auto bg-gray-950/80 backdrop-blur-xs animate-fadeIn" role="dialog" aria-modal="true">
+        <div class="fixed inset-0 z-[999999] overflow-y-auto bg-gray-950/80 backdrop-blur-xs animate-fadeIn" role="dialog" aria-modal="true">
             <div class="flex min-h-full items-center justify-center p-3 sm:p-4 text-center">
                 <div class="relative w-full max-w-md rounded-2xl border border-gray-200 bg-white text-left shadow-2xl transition-all dark:border-gray-700 dark:bg-gray-900 my-auto p-6 space-y-4">
                 
@@ -1055,4 +1737,373 @@
         </div>
     @endif
 
+    <script>
+    (function() {
+        function registerPoItemCombobox() {
+            if (typeof Alpine !== 'undefined' && !Alpine.data('poItemSearchCombobox')) {
+                Alpine.data('poItemSearchCombobox', (initialId = '', rowIndex = null, initialName = '', initialCode = '') => ({
+                    open: false,
+                    search: '',
+                    selectedId: initialId ? String(initialId) : '',
+                    rowIndex: rowIndex,
+                    initialName: initialName || '',
+                    initialCode: initialCode || '',
+                    items: window.warehouseItemsList || [],
+                    fixedTop: 0,
+                    fixedLeft: 0,
+                    fixedWidth: 380,
+
+                    init() {
+                        this.items = window.warehouseItemsList || [];
+
+                        this.$watch('selectedId', (val) => {
+                            const input = this.getHiddenInputEl();
+                            if (input && input.value !== val) {
+                                input.value = val;
+                                input.dispatchEvent(new Event('input', { bubbles: true }));
+                                input.dispatchEvent(new Event('change', { bubbles: true }));
+                            }
+                        });
+
+                        const onScroll = () => {
+                            if (this.open) {
+                                this.updatePosition();
+                            }
+                        };
+                        window.addEventListener('scroll', onScroll, { capture: true, passive: true });
+                        window.addEventListener('resize', onScroll, { passive: true });
+                    },
+
+                    getTriggerEl() {
+                        if (this.$refs.triggerWrap && this.$refs.triggerWrap.isConnected) {
+                            return this.$refs.triggerWrap;
+                        }
+                        return this.$el.querySelector('[x-ref="triggerWrap"]') || this.$el;
+                    },
+
+                    getHiddenInputEl() {
+                        if (this.$refs.hiddenInput && this.$refs.hiddenInput.isConnected) {
+                            return this.$refs.hiddenInput;
+                        }
+                        return this.$el.querySelector('input[type="hidden"]') || this.$refs.hiddenInput;
+                    },
+
+                    get selectedItem() {
+                        if (!this.selectedId) return null;
+                        const list = (this.items && this.items.length) ? this.items : (window.warehouseItemsList || []);
+                        return list.find(i => String(i.id) === String(this.selectedId)) || null;
+                    },
+
+                    get displayInfo() {
+                        const item = this.selectedItem;
+                        if (item) {
+                            return {
+                                name: item.name,
+                                code: item.code,
+                                stock: item.stock,
+                                unit: item.unit
+                            };
+                        }
+                        if (this.selectedId && (this.initialName || this.initialCode)) {
+                            return {
+                                name: this.initialName,
+                                code: this.initialCode,
+                                stock: undefined,
+                                unit: ''
+                            };
+                        }
+                        return null;
+                    },
+
+                    get filteredItems() {
+                        const list = (this.items && this.items.length) ? this.items : (window.warehouseItemsList || []);
+                        if (!this.search || !this.search.trim()) {
+                            return list;
+                        }
+                        const q = this.search.toLowerCase().trim();
+                        return list.filter(i => 
+                            (i.name && i.name.toLowerCase().includes(q)) || 
+                            (i.code && i.code.toLowerCase().includes(q)) ||
+                            (i.category && i.category.toLowerCase().includes(q))
+                        );
+                    },
+
+                    toggle() {
+                        if (this.open) {
+                            this.close();
+                        } else {
+                            this.openDropdown();
+                        }
+                    },
+
+                    openDropdown() {
+                        this.open = true;
+                        this.search = '';
+                        this.items = window.warehouseItemsList || [];
+                        this.updatePosition();
+                        this.$nextTick(() => {
+                            if (this.$refs.searchField) {
+                                this.$refs.searchField.focus();
+                            }
+                        });
+                    },
+
+                    close() {
+                        this.open = false;
+                    },
+
+                    updatePosition() {
+                        const el = this.getTriggerEl();
+                        if (!el || !el.isConnected) return;
+                        const rect = el.getBoundingClientRect();
+                        if (rect.width === 0 && rect.height === 0) return;
+                        
+                        this.fixedWidth = Math.max(rect.width, 380);
+                        
+                        let left = rect.left;
+                        if (left + this.fixedWidth > window.innerWidth - 16) {
+                            left = window.innerWidth - this.fixedWidth - 16;
+                        }
+                        this.fixedLeft = Math.max(16, left);
+
+                        const dropdownHeight = 320;
+                        const spaceBelow = window.innerHeight - rect.bottom;
+                        if (spaceBelow < dropdownHeight && rect.top > dropdownHeight) {
+                            this.fixedTop = Math.max(16, rect.top - dropdownHeight - 6);
+                        } else {
+                            this.fixedTop = Math.min(window.innerHeight - dropdownHeight - 16, rect.bottom + 4);
+                        }
+                    },
+
+                    selectItem(item) {
+                        this.selectedId = String(item.id);
+                        this.initialName = item.name;
+                        this.initialCode = item.code;
+                        const input = this.getHiddenInputEl();
+                        if (input) {
+                            input.value = this.selectedId;
+                            input.dispatchEvent(new Event('input', { bubbles: true }));
+                            input.dispatchEvent(new Event('change', { bubbles: true }));
+                        }
+                        if (this.rowIndex !== null && this.$wire) {
+                            this.$wire.selectItemForRow(this.rowIndex, item.id);
+                        }
+                        this.close();
+                    },
+
+                    clearSelection() {
+                        this.selectedId = '';
+                        this.initialName = '';
+                        this.initialCode = '';
+                        this.search = '';
+                        const input = this.getHiddenInputEl();
+                        if (input) {
+                            input.value = '';
+                            input.dispatchEvent(new Event('input', { bubbles: true }));
+                            input.dispatchEvent(new Event('change', { bubbles: true }));
+                        }
+                        if (this.rowIndex !== null && this.$wire) {
+                            this.$wire.selectItemForRow(this.rowIndex, null);
+                        }
+                        this.close();
+                    }
+                }));
+            }
+        }
+
+        function registerPoProjectCombobox() {
+            if (typeof Alpine !== 'undefined' && !Alpine.data('poProjectSearchCombobox')) {
+                Alpine.data('poProjectSearchCombobox', (initialId = '', initialName = '', initialCode = '', initialProjects = []) => ({
+                    open: false,
+                    search: '',
+                    selectedId: initialId ? String(initialId) : '',
+                    initialName: initialName || '',
+                    initialCode: initialCode || '',
+                    projects: (initialProjects && initialProjects.length) ? initialProjects : (window.warehouseProjectsList || []),
+                    fixedTop: 0,
+                    fixedLeft: 0,
+                    fixedWidth: 380,
+
+                    init() {
+                        if (!this.projects || !this.projects.length) {
+                            this.projects = window.warehouseProjectsList || [];
+                        }
+
+                        this.$watch('selectedId', (val) => {
+                            const input = this.getHiddenInputEl();
+                            if (input && input.value !== val) {
+                                input.value = val;
+                                input.dispatchEvent(new Event('input', { bubbles: true }));
+                                input.dispatchEvent(new Event('change', { bubbles: true }));
+                            }
+                        });
+
+                        if (this.$wire) {
+                            this.$watch('$wire.project_id', (val) => {
+                                const strVal = val ? String(val) : '';
+                                if (this.selectedId !== strVal) {
+                                    this.selectedId = strVal;
+                                    const p = this.selectedProject;
+                                    if (p) {
+                                        this.initialName = p.name;
+                                        this.initialCode = p.code || '';
+                                    } else if (!val) {
+                                        this.initialName = '';
+                                        this.initialCode = '';
+                                    }
+                                }
+                            });
+                        }
+
+                        const onScroll = () => {
+                            if (this.open) {
+                                this.updatePosition();
+                            }
+                        };
+                        window.addEventListener('scroll', onScroll, { capture: true, passive: true });
+                        window.addEventListener('resize', onScroll, { passive: true });
+                    },
+
+                    getTriggerEl() {
+                        if (this.$refs.triggerWrap && this.$refs.triggerWrap.isConnected) {
+                            return this.$refs.triggerWrap;
+                        }
+                        return this.$el.querySelector('[x-ref="triggerWrap"]') || this.$el;
+                    },
+
+                    getHiddenInputEl() {
+                        if (this.$refs.hiddenInput && this.$refs.hiddenInput.isConnected) {
+                            return this.$refs.hiddenInput;
+                        }
+                        return this.$el.querySelector('input[type="hidden"]') || this.$refs.hiddenInput;
+                    },
+
+                    get selectedProject() {
+                        if (!this.selectedId) return null;
+                        const list = (this.projects && this.projects.length) 
+                            ? this.projects 
+                            : (window.warehouseProjectsList || []);
+                        return list.find(p => String(p.id) === String(this.selectedId)) || null;
+                    },
+
+                    get displayName() {
+                        const p = this.selectedProject;
+                        if (p) return p.name;
+                        if (this.selectedId && this.initialName) return this.initialName;
+                        return null;
+                    },
+
+                    get displayCode() {
+                        const p = this.selectedProject;
+                        if (p && p.code) return p.code;
+                        if (this.selectedId && this.initialCode) return this.initialCode;
+                        return null;
+                    },
+
+                    get filteredProjects() {
+                        const list = (this.projects && this.projects.length) 
+                            ? this.projects 
+                            : (window.warehouseProjectsList || []);
+                        if (!this.search || !this.search.trim()) {
+                            return list;
+                        }
+                        const q = this.search.toLowerCase().trim();
+                        return list.filter(p => 
+                            (p.name && p.name.toLowerCase().includes(q)) || 
+                            (p.code && p.code.toLowerCase().includes(q))
+                        );
+                    },
+
+                    toggle() {
+                        if (this.open) {
+                            this.close();
+                        } else {
+                            this.openDropdown();
+                        }
+                    },
+
+                    openDropdown() {
+                        this.open = true;
+                        this.search = '';
+                        if (!this.projects || !this.projects.length) {
+                            this.projects = window.warehouseProjectsList || [];
+                        }
+                        this.updatePosition();
+                        this.$nextTick(() => {
+                            if (this.$refs.searchField) {
+                                this.$refs.searchField.focus();
+                            }
+                        });
+                    },
+
+                    close() {
+                        this.open = false;
+                    },
+
+                    updatePosition() {
+                        const el = this.getTriggerEl();
+                        if (!el || !el.isConnected) return;
+                        const rect = el.getBoundingClientRect();
+                        if (rect.width === 0 && rect.height === 0) return;
+                        
+                        this.fixedWidth = Math.max(rect.width, 380);
+                        
+                        let left = rect.left;
+                        if (left + this.fixedWidth > window.innerWidth - 16) {
+                            left = window.innerWidth - this.fixedWidth - 16;
+                        }
+                        this.fixedLeft = Math.max(16, left);
+
+                        const dropdownHeight = 320;
+                        const spaceBelow = window.innerHeight - rect.bottom;
+                        if (spaceBelow < dropdownHeight && rect.top > dropdownHeight) {
+                            this.fixedTop = Math.max(16, rect.top - dropdownHeight - 6);
+                        } else {
+                            this.fixedTop = Math.min(window.innerHeight - dropdownHeight - 16, rect.bottom + 4);
+                        }
+                    },
+
+                    selectProject(project) {
+                        if (!project) {
+                            this.selectedId = '';
+                            this.initialName = '';
+                            this.initialCode = '';
+                        } else {
+                            this.selectedId = String(project.id);
+                            this.initialName = project.name;
+                            this.initialCode = project.code || '';
+                        }
+                        const input = this.getHiddenInputEl();
+                        if (input) {
+                            input.value = this.selectedId;
+                            input.dispatchEvent(new Event('input', { bubbles: true }));
+                            input.dispatchEvent(new Event('change', { bubbles: true }));
+                        }
+                        if (this.$wire) {
+                            this.$wire.set('project_id', this.selectedId ? Number(this.selectedId) : null);
+                        }
+                        this.close();
+                    },
+
+                    clearSelection() {
+                        this.selectProject(null);
+                    }
+                }));
+            }
+        }
+
+        function initPoComponents() {
+            registerPoProjectCombobox();
+            registerPoItemCombobox();
+        }
+
+        if (window.Alpine) {
+            initPoComponents();
+        } else {
+            document.addEventListener('alpine:init', initPoComponents);
+        }
+        document.addEventListener('livewire:init', initPoComponents);
+        document.addEventListener('livewire:navigated', initPoComponents);
+    })();
+    </script>
 </div>

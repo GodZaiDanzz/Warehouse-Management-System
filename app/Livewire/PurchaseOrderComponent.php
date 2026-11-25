@@ -166,11 +166,22 @@ class PurchaseOrderComponent extends Component
     }
 
     /**
-     * Add a new item row to the form.
+     * Add a new item row to the form (supports adding multiple rows at once).
      */
-    public function addItemRow()
+    public function addItemRow(int $count = 1)
     {
-        $this->items[] = $this->getBlankItemRow();
+        $count = max(1, min(20, $count));
+        for ($i = 0; $i < $count; $i++) {
+            $this->items[] = $this->getBlankItemRow();
+        }
+    }
+
+    /**
+     * Quick shortcut to add multiple item rows at once.
+     */
+    public function addItemRows(int $count = 5)
+    {
+        $this->addItemRow($count);
     }
 
     /**
@@ -181,6 +192,30 @@ class PurchaseOrderComponent extends Component
         if (count($this->items) > 1) {
             unset($this->items[$index]);
             $this->items = array_values($this->items);
+        }
+    }
+
+    /**
+     * Select item for specific row and auto-fill related details.
+     */
+    public function selectItemForRow(int $index, $itemId)
+    {
+        if (isset($this->items[$index])) {
+            $this->items[$index]['item_id'] = $itemId ? (int) $itemId : '';
+            if (!empty($itemId)) {
+                $item = Item::find($itemId);
+                if ($item) {
+                    $this->items[$index]['item_code'] = $item->code_item ?? '';
+                    $this->items[$index]['item_name'] = $item->name ?? '';
+                    $this->items[$index]['unit'] = $item->unit ?: 'PCS';
+                    if (empty($this->items[$index]['unit_price']) || (float)$this->items[$index]['unit_price'] == 0) {
+                        $this->items[$index]['unit_price'] = (float) ($item->unit_price ?: 0);
+                    }
+                }
+            } else {
+                $this->items[$index]['item_code'] = '';
+                $this->items[$index]['item_name'] = '';
+            }
         }
     }
 
@@ -575,16 +610,35 @@ class PurchaseOrderComponent extends Component
         // All active projects for filter & dropdown
         $projects = Project::select('id', 'name', 'code')->orderBy('name')->get();
 
-        // Items for dropdown in modal
-        $availableItems = Item::select('id', 'code_item', 'name', 'unit', 'stock', 'unit_price')
+        $projectsJsonList = $projects->map(fn($p) => [
+            'id' => (string) $p->id,
+            'name' => $p->name,
+            'code' => $p->code ?? '',
+        ])->values();
+
+        // Items for dropdown and searchable combobox in modal
+        $availableItems = Item::with('category:id,name')
+            ->select('id', 'category_id', 'code_item', 'name', 'unit', 'stock', 'unit_price')
             ->orderBy('name')
             ->get();
+
+        $itemsJsonList = $availableItems->map(fn($it) => [
+            'id' => (string) $it->id,
+            'name' => $it->name,
+            'code' => $it->code_item ?? '',
+            'category' => $it->category?->name ?? '',
+            'stock' => (float) $it->stock,
+            'unit' => $it->unit ?? 'PCS',
+            'unit_price' => (float) ($it->unit_price ?? 0),
+        ])->values();
 
         return view('livewire.purchase-order-component', [
             'purchaseOrders' => $purchaseOrders,
             'metrics' => $metrics,
             'projects' => $projects,
+            'projectsJsonList' => $projectsJsonList,
             'availableItems' => $availableItems,
+            'itemsJsonList' => $itemsJsonList,
         ]);
     }
 }
