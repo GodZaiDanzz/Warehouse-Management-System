@@ -72,9 +72,6 @@ class WipProcessTabsTest extends TestCase
             'project' => $this->project->name,
             'project_id' => $this->project->id,
             'wip_stage' => 'Cutting',
-            'manpower_hours' => 8,
-            'manpower_rate_per_hour' => 30000,
-            'manpower_cost' => 240000,
             'pic' => 'Budi Santoso',
             'user_id' => $this->user->id,
         ]);
@@ -91,7 +88,6 @@ class WipProcessTabsTest extends TestCase
         $response->assertSee('Tahap Cutting');
         $response->assertSee('+ Input WIP (Cutting)');
         $response->assertSee($this->item->name);
-        $response->assertSee('240.000');
 
         // Tab: vendor
         $response = $this->actingAs($this->user)->get(route('finish-goods.index', ['tab' => 'vendor']));
@@ -118,8 +114,6 @@ class WipProcessTabsTest extends TestCase
             'item_id' => $this->item->id,
             'quantity' => 15,
             'unit' => 'PCS',
-            'manpower_hours' => 6,
-            'manpower_rate_per_hour' => 35000,
             'pic' => 'Ahmad Operator',
             'notes' => 'Cutting plat shell segmen 1',
         ];
@@ -135,9 +129,6 @@ class WipProcessTabsTest extends TestCase
             'item_id' => $this->item->id,
             'quantity' => 15,
             'wip_stage' => 'Cutting',
-            'manpower_hours' => 6,
-            'manpower_rate' => 35000,
-            'manpower_cost' => 210000,
             'pic' => 'Ahmad Operator',
         ]);
 
@@ -153,7 +144,7 @@ class WipProcessTabsTest extends TestCase
         ]);
     }
 
-    public function test_can_record_wip_material_and_manpower_from_project_show(): void
+    public function test_can_record_wip_material_from_project_show(): void
     {
         $payload = [
             'date' => now()->format('Y-m-d'),
@@ -161,8 +152,6 @@ class WipProcessTabsTest extends TestCase
             'quantity' => 8,
             'unit' => 'PCS',
             'wip_stage' => 'Welding',
-            'manpower_hours' => 10,
-            'manpower_rate_per_hour' => 30000,
             'pic' => 'Joko Welder',
             'notes' => 'Pengelasan seam luar',
         ];
@@ -177,9 +166,6 @@ class WipProcessTabsTest extends TestCase
             'item_id' => $this->item->id,
             'quantity' => 8,
             'wip_stage' => 'Welding',
-            'manpower_hours' => 10,
-            'manpower_rate' => 30000,
-            'manpower_cost' => 300000,
             'pic' => 'Joko Welder',
         ]);
 
@@ -193,7 +179,5 @@ class WipProcessTabsTest extends TestCase
 
         $showResponse->assertStatus(200);
         $showResponse->assertSee('Welding');
-        $showResponse->assertSee('10 Jam');
-        $showResponse->assertSee('300.000');
     }
 }

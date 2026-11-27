@@ -157,9 +157,8 @@ class WipCostingTest extends TestCase
         $fg = FinishGood::where('project_id', $project->id)->latest('id')->first();
         $this->assertNotNull($fg);
         $this->assertEquals(700000, (float) $fg->material_cost);
-        $this->assertEquals(300000, (float) $fg->manpower_cost);
-        $this->assertEquals(1000000, (float) $fg->total_hpp);
-        $this->assertEquals(500000, (float) $fg->hpp_per_unit);
+        $this->assertEquals(700000, (float) $fg->total_hpp);
+        $this->assertEquals(350000, (float) $fg->hpp_per_unit);
 
         // Verify MaterialOuts are now linked to this FinishGood
         $this->assertEquals($fg->id, $out1->fresh()->finish_good_id);
