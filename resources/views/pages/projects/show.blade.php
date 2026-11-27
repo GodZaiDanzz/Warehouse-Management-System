@@ -216,7 +216,7 @@
                     </span>
                 </h3>
                 <p class="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
-                    Pelacakan penyerapan biaya material dan upah tenaga kerja (manpower) per tahapan proses fabrikasi internal.
+                    Pelacakan penyerapan biaya material per tahapan proses fabrikasi internal.
                 </p>
             </div>
             <div class="flex items-center gap-3">
@@ -267,23 +267,14 @@
                                 <span class="w-2 h-2 rounded-full {{ $meta['dot'] }}"></span>
                                 {{ $stageKey }}
                             </span>
-                            <span class="text-[11px] font-mono font-bold text-gray-500 dark:text-gray-400 bg-white dark:bg-gray-900 px-2 py-0.5 rounded-lg border border-gray-100 dark:border-gray-800">
-                                {{ number_format($sData['manpower_hours'], 1) }} Jam
-                            </span>
                         </div>
                         <p class="text-[10px] text-gray-400 mt-0.5">{{ $meta['desc'] }}</p>
 
                         <div class="mt-3 space-y-1.5 text-xs">
                             <div class="flex items-center justify-between">
-                                <span class="text-gray-500 dark:text-gray-400">Biaya Material:</span>
+                                <span class="text-gray-500 dark:text-gray-400">Total Material:</span>
                                 <span class="font-mono font-semibold text-gray-800 dark:text-gray-200">
                                     Rp {{ number_format($sData['material_cost'], 0, ',', '.') }}
-                                </span>
-                            </div>
-                            <div class="flex items-center justify-between">
-                                <span class="text-gray-500 dark:text-gray-400">Biaya Manpower:</span>
-                                <span class="font-mono font-semibold text-gray-800 dark:text-gray-200">
-                                    Rp {{ number_format($sData['manpower_cost'], 0, ',', '.') }}
                                 </span>
                             </div>
                         </div>
@@ -502,8 +493,6 @@
                         <th class="px-4 py-3.5">NAMA BARANG</th>
                         <th class="px-4 py-3.5 text-center">JUMLAH TERPAKAI</th>
                         <th class="px-4 py-3.5 text-center">SATUAN</th>
-                        <th class="px-4 py-3.5 text-center">MANPOWER (JAM)</th>
-                        <th class="px-4 py-3.5 text-right">BIAYA MANPOWER</th>
                         @if($canViewPrices)
                             <th class="px-4 py-3.5 text-right">HARGA SATUAN</th>
                             <th class="px-4 py-3.5 text-right">TOTAL NILAI</th>
@@ -532,9 +521,6 @@
                                     @endphp
                                     <span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-bold border {{ $wipBadgeStyle }}">
                                         {{ $mo->wip_stage }}
-                                        @if($mo->manpower_hours > 0)
-                                            <span class="opacity-75 font-mono text-[10px]">({{ (float)$mo->manpower_hours }} Jam)</span>
-                                        @endif
                                     </span>
                                 @else
                                     <span class="text-gray-400 italic text-[11px]">-</span>
@@ -555,24 +541,6 @@
                                 <span class="rounded-md bg-gray-100 dark:bg-gray-800 px-2 py-0.5 font-bold text-gray-700 dark:text-gray-300">
                                     {{ strtoupper($mo->unit) }}
                                 </span>
-                            </td>
-                            <td class="px-4 py-3 text-center whitespace-nowrap">
-                                @if($mo->manpower_hours > 0)
-                                    <span class="inline-flex items-center gap-1 font-mono text-xs font-bold text-rose-700 dark:text-rose-300 bg-rose-50 dark:bg-rose-950/50 px-2 py-0.5 rounded-md border border-rose-200 dark:border-rose-800">
-                                        {{ (float)$mo->manpower_hours }} Jam
-                                    </span>
-                                @else
-                                    <span class="text-gray-400 text-xs italic">-</span>
-                                @endif
-                            </td>
-                            <td class="px-4 py-3 text-right whitespace-nowrap">
-                                @if($mo->manpower_cost > 0)
-                                    <span class="font-mono font-bold text-xs text-rose-600 dark:text-rose-400">
-                                        Rp {{ number_format($mo->manpower_cost, 0, ',', '.') }}
-                                    </span>
-                                @else
-                                    <span class="text-gray-400 text-xs">-</span>
-                                @endif
                             </td>
                             @if($canViewPrices)
                                 <td class="px-4 py-3 text-right font-mono font-bold text-gray-700 dark:text-gray-300 whitespace-nowrap">
@@ -819,29 +787,6 @@
                                     <option value="{{ $u }}">{{ $u }}</option>
                                 @endforeach
                             </select>
-                        </div>
-                    </div>
-
-                    <!-- Upah Tenaga Kerja / Manpower -->
-                    <div x-data="{ mpHours: 0, mpRate: 25000 }" class="rounded-xl border border-amber-200 bg-amber-50/60 p-3.5 dark:border-amber-800/60 dark:bg-amber-950/30 space-y-3">
-                        <div class="flex items-center gap-2">
-                            <svg class="w-4 h-4 text-amber-600 dark:text-amber-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
-                            <span class="text-xs font-bold text-amber-900 dark:text-amber-200">Perhitungan Upah Tenaga Kerja (Manpower WIP)</span>
-                        </div>
-                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                            <div>
-                                <label class="block text-[11px] font-bold text-gray-700 dark:text-gray-300 mb-1">Jam Kerja Tenaga Kerja (Hours)</label>
-                                <input type="number" step="0.1" min="0" name="manpower_hours" x-model.number="mpHours" placeholder="0" class="w-full rounded-xl border border-gray-200 bg-white px-3 py-2 text-xs text-gray-800 outline-none focus:border-brand-500 dark:border-gray-700 dark:bg-gray-800 dark:text-white font-mono">
-                            </div>
-                            <div>
-                                <label class="block text-[11px] font-bold text-gray-700 dark:text-gray-300 mb-1">Tarif Upah per Jam (Rp / Jam)</label>
-                                <input type="number" step="1000" min="0" name="manpower_rate_per_hour" x-model.number="mpRate" placeholder="25000" class="w-full rounded-xl border border-gray-200 bg-white px-3 py-2 text-xs text-gray-800 outline-none focus:border-brand-500 dark:border-gray-700 dark:bg-gray-800 dark:text-white font-mono">
-                            </div>
-                        </div>
-                        <div class="flex items-center justify-between text-xs pt-1 border-t border-amber-200/60 dark:border-amber-800/60">
-                            <span class="text-gray-600 dark:text-gray-400">Total Biaya Tenaga Kerja:</span>
-                            <span class="font-extrabold text-amber-700 dark:text-amber-300 font-mono"
-                                  x-text="'Rp ' + ((mpHours || 0) * (mpRate || 0)).toLocaleString('id-ID')"></span>
                         </div>
                     </div>
 
