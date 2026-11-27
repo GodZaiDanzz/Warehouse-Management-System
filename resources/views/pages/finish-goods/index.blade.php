@@ -20,7 +20,6 @@
         delivery_date: '',
         delivery_order_number: '',
         material_cost: '',
-        manpower_cost: '',
         notes: ''
     },
     deliveryData: {
@@ -44,7 +43,6 @@
             delivery_date: item.delivery_date ? item.delivery_date.substring(0, 10) : '',
             delivery_order_number: item.delivery_order_number || '',
             material_cost: item.material_cost || '',
-            manpower_cost: item.manpower_cost || '',
             notes: item.notes || ''
         };
         this.openEditModal = true;
@@ -71,8 +69,6 @@
         item_id: '',
         quantity: 1,
         unit: 'PCS',
-        manpower_hours: 0,
-        manpower_rate_per_hour: 25000,
         pic: @js(auth()->user()->name ?? 'Operator Fabrikasi'),
         notes: ''
     },
@@ -91,7 +87,7 @@
                 <p class="text-xs sm:text-sm text-gray-500 dark:text-gray-400 mt-1">Pencatatan produk jadi hasil fabrikasi per project hingga pengiriman ke klien.</p>
             @else
                 <h1 class="text-2xl font-black text-gray-900 dark:text-white">WIP (Work In Process) - Tahap {{ $stageKey }}</h1>
-                <p class="text-xs sm:text-sm text-gray-500 dark:text-gray-400 mt-1">Pencatatan dan pemantauan material keluar serta upah tenaga kerja pada proses <strong>{{ $stageKey }}</strong>.</p>
+                <p class="text-xs sm:text-sm text-gray-500 dark:text-gray-400 mt-1">Pencatatan dan pemantauan pengeluaran material pada proses <strong>{{ $stageKey }}</strong>.</p>
             @endif
         </div>
 
@@ -231,7 +227,7 @@
         </div>
     </div>
     @else
-    <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4 print:hidden">
+    <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 print:hidden">
         <!-- Total Catatan WIP -->
         <div class="rounded-2xl border border-gray-200 bg-white p-5 dark:border-gray-800 dark:bg-gray-900 shadow-xs">
             <span class="text-xs font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400">Catatan Material WIP</span>
@@ -241,23 +237,9 @@
 
         <!-- Total Kuantitas Fisik -->
         <div class="rounded-2xl border border-gray-200 bg-white p-5 dark:border-gray-800 dark:bg-gray-900 shadow-xs">
-            <span class="text-xs font-bold uppercase tracking-wider text-amber-600 dark:text-amber-400">Total Kuantitas Fisik</span>
+            <span class="text-xs font-bold uppercase tracking-wider text-amber-600 dark:text-amber-400">Total Kuantitas Fisik Material</span>
             <h3 class="mt-2 text-2xl font-black text-amber-600 dark:text-amber-400 font-mono">{{ number_format($stageStats['total_qty'] ?? 0, 1) }} Unit</h3>
-            <p class="mt-3 text-xs text-gray-400">Total volume material terserap</p>
-        </div>
-
-        <!-- Total Jam Kerja Manpower -->
-        <div class="rounded-2xl border border-gray-200 bg-white p-5 dark:border-gray-800 dark:bg-gray-900 shadow-xs">
-            <span class="text-xs font-bold uppercase tracking-wider text-rose-600 dark:text-rose-400">Total Jam Manpower</span>
-            <h3 class="mt-2 text-2xl font-black text-rose-600 dark:text-rose-400 font-mono">{{ number_format($stageStats['total_manpower_hours'] ?? 0, 1) }} Jam</h3>
-            <p class="mt-3 text-xs text-gray-400">Total jam kerja operator fabrikasi</p>
-        </div>
-
-        <!-- Total Upah Tenaga Kerja -->
-        <div class="rounded-2xl border border-gray-200 bg-white p-5 dark:border-gray-800 dark:bg-gray-900 shadow-xs">
-            <span class="text-xs font-bold uppercase tracking-wider text-emerald-600 dark:text-emerald-400">Total Biaya Manpower</span>
-            <h3 class="mt-2 text-xl font-black text-emerald-600 dark:text-emerald-400 font-mono">Rp {{ number_format($stageStats['total_manpower_cost'] ?? 0, 0, ',', '.') }}</h3>
-            <p class="mt-3 text-xs text-gray-400">Akumulasi upah tenaga kerja WIP</p>
+            <p class="mt-3 text-xs text-gray-400">Total akumulasi volume material terpakai</p>
         </div>
     </div>
     @endif
@@ -535,12 +517,12 @@
         <div class="p-4 border-b border-gray-100 dark:border-gray-800 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 bg-gray-50/50 dark:bg-gray-800/30">
             <div>
                 <h3 class="text-sm font-bold text-gray-900 dark:text-white flex items-center gap-2">
-                    <span>Daftar Penggunaan Material & Manpower: {{ $stageKey }}</span>
+                    <span>Daftar Penggunaan Material: {{ $stageKey }}</span>
                     <span class="px-2 py-0.5 rounded-full text-[11px] font-bold bg-amber-100 text-amber-800 dark:bg-amber-950/60 dark:text-amber-300">
                         {{ $stageKey }}
                     </span>
                 </h3>
-                <p class="text-xs text-gray-500 dark:text-gray-400">Setiap material yang keluar di bawah otomatis memotong stok gudang dan terakumulasi ke HPP barang jadi.</p>
+                <p class="text-xs text-gray-500 dark:text-gray-400">Setiap material yang keluar di bawah otomatis memotong stok fisik gudang.</p>
             </div>
             @if(auth()->user() && auth()->user()->canManageWarehouse())
                 <button type="button" @click="openWipModal('{{ $stageKey }}')" class="inline-flex items-center gap-1.5 rounded-xl bg-amber-600 px-3.5 py-2 text-xs font-bold text-white hover:bg-amber-700 shadow-xs transition cursor-pointer">
@@ -560,8 +542,6 @@
                         <th class="px-4 py-3.5">KODE MATERIAL</th>
                         <th class="px-4 py-3.5">NAMA BARANG</th>
                         <th class="px-4 py-3.5 text-center">KUANTITAS FISIK</th>
-                        <th class="px-4 py-3.5 text-center">MANPOWER (JAM)</th>
-                        <th class="px-4 py-3.5 text-right">BIAYA MANPOWER</th>
                         <th class="px-4 py-3.5">PIC PELAKSANA</th>
                         <th class="px-4 py-3.5">CATATAN</th>
                     </tr>
@@ -612,28 +592,6 @@
                                 </span>
                             </td>
 
-                            <!-- MANPOWER (JAM) -->
-                            <td class="px-4 py-3.5 text-center whitespace-nowrap">
-                                @if($mo->manpower_hours > 0)
-                                    <span class="inline-flex items-center gap-1 font-mono text-xs font-bold text-rose-700 dark:text-rose-300 bg-rose-50 dark:bg-rose-950/50 px-2 py-0.5 rounded-md border border-rose-200 dark:border-rose-800">
-                                        {{ (float)$mo->manpower_hours }} Jam
-                                    </span>
-                                @else
-                                    <span class="text-gray-400 text-xs italic">-</span>
-                                @endif
-                            </td>
-
-                            <!-- BIAYA MANPOWER -->
-                            <td class="px-4 py-3.5 text-right whitespace-nowrap">
-                                @if($mo->manpower_cost > 0)
-                                    <span class="font-mono font-bold text-xs text-rose-600 dark:text-rose-400">
-                                        Rp {{ number_format($mo->manpower_cost, 0, ',', '.') }}
-                                    </span>
-                                @else
-                                    <span class="text-gray-400 text-xs">-</span>
-                                @endif
-                            </td>
-
                             <!-- PIC -->
                             <td class="px-4 py-3.5 whitespace-nowrap">
                                 <span class="font-semibold text-gray-800 dark:text-gray-200">{{ $mo->pic ?: '-' }}</span>
@@ -646,13 +604,13 @@
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="10" class="px-4 py-12 text-center">
+                            <td colspan="8" class="px-4 py-12 text-center">
                                 <div class="flex flex-col items-center justify-center space-y-2">
                                     <div class="h-12 w-12 rounded-full bg-amber-50 dark:bg-amber-950/60 flex items-center justify-center text-amber-500">
                                         <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/></svg>
                                     </div>
                                     <span class="text-sm font-bold text-gray-700 dark:text-gray-300">Belum Ada Pengeluaran Material untuk Tahap {{ $stageKey }}</span>
-                                    <p class="text-xs text-gray-400 max-w-sm">Klik tombol di bawah untuk mencatat pemakaian material dan upah tenaga kerja pada proses {{ $stageKey }}.</p>
+                                    <p class="text-xs text-gray-400 max-w-sm">Klik tombol di bawah untuk mencatat pemakaian material pada proses {{ $stageKey }}.</p>
                                     @if(auth()->user() && auth()->user()->canManageWarehouse())
                                         <button type="button" @click="openWipModal('{{ $stageKey }}')" class="mt-2 inline-flex items-center gap-1.5 rounded-xl bg-amber-600 px-3.5 py-2 text-xs font-bold text-white hover:bg-amber-700 transition cursor-pointer">
                                             <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
@@ -920,7 +878,7 @@
                         <div class="flex items-center justify-between">
                             <span class="font-bold text-indigo-950 dark:text-indigo-200 flex items-center gap-1.5 text-xs">
                                 <svg class="w-4 h-4 text-indigo-600 dark:text-indigo-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z"/></svg>
-                                <span>Perhitungan HPP & Akumulasi WIP (Finance)</span>
+                                <span>Perhitungan Nilai HPP Material</span>
                             </span>
                             <label class="inline-flex items-center gap-1.5 cursor-pointer">
                                 <input type="checkbox" name="auto_calculate_wip" value="1" checked class="rounded text-brand-600 focus:ring-brand-500">
@@ -928,17 +886,11 @@
                             </label>
                         </div>
                         <p class="text-[11px] text-gray-500 dark:text-gray-400">
-                            Centang untuk menjumlahkan otomatis seluruh biaya material part & manpower yang telah dikeluarkan untuk proyek ini ke HPP produk jadi.
+                            Centang untuk menjumlahkan otomatis seluruh biaya material part yang telah dikeluarkan untuk proyek ini ke nilai produk jadi.
                         </p>
-                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                            <div>
-                                <label class="block text-[11px] font-semibold text-gray-700 dark:text-gray-300 mb-1">Estimasi Biaya Material Part (Rp)</label>
-                                <input type="number" step="any" min="0" name="material_cost" placeholder="0 (Kosongkan jika otomatis)" class="w-full rounded-xl border border-gray-200 bg-white px-3 py-2 text-xs text-gray-800 outline-none focus:border-brand-500 dark:border-gray-700 dark:bg-gray-800 dark:text-white">
-                            </div>
-                            <div>
-                                <label class="block text-[11px] font-semibold text-gray-700 dark:text-gray-300 mb-1">Estimasi Biaya Manpower (Rp)</label>
-                                <input type="number" step="any" min="0" name="manpower_cost" placeholder="0 (Kosongkan jika otomatis)" class="w-full rounded-xl border border-gray-200 bg-white px-3 py-2 text-xs text-gray-800 outline-none focus:border-brand-500 dark:border-gray-700 dark:bg-gray-800 dark:text-white">
-                            </div>
+                        <div>
+                            <label class="block text-[11px] font-semibold text-gray-700 dark:text-gray-300 mb-1">Estimasi Biaya Material Part (Rp)</label>
+                            <input type="number" step="any" min="0" name="material_cost" placeholder="0 (Kosongkan jika otomatis)" class="w-full rounded-xl border border-gray-200 bg-white px-3 py-2 text-xs text-gray-800 outline-none focus:border-brand-500 dark:border-gray-700 dark:bg-gray-800 dark:text-white">
                         </div>
                     </div>
 
@@ -1200,18 +1152,12 @@
                         <div class="flex items-center justify-between">
                             <span class="text-xs font-bold text-gray-900 dark:text-white flex items-center gap-1.5">
                                 <svg class="w-3.5 h-3.5 text-emerald-600" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
-                                Penyesuaian Biaya HPP (Finance)
+                                Penyesuaian Biaya Material (HPP)
                             </span>
                         </div>
-                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                            <div>
-                                <label class="block text-[11px] font-bold text-gray-600 dark:text-gray-300 mb-1">Biaya Material (Rp)</label>
-                                <input type="number" step="0.01" min="0" name="material_cost" x-model="editData.material_cost" placeholder="0" class="w-full rounded-xl border border-gray-200 bg-white px-3.5 py-2 text-xs font-semibold text-gray-800 outline-none focus:border-brand-500 dark:border-gray-700 dark:bg-gray-900 dark:text-white">
-                            </div>
-                            <div>
-                                <label class="block text-[11px] font-bold text-gray-600 dark:text-gray-300 mb-1">Biaya Manpower (Rp)</label>
-                                <input type="number" step="0.01" min="0" name="manpower_cost" x-model="editData.manpower_cost" placeholder="0" class="w-full rounded-xl border border-gray-200 bg-white px-3.5 py-2 text-xs font-semibold text-gray-800 outline-none focus:border-brand-500 dark:border-gray-700 dark:bg-gray-900 dark:text-white">
-                            </div>
+                        <div>
+                            <label class="block text-[11px] font-bold text-gray-600 dark:text-gray-300 mb-1">Biaya Material (Rp)</label>
+                            <input type="number" step="0.01" min="0" name="material_cost" x-model="editData.material_cost" placeholder="0" class="w-full rounded-xl border border-gray-200 bg-white px-3.5 py-2 text-xs font-semibold text-gray-800 outline-none focus:border-brand-500 dark:border-gray-700 dark:bg-gray-900 dark:text-white">
                         </div>
                     </div>
                     @endif
@@ -1404,21 +1350,16 @@
                 <!-- Financial HPP Breakdown Card -->
                 @if(auth()->user() && auth()->user()->canViewPrices())
                 <div class="rounded-xl border border-indigo-100 bg-indigo-50/40 p-4 dark:border-indigo-900/50 dark:bg-indigo-950/20">
-                    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                    <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
                         <div>
                             <span class="text-[10px] font-bold uppercase text-gray-500 dark:text-gray-400">Total Biaya Material</span>
                             <p class="font-mono text-base font-extrabold text-gray-900 dark:text-white mt-0.5" x-text="'Rp ' + Number(traceItem?.material_cost || 0).toLocaleString('id-ID')"></p>
                             <span class="text-[10px] text-gray-400">Akumulasi bahan baku & consumable</span>
                         </div>
                         <div>
-                            <span class="text-[10px] font-bold uppercase text-gray-500 dark:text-gray-400">Total Upah Manpower</span>
-                            <p class="font-mono text-base font-extrabold text-gray-900 dark:text-white mt-0.5" x-text="'Rp ' + Number(traceItem?.manpower_cost || 0).toLocaleString('id-ID')"></p>
-                            <span class="text-[10px] text-gray-400">Upah langsung operator & teknisi</span>
-                        </div>
-                        <div>
                             <span class="text-[10px] font-bold uppercase text-indigo-700 dark:text-indigo-300">Total HPP Barang Jadi</span>
                             <p class="font-mono text-lg font-black text-indigo-700 dark:text-indigo-400 mt-0.5" x-text="'Rp ' + Number(traceItem?.total_hpp || 0).toLocaleString('id-ID')"></p>
-                            <span class="text-[10px] text-indigo-500 dark:text-indigo-400">Material + Manpower</span>
+                            <span class="text-[10px] text-indigo-500 dark:text-indigo-400">Nilai Akumulasi Material</span>
                         </div>
                         <div>
                             <span class="text-[10px] font-bold uppercase text-emerald-700 dark:text-emerald-300">HPP per Satuan Unit</span>
@@ -1434,7 +1375,7 @@
                     <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 border-b border-gray-100 dark:border-gray-800 pb-2.5">
                         <div>
                             <h4 class="text-xs font-black uppercase tracking-wider text-gray-900 dark:text-white flex items-center gap-2">
-                                <span>Material & Manpower Terpakai (WIP Breakdown)</span>
+                                <span>Material Fisik Terpakai (WIP Breakdown)</span>
                                 <span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-indigo-50 text-indigo-700 dark:bg-indigo-950/60 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-800"
                                       x-text="((traceItem?.material_outs || []).filter(m => stageFilter === 'all' || m.wip_stage === stageFilter).length) + ' Item Terfilter'"></span>
                             </h4>
@@ -1486,7 +1427,6 @@
                                     <th class="px-3 py-2.5 text-right">QTY KELUAR</th>
                                     @if(auth()->user() && auth()->user()->canViewPrices())
                                     <th class="px-3 py-2.5 text-right">BIAYA MATERIAL</th>
-                                    <th class="px-3 py-2.5 text-right">MAN-HOURS & UPAH</th>
                                     @endif
                                     <th class="px-3 py-2.5">PIC / OPERATOR</th>
                                 </tr>
@@ -1516,10 +1456,6 @@
                                         @if(auth()->user() && auth()->user()->canViewPrices())
                                         <td class="px-3 py-2.5 text-right font-mono text-gray-800 dark:text-gray-200 whitespace-nowrap"
                                             x-text="'Rp ' + Number(Number(mo.quantity) * Number(mo.item?.unit_price || 0)).toLocaleString('id-ID')"></td>
-                                        <td class="px-3 py-2.5 text-right font-mono text-gray-800 dark:text-gray-200 whitespace-nowrap">
-                                            <span class="font-bold" x-text="(mo.manpower_hours || 0) + ' Jam'"></span>
-                                            <span class="text-[10px] text-gray-400 block" x-text="'(Rp ' + Number(mo.manpower_cost || 0).toLocaleString('id-ID') + ')'"></span>
-                                        </td>
                                         @endif
                                         <td class="px-3 py-2.5 text-gray-600 dark:text-gray-300 whitespace-nowrap" x-text="mo.pic || '-'"></td>
                                     </tr>
@@ -1567,7 +1503,7 @@
                             <h3 class="text-base font-black text-gray-900 dark:text-white">
                                 Catat WIP: <span x-text="'Tahap ' + wipData.wip_stage"></span>
                             </h3>
-                            <p class="text-xs text-gray-500 dark:text-gray-400">Alokasikan material dari stok gudang dan catat upah jam kerja manpower.</p>
+                            <p class="text-xs text-gray-500 dark:text-gray-400">Alokasikan material dari stok fisik gudang untuk proses fabrikasi.</p>
                         </div>
                     </div>
                     <button type="button" @click="openWipModalState = false" class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 cursor-pointer">
@@ -1680,29 +1616,6 @@
                                     <option value="{{ $u->symbol }}">{{ $u->symbol }} ({{ $u->name }})</option>
                                 @endforeach
                             </select>
-                        </div>
-                    </div>
-
-                    <!-- Tenaga Kerja / Manpower -->
-                    <div class="rounded-xl border border-amber-200 bg-amber-50/60 p-3.5 dark:border-amber-800/60 dark:bg-amber-950/30 space-y-3">
-                        <div class="flex items-center gap-2">
-                            <svg class="w-4 h-4 text-amber-600 dark:text-amber-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
-                            <span class="text-xs font-bold text-amber-900 dark:text-amber-200">Perhitungan Upah Tenaga Kerja (Manpower WIP)</span>
-                        </div>
-                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                            <div>
-                                <label class="block text-[11px] font-bold text-gray-700 dark:text-gray-300 mb-1">Jam Kerja Tenaga Kerja (Hours)</label>
-                                <input type="number" step="0.1" min="0" name="manpower_hours" x-model.number="wipData.manpower_hours" placeholder="0" class="w-full rounded-xl border border-gray-200 bg-white px-3 py-2 text-xs text-gray-800 outline-none focus:border-brand-500 dark:border-gray-700 dark:bg-gray-800 dark:text-white font-mono">
-                            </div>
-                            <div>
-                                <label class="block text-[11px] font-bold text-gray-700 dark:text-gray-300 mb-1">Tarif Upah per Jam (Rp / Jam)</label>
-                                <input type="number" step="1000" min="0" name="manpower_rate_per_hour" x-model.number="wipData.manpower_rate_per_hour" placeholder="25000" class="w-full rounded-xl border border-gray-200 bg-white px-3 py-2 text-xs text-gray-800 outline-none focus:border-brand-500 dark:border-gray-700 dark:bg-gray-800 dark:text-white font-mono">
-                            </div>
-                        </div>
-                        <div class="flex items-center justify-between text-xs pt-1 border-t border-amber-200/60 dark:border-amber-800/60">
-                            <span class="text-gray-600 dark:text-gray-400">Total Biaya Tenaga Kerja:</span>
-                            <span class="font-extrabold text-amber-700 dark:text-amber-300 font-mono"
-                                  x-text="'Rp ' + ((wipData.manpower_hours || 0) * (wipData.manpower_rate_per_hour || 0)).toLocaleString('id-ID')"></span>
                         </div>
                     </div>
 
